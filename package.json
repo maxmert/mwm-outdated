@@ -5,10 +5,16 @@
 	"scripts": {
 		"start": "node app"
 	},
+
+	"bin":{
+		"mwm": "./bin/mwm",
+		"mwm-install": "./bin/mwm-install"
+	},
 	
 	"dependencies": {
 		"commander": "1.1.1",
 		"superagent": "*",
-		"async": "*"
+		"async": "*",
+		"cli-color": "*"
 	}
 }
