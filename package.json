@@ -1,0 +1,14 @@
+{
+	"name": "mwm",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"start": "node app"
+	},
+	
+	"dependencies": {
+		"commander": "1.1.1",
+		"superagent": "*",
+		"async": "*"
+	}
+}
