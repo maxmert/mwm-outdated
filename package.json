@@ -1,6 +1,7 @@
 {
 	"name": "mwm",
 	"version": "0.0.1",
+	"homepage": "http://localhost:3000",
 	"private": true,
 	"scripts": {
 		"start": "node app"
@@ -10,8 +11,13 @@
 	
 	"dependencies": {
 		"nomnom": "*",
+		"commander": "*",
 		"superagent": "*",
 		"async": "*",
-		"cli-color": "*"
-	}
+		"cli-color": "*",
+		"tar.gz": "0.1.1"
+	},
+
+
+	"maxmertkit": "maxmertkit.json"
 }

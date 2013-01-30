@@ -1,25 +1,107 @@
-var __slice = [].slice;
+var dialog, fs, log, pack, path, request, targz;
 
-exports.getList = function() {
-  var arg, args, item, list, _i, _j, _len, _len1;
-  args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-  list = [];
-  for (_i = 0, _len = args.length; _i < _len; _i++) {
-    arg = args[_i];
-    switch (typeof arg) {
-      case 'string':
-        list.push(arg);
-        break;
-      case 'object':
-        if (arg.length > 0) {
-          for (_j = 0, _len1 = arg.length; _j < _len1; _j++) {
-            item = arg[_j];
-            if (typeof item === 'string') {
-              list.push(item);
-            }
-          }
-        }
+pack = require('../package.json');
+
+request = require('superagent');
+
+dialog = require('commander');
+
+path = require('path');
+
+log = require('./logger');
+
+targz = require('tar.gz');
+
+fs = require('fs');
+
+exports.isExist = function(widget, callback) {
+  return request.get("" + pack.homepage + "/widgets/" + widget.name).set('Accept', 'application/json').end(function(res) {
+    if (res.statusCode === 502 || res.statusCode === 404 || !res.body.done) {
+      if (widget.options.silent !== true) {
+        log.requestError("" + pack.homepage + "/widgets/" + widget.name, widget.name);
+      }
+      return callback(false);
+    } else {
+      if (widget.options.silent !== true) {
+        log.requestSuccess("" + pack.homepage + "/widgets/" + widget.name, widget.name);
+      }
+      return callback(true);
     }
-  }
-  return list;
+  });
+};
+
+exports.init = function(options) {
+  var type, writeJSON;
+  writeJSON = function(json) {
+    return fs.writeFile(pack.maxmertkit, JSON.stringify(json, null, 4), function(err) {
+      if (err) {
+        log.error("while initializing – " + err);
+      }
+      log.success("file " + pack.maxmertkit + " successfully created.");
+      return process.stdin.destroy();
+    });
+  };
+  type = ['widget', 'theme'];
+  console.log('Choose what you will create');
+  return dialog.choose(type, function(i) {
+    return dialog.prompt("" + type[i] + " name: (test) ", function(pkgName) {
+      if (pkgName === '') {
+        pkgName = 'test';
+      }
+      return dialog.prompt("version: (0.0.0) ", function(version) {
+        if (version === '') {
+          version = '0.0.0';
+        }
+        return dialog.prompt("description: ", function(description) {
+          return dialog.prompt("repository: ", function(repository) {
+            return dialog.prompt("author: ", function(author) {
+              return dialog.prompt("license: (BSD) ", function(license) {
+                var maxmertkitjson;
+                if (license === '') {
+                  license = 'BSD';
+                }
+                maxmertkitjson = {
+                  type: type[i],
+                  name: pkgName,
+                  version: version,
+                  description: description,
+                  repository: repository,
+                  author: author,
+                  license: license
+                };
+                console.log("");
+                return dialog.confirm("Is everything correct? \n\n " + (JSON.stringify(maxmertkitjson, null, 4)) + "\n-> ", function(ok) {
+                  console.log("");
+                  if (!ok) {
+                    log.error("Initializing canceled");
+                    return process.stdin.destroy();
+                  } else {
+                    return fs.exists(pack.maxmertkit, function(exists) {
+                      if (!exists) {
+                        return writeJSON(maxmertkitjson);
+                      } else {
+                        log.error("File " + pack.maxmertkit + " already exists.");
+                        return dialog.confirm("Do you want to overwrite it? -> ", function(ok) {
+                          if (!ok) {
+                            log.error("initialization canceled.");
+                            return process.stdin.destroy();
+                          } else {
+                            return writeJSON(maxmertkitjson);
+                          }
+                        });
+                      }
+                    });
+                  }
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+};
+
+exports.install = function(name, callback) {
+  return callback();
 };

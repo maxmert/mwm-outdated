@@ -14,8 +14,14 @@ logWidgetName = log.xterm(61)
 
 
 
-exports.error = ( msg, widget, type = 'ERRR', status = 404 ) ->
+exports.requestError = ( msg, widget, type = 'ERRR', status = 404 ) ->
 	console.log "#{logName(pack.name)} #{logTypeError(type)} #{logStatusError(status)} #{logWidgetName(widget)} – #{msg}"
 
-exports.success = ( msg, widget, type = 'http', status = 200 ) ->
+exports.requestSuccess = ( msg, widget, type = 'http', status = 200 ) ->
 	console.log "#{logName(pack.name)} #{logTypeSuccess(type)} #{logStatusSuccess(status)} #{logWidgetName(widget)} – #{msg}"
+
+exports.error = ( msg, type = 'ERRR') ->
+	console.log "#{logName(pack.name)} #{logTypeError(type)} #{msg}\n"
+
+exports.success = ( msg, type = 'OK') ->
+	console.log "#{logName(pack.name)} #{logTypeSuccess(type)} #{msg}\n"

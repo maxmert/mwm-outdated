@@ -3,15 +3,11 @@
 
 # Dependences
 pack = require './package.json'
-request = require 'superagent'
-async = require 'async'
-path = require 'path'
-log = require './lib/logger'
 widgets = require './lib/widgets'
 program = require('nomnom').colors()
+async = require 'async'
+log = require './lib/logger'
 
-#URL
-URL = 'http://localhost:3000'
 
 
 program
@@ -19,72 +15,54 @@ program
 
 	.option 'widgets'
 		position: 1
-		help: 'names to install'
+		help: 'names of widgets to install'
 		list: on
 	.option 'silent'
 		abbr: 's'
 		default: off
 		flag: yes
-		help: 'tell nothing while installing'
+		help: 'no log output during installation'
 	
 	.callback (options) ->
 		
-		# Check if widget exists and install it if it does
-		isExist = ( name ) ->
-			request
-				.get( "#{URL}/widgets/#{name}" )
-				.set('Accept', 'application/json')
-				.end (res) ->
-					if res.statusCode is 502 or res.statusCode is 404
-						log.error("#{URL}/widgets/#{name}", name) if not options.silent
-						
-					else
-						log.success("#{URL}/widgets/#{name}", name) if not options.silent
-						console.log path.dirname __dirname
-						
+		widgetList = []
+		for widget in options.widgets
+			widgetList.push
+				name: widget
+				options: options
 
-		
-		async.every options.widgets, isExist, (res) ->
-			console.log 123
+
+		async.every widgetList, widgets.isExist, (res) ->
+			if res is true
+				async.forEachSeries widgetList, widgets.install, (res) ->
+
+			else
+				console.log "Some of the widgets do not exist at #{pack.homepage}. Installation aborted!"
 	
 	.help 'Installing widgets to maxmertkit css framework.'
 
 
+
+
+
+program
+	.command('init')
+
+	# .option 'theme'
+	# 	abbr: 't'
+	# 	flag: yes
+	# 	default: off
+	# 	help: 'init new theme if flag is active'
+
+	.callback (options) ->
+
+		widgets.init options
+
+
+	.help 'Initializing new widget or theme in current directory'
+
+
+
+
+
 program.parse()
-
-
-# program
-# 	.version( pack.version )
-# 	.option('-T, --no-tests', 'ignore test hook')
-
-# program
-# 	.command( 'install [widgets]' )
-# 	.option("-s, --silent", "Do not tell anything while installing")
-# 	.description( 'Install widgets' )
-# 	.action (widgets, options) ->
-# 		console.log widgets, options
-		# Get all widget names
-		# list = widgets.getList name, program.args
-
-		
-		# Check if widget exists and install it if it does
-		# isExist = ( name ) ->
-		# 	request
-		# 		.get( "#{URL}/widgets/#{name}" )
-		# 		.set('Accept', 'application/json')
-		# 		.end (res) ->
-		# 			if res.statusCode is 502 or res.statusCode is 404
-		# 				log.error "#{URL}/widgets/#{name}", name
-		# 				# console.log "#{logName('mwm')} #{logTypeError('ERRR')} #{logStatusError(res.statusCode)} #{logWidgetName(name)} – #{URL}/widgets/#{name}"
-						
-		# 			else
-		# 				log.success "#{URL}/widgets/#{name}", name
-		# 				# console.log "#{logName('mwm')} #{logTypeSuccess('http')} #{logStatusSuccess(res.statusCode)} #{logWidgetName(name)} – #{URL}/widgets/#{name}"
-						
-
-		
-		# async.every list, isExist, (res) ->
-		# 	console.log 123
-
-
-# program.parse process.argv

@@ -21,7 +21,7 @@ logStatusSuccess = log.xterm(34);
 
 logWidgetName = log.xterm(61);
 
-exports.error = function(msg, widget, type, status) {
+exports.requestError = function(msg, widget, type, status) {
   if (type == null) {
     type = 'ERRR';
   }
@@ -31,7 +31,7 @@ exports.error = function(msg, widget, type, status) {
   return console.log("" + (logName(pack.name)) + " " + (logTypeError(type)) + " " + (logStatusError(status)) + " " + (logWidgetName(widget)) + " – " + msg);
 };
 
-exports.success = function(msg, widget, type, status) {
+exports.requestSuccess = function(msg, widget, type, status) {
   if (type == null) {
     type = 'http';
   }
@@ -39,4 +39,18 @@ exports.success = function(msg, widget, type, status) {
     status = 200;
   }
   return console.log("" + (logName(pack.name)) + " " + (logTypeSuccess(type)) + " " + (logStatusSuccess(status)) + " " + (logWidgetName(widget)) + " – " + msg);
+};
+
+exports.error = function(msg, type) {
+  if (type == null) {
+    type = 'ERRR';
+  }
+  return console.log("" + (logName(pack.name)) + " " + (logTypeError(type)) + " " + msg + "\n");
+};
+
+exports.success = function(msg, type) {
+  if (type == null) {
+    type = 'OK';
+  }
+  return console.log("" + (logName(pack.name)) + " " + (logTypeSuccess(type)) + " " + msg + "\n");
 };
