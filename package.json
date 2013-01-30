@@ -6,13 +6,10 @@
 		"start": "node app"
 	},
 
-	"bin":{
-		"mwm": "./bin/mwm",
-		"mwm-install": "./bin/mwm-install"
-	},
+	"main": "mwm",
 	
 	"dependencies": {
-		"commander": "1.1.1",
+		"nomnom": "*",
 		"superagent": "*",
 		"async": "*",
 		"cli-color": "*"

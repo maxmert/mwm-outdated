@@ -1,0 +1,51 @@
+#!/usr/bin/env node;
+
+var URL, async, log, pack, path, program, request, widgets;
+
+pack = require('./package.json');
+
+request = require('superagent');
+
+async = require('async');
+
+path = require('path');
+
+log = require('./lib/logger');
+
+widgets = require('./lib/widgets');
+
+program = require('nomnom').colors();
+
+URL = 'http://localhost:3000';
+
+program.command('install').option('widgets', {
+  position: 1,
+  help: 'names to install',
+  list: true
+}).option('silent', {
+  abbr: 's',
+  "default": false,
+  flag: true,
+  help: 'tell nothing while installing'
+}).callback(function(options) {
+  var isExist;
+  isExist = function(name) {
+    return request.get("" + URL + "/widgets/" + name).set('Accept', 'application/json').end(function(res) {
+      if (res.statusCode === 502 || res.statusCode === 404) {
+        if (!options.silent) {
+          return log.error("" + URL + "/widgets/" + name, name);
+        }
+      } else {
+        if (!options.silent) {
+          log.success("" + URL + "/widgets/" + name, name);
+        }
+        return console.log(path.dirname(__dirname));
+      }
+    });
+  };
+  return async.every(options.widgets, isExist, function(res) {
+    return console.log(123);
+  });
+}).help('Installing widgets to maxmertkit css framework.');
+
+program.parse();
