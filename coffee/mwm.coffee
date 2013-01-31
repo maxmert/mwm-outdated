@@ -7,6 +7,7 @@ widgets = require './lib/widgets'
 program = require('nomnom').colors()
 async = require 'async'
 log = require './lib/logger'
+fs = require 'fs'
 
 
 
@@ -25,19 +26,30 @@ program
 	
 	.callback (options) ->
 		
-		widgetList = []
-		for widget in options.widgets
-			widgetList.push
-				name: widget
-				options: options
+		if options.widgets? and options.widgets.length > 0
+		# if we have widget names DONT USE maxmertkit.json
+
+			widgetList = []
+			for widget in options.widgets
+				widgetList.push
+					name: widget
+					options: options
 
 
-		async.every widgetList, widgets.isExist, (res) ->
-			if res is true
-				async.forEachSeries widgetList, widgets.install, (res) ->
+			async.every widgetList, widgets.isExist, (res) ->
+				if res is true
+					async.forEachSeries widgetList, widgets.install, (res) ->
 
-			else
-				console.log "Some of the widgets do not exist at #{pack.homepage}. Installation aborted!"
+				else
+					console.log "Some of the widgets do not exist at #{pack.homepage}. Installation aborted!"
+
+
+		
+		else
+		# if we dont have widget names, use maxmertkit.json for dependences
+
+			widgets.installJSON()
+
 	
 	.help 'Installing widgets to maxmertkit css framework.'
 
@@ -47,12 +59,6 @@ program
 
 program
 	.command('init')
-
-	# .option 'theme'
-	# 	abbr: 't'
-	# 	flag: yes
-	# 	default: off
-	# 	help: 'init new theme if flag is active'
 
 	.callback (options) ->
 

@@ -14,6 +14,11 @@ targz = require('tar.gz');
 
 fs = require('fs');
 
+/*
+Check if widget is exists at the server
+*/
+
+
 exports.isExist = function(widget, callback) {
   return request.get("" + pack.homepage + "/widgets/" + widget.name).set('Accept', 'application/json').end(function(res) {
     if (res.statusCode === 502 || res.statusCode === 404 || !res.body.done) {
@@ -29,6 +34,11 @@ exports.isExist = function(widget, callback) {
     }
   });
 };
+
+/*
+Init new widget/theme
+*/
+
 
 exports.init = function(options) {
   var type, writeJSON;
@@ -102,6 +112,42 @@ exports.init = function(options) {
   });
 };
 
-exports.install = function(name, callback) {
+exports.install = function(widget, callback) {
+  request.get("" + pack.homepage + "/widgets/" + widget.name + "/" + widget.version + "/tar").set('Accept', 'application/json').end(function(res) {
+    if (res.statusCode === 502 || res.statusCode === 404) {
+      log.requestError("" + pack.homepage + "/widgets/" + widget.name, widget.name);
+      return callback(false);
+    } else {
+      return console.log(res);
+    }
+  });
   return callback();
+};
+
+exports.installJSON = function() {
+  return fs.readFile(pack.maxmertkit, function(err, data) {
+    var maxmertkitjson, version, widget, _ref, _results;
+    if (err) {
+      log.error("can\'t find " + pack.maxmertkit + " file.");
+      process.stdin.destroy();
+    }
+    if (data != null) {
+      maxmertkitjson = JSON.parse(data);
+      if (!(maxmertkitjson.dependences != null)) {
+        console.log("There is no dependences in " + pack.maxmertkit + " file.");
+        return process.stdin.destroy();
+      } else {
+        _ref = maxmertkitjson.dependences;
+        _results = [];
+        for (widget in _ref) {
+          version = _ref[widget];
+          _results.push(exports.install({
+            name: widget,
+            version: version
+          }, function() {}));
+        }
+        return _results;
+      }
+    }
+  });
 };

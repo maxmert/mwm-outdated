@@ -6,8 +6,9 @@ log = require './logger'
 targz = require 'tar.gz'
 fs = require 'fs'
 
-
-
+###
+Check if widget is exists at the server
+###
 exports.isExist = ( widget, callback ) ->
 
 	request
@@ -24,10 +25,13 @@ exports.isExist = ( widget, callback ) ->
 				callback( true )
 
 
+
+###
+Init new widget/theme
+###
 exports.init = ( options ) ->
 
-	
-
+	# Writes <pack.maxmertkit> json file
 	writeJSON = ( json ) ->
 		fs.writeFile pack.maxmertkit, JSON.stringify(json, null, 4), ( err ) ->
 													
@@ -98,10 +102,54 @@ exports.init = ( options ) ->
 													else
 														writeJSON maxmertkitjson
 
-exports.install = ( name, callback ) ->
 
-	
+
+exports.install = ( widget, callback ) ->
+
+	request
+		.get( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}/tar" )
+		.set('Accept', 'application/json')
+		.end (res) ->
+			
+			if res.statusCode is 502 or res.statusCode is 404
+				log.requestError("#{pack.homepage}/widgets/#{widget.name}", widget.name)
+				callback( false )
+
+			else
+				console.log res
 
 	callback()
+
+
+
+exports.installJSON = () ->
+
+	fs.readFile pack.maxmertkit, ( err, data ) ->
+
+		if err
+			log.error("can\'t find #{pack.maxmertkit} file.")
+			process.stdin.destroy()
+
+		if data?
+			maxmertkitjson = JSON.parse data
+
+			if not maxmertkitjson.dependences?
+				console.log "There is no dependences in #{pack.maxmertkit} file."
+				process.stdin.destroy()
+
+			else
+				for widget, version of maxmertkitjson.dependences
+					exports.install 
+						name: widget
+						version: version
+					, ->
+
+				# console.log exports.install
+
+	# fs.exists pack.maxmertkit, ( exists ) ->
+
+	# 	if exists
+	# 		fs.readFile
+	# 		console.log maxmertkitjson
 
 	

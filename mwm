@@ -1,6 +1,6 @@
 #!/usr/bin/env node;
 
-var async, log, pack, program, widgets;
+var async, fs, log, pack, program, widgets;
 
 pack = require('./package.json');
 
@@ -11,6 +11,8 @@ program = require('nomnom').colors();
 async = require('async');
 
 log = require('./lib/logger');
+
+fs = require('fs');
 
 program.command('install').option('widgets', {
   position: 1,
@@ -23,22 +25,26 @@ program.command('install').option('widgets', {
   help: 'no log output during installation'
 }).callback(function(options) {
   var widget, widgetList, _i, _len, _ref;
-  widgetList = [];
-  _ref = options.widgets;
-  for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-    widget = _ref[_i];
-    widgetList.push({
-      name: widget,
-      options: options
-    });
-  }
-  return async.every(widgetList, widgets.isExist, function(res) {
-    if (res === true) {
-      return async.forEachSeries(widgetList, widgets.install, function(res) {});
-    } else {
-      return console.log("Some of the widgets do not exist at " + pack.homepage + ". Installation aborted!");
+  if ((options.widgets != null) && options.widgets.length > 0) {
+    widgetList = [];
+    _ref = options.widgets;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      widget = _ref[_i];
+      widgetList.push({
+        name: widget,
+        options: options
+      });
     }
-  });
+    return async.every(widgetList, widgets.isExist, function(res) {
+      if (res === true) {
+        return async.forEachSeries(widgetList, widgets.install, function(res) {});
+      } else {
+        return console.log("Some of the widgets do not exist at " + pack.homepage + ". Installation aborted!");
+      }
+    });
+  } else {
+    return widgets.installJSON();
+  }
 }).help('Installing widgets to maxmertkit css framework.');
 
 program.command('init').callback(function(options) {
