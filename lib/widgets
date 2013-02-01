@@ -1,4 +1,4 @@
-var dialog, fs, log, pack, path, request, targz;
+var dialog, fs, log, pack, path, request, tar;
 
 pack = require('../package.json');
 
@@ -10,7 +10,7 @@ path = require('path');
 
 log = require('./logger');
 
-targz = require('tar.gz');
+tar = require('tar');
 
 fs = require('fs');
 
@@ -113,13 +113,20 @@ exports.init = function(options) {
 };
 
 exports.install = function(widget, callback) {
-  request.get("" + pack.homepage + "/widgets/" + widget.name + "/" + widget.version + "/tar").set('Accept', 'application/json').end(function(res) {
-    if (res.statusCode === 502 || res.statusCode === 404) {
-      log.requestError("" + pack.homepage + "/widgets/" + widget.name, widget.name);
-      return callback(false);
-    } else {
-      return console.log(res);
-    }
+  var fileName, req, stream;
+  fileName = "" + widget.name + "@" + widget.version + ".tar";
+  stream = fs.createWriteStream(fileName);
+  req = request.get("" + pack.homepage + "/widgets/" + widget.name + "/" + widget.version + "/tar");
+  req.pipe(stream);
+  stream.on('close', function() {
+    return fs.createReadStream(fileName).pipe(tar.Extract({
+      path: './'
+    })).on('error', function(err) {
+      return log.error(err);
+    }).on('end', function() {
+      fs.unlink(fileName);
+      return log.success("Installation of " + fileName + " complete.");
+    });
   });
   return callback();
 };

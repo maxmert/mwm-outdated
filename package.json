@@ -15,7 +15,7 @@
 		"superagent": "*",
 		"async": "*",
 		"cli-color": "*",
-		"tar.gz": "0.1.1"
+		"tar": "0.1.14"
 	},
 
 

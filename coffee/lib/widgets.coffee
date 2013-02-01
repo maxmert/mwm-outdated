@@ -3,7 +3,7 @@ request = require 'superagent'
 dialog = require 'commander'
 path = require 'path'
 log = require './logger'
-targz = require 'tar.gz'
+tar = require 'tar'
 fs = require 'fs'
 
 ###
@@ -106,17 +106,20 @@ exports.init = ( options ) ->
 
 exports.install = ( widget, callback ) ->
 
-	request
-		.get( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}/tar" )
-		.set('Accept', 'application/json')
-		.end (res) ->
-			
-			if res.statusCode is 502 or res.statusCode is 404
-				log.requestError("#{pack.homepage}/widgets/#{widget.name}", widget.name)
-				callback( false )
-
-			else
-				console.log res
+	fileName = "#{widget.name}@#{widget.version}.tar"
+	stream = fs.createWriteStream( fileName )
+	req = request.get( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}/tar" )
+	req.pipe(stream)
+	
+	stream.on 'close', ->
+		fs
+			.createReadStream( fileName )
+			.pipe( tar.Extract( path: './' ) )
+			.on 'error', ( err )->
+				log.error err
+			.on 'end', ->
+				fs.unlink fileName
+				log.success "Installation of #{fileName} complete."
 
 	callback()
 
