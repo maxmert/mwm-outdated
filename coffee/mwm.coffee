@@ -3,6 +3,7 @@
 
 # Dependences
 pack = require './package.json'
+path = require 'path'
 widgets = require './lib/widgets'
 program = require('nomnom').colors()
 async = require 'async'
@@ -66,6 +67,26 @@ program
 
 
 	.help 'Initializing new widget or theme in current directory'
+
+
+
+
+
+
+program
+	.command('publish')
+
+	.callback (options) ->
+		fs.readFile 'maxmertkit.json', (err, data) ->
+			if err
+				log.error("You don\'t have maxmertkit.json file.")
+			else
+				console.log JSON.parse(data)
+		# widgets.init options
+
+
+	.help 'Publish your widget to mwm-site'
+	
 
 
 

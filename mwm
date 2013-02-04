@@ -1,8 +1,10 @@
 #!/usr/bin/env node;
 
-var async, fs, log, pack, program, widgets;
+var async, fs, log, pack, path, program, widgets;
 
 pack = require('./package.json');
+
+path = require('path');
 
 widgets = require('./lib/widgets');
 
@@ -50,5 +52,15 @@ program.command('install').option('widgets', {
 program.command('init').callback(function(options) {
   return widgets.init(options);
 }).help('Initializing new widget or theme in current directory');
+
+program.command('publish').callback(function(options) {
+  return fs.readFile('maxmertkit.json', function(err, data) {
+    if (err) {
+      return log.error("You don\'t have maxmertkit.json file.");
+    } else {
+      return console.log(JSON.parse(data));
+    }
+  });
+}).help('Publish your widget to mwm-site');
 
 program.parse();
