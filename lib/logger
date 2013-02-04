@@ -45,12 +45,12 @@ exports.error = function(msg, type) {
   if (type == null) {
     type = 'ERRR';
   }
-  return console.log("" + (logName(pack.name)) + " " + (logTypeError(type)) + " " + msg + "\n");
+  return console.log("" + (logName(pack.name)) + " " + (logTypeError(type)) + " " + msg);
 };
 
 exports.success = function(msg, type) {
   if (type == null) {
     type = 'OK';
   }
-  return console.log("" + (logName(pack.name)) + " " + (logTypeSuccess(type)) + " " + msg + "\n");
+  return console.log("" + (logName(pack.name)) + " " + (logTypeSuccess(type)) + " " + msg);
 };

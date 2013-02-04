@@ -1,4 +1,4 @@
-var dialog, fs, log, pack, path, request, tar;
+var dialog, fs, fstream, log, pack, path, request, tar;
 
 pack = require('../package.json');
 
@@ -13,6 +13,8 @@ log = require('./logger');
 tar = require('tar');
 
 fs = require('fs');
+
+fstream = require('fstream');
 
 /*
 Check if widget is exists at the server
@@ -129,6 +131,49 @@ exports.install = function(widget, callback) {
     });
   });
   return callback();
+};
+
+exports.pack = function() {
+  var packFile,
+    _this = this;
+  packFile = "/tmp/" + pack.author + "@" + pack.version + ".tar";
+  return fstream.Reader({
+    type: "Directory",
+    path: '.'
+  }).pipe(tar.Pack({})).on('error', function() {
+    return log.error('Failed to create package.');
+  }).pipe(fstream.Writer(packFile).on("close", function() {
+    log.success("Finished to create package");
+    return _this.sendPack(packFile);
+  }));
+};
+
+exports.sendPack = function(file) {
+  console.log(path.basename(file), file);
+  return request.post("" + pack.homepage + "/upload").attach(path.basename(file), file).end(function(res) {
+    return console.log(res);
+  });
+};
+
+exports.publish = function(author) {
+  var _this = this;
+  return dialog.password('Password: ', function(pass) {
+    return request.post("" + pack.homepage + "/loginAJAX").send({
+      username: author,
+      password: pass
+    }).set('Accept', 'application/json').end(function(res) {
+      if (!res.ok) {
+        log.error("Authorization Failed. Check the author name in maxmert.json or your password. Or maybe you need to register at " + pack.homepage + "?");
+        return process.stdin.destroy();
+      } else {
+        log.success("Authorization succeed.");
+        _this.pack(function() {
+          return this.sendPack();
+        });
+        return process.stdin.destroy();
+      }
+    });
+  });
 };
 
 exports.installJSON = function() {

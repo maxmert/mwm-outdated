@@ -1,7 +1,7 @@
 {
 	"name": "mwm",
 	"version": "0.0.1",
-	"homepage": "http://localhost:3000",
+	"homepage": "http://localhost:3001",
 	"private": true,
 	"scripts": {
 		"start": "node app"
@@ -15,7 +15,9 @@
 		"superagent": "*",
 		"async": "*",
 		"cli-color": "*",
-		"tar": "0.1.14"
+		"tar": "0.1.14",
+		"fstream": "*",
+		"multipart": "*"
 	},
 
 

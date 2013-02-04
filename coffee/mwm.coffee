@@ -78,11 +78,12 @@ program
 
 	.callback (options) ->
 		fs.readFile 'maxmertkit.json', (err, data) ->
+			maxmertkitjson = JSON.parse(data)
+			
 			if err
 				log.error("You don\'t have maxmertkit.json file.")
 			else
-				console.log JSON.parse(data)
-		# widgets.init options
+				widgets.publish maxmertkitjson.author
 
 
 	.help 'Publish your widget to mwm-site'

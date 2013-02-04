@@ -21,7 +21,7 @@ exports.requestSuccess = ( msg, widget, type = 'http', status = 200 ) ->
 	console.log "#{logName(pack.name)} #{logTypeSuccess(type)} #{logStatusSuccess(status)} #{logWidgetName(widget)} – #{msg}"
 
 exports.error = ( msg, type = 'ERRR') ->
-	console.log "#{logName(pack.name)} #{logTypeError(type)} #{msg}\n"
+	console.log "#{logName(pack.name)} #{logTypeError(type)} #{msg}"
 
 exports.success = ( msg, type = 'OK') ->
-	console.log "#{logName(pack.name)} #{logTypeSuccess(type)} #{msg}\n"
+	console.log "#{logName(pack.name)} #{logTypeSuccess(type)} #{msg}"

@@ -55,10 +55,12 @@ program.command('init').callback(function(options) {
 
 program.command('publish').callback(function(options) {
   return fs.readFile('maxmertkit.json', function(err, data) {
+    var maxmertkitjson;
+    maxmertkitjson = JSON.parse(data);
     if (err) {
       return log.error("You don\'t have maxmertkit.json file.");
     } else {
-      return console.log(JSON.parse(data));
+      return widgets.publish(maxmertkitjson.author);
     }
   });
 }).help('Publish your widget to mwm-site');

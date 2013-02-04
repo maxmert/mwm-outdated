@@ -4,7 +4,15 @@ dialog = require 'commander'
 path = require 'path'
 log = require './logger'
 tar = require 'tar'
+
 fs = require 'fs'
+fstream = require 'fstream'
+
+
+
+
+
+
 
 ###
 Check if widget is exists at the server
@@ -122,6 +130,55 @@ exports.install = ( widget, callback ) ->
 				log.success "Installation of #{fileName} complete."
 
 	callback()
+
+
+exports.pack = ->
+
+	packFile = "/tmp/#{pack.author}@#{pack.version}.tar"
+
+	fstream.Reader
+		type: "Directory"
+		path: '.'
+	
+	.pipe(tar.Pack({}))
+		.on 'error', =>
+			log.error 'Failed to create package.'
+
+	.pipe fstream.Writer( packFile )
+		.on "close", =>
+			log.success "Finished to create package"
+			@.sendPack packFile
+
+
+exports.sendPack = (file) ->
+	console.log path.basename( file ), file
+	request
+		.post( "#{pack.homepage}/upload" )
+		.attach( path.basename( file ), file )
+		.end ( res ) ->
+			console.log res
+
+exports.publish = ( author ) ->
+
+	dialog.password 'Password: ', ( pass ) =>
+		request
+			.post( "#{pack.homepage}/loginAJAX" )
+			.send
+				username: author
+				password: pass
+			.set('Accept', 'application/json')
+			.end (res) =>
+				
+				if not res.ok
+					log.error("Authorization Failed. Check the author name in maxmert.json or your password. Or maybe you need to register at #{pack.homepage}?")
+					process.stdin.destroy()
+				else
+					log.success("Authorization succeed.")
+					@.pack ->
+						@.sendPack()
+					process.stdin.destroy()
+
+
 
 
 
