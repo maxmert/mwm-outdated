@@ -136,7 +136,7 @@ exports.install = function(widget, callback) {
 exports.pack = function() {
   var packFile,
     _this = this;
-  packFile = "/tmp/" + pack.author + "@" + pack.version + ".tar";
+  packFile = "/tmp/" + pack.name + "@" + pack.version + ".tar";
   return fstream.Reader({
     type: "Directory",
     path: '.'
@@ -149,9 +149,40 @@ exports.pack = function() {
 };
 
 exports.sendPack = function(file) {
-  console.log(path.basename(file), file);
-  return request.post("" + pack.homepage + "/upload").attach(path.basename(file), file).end(function(res) {
-    return console.log(res);
+  return fs.readFile(pack.maxmertkit, function(err, data) {
+    var maxmertkitjson;
+    if (err) {
+      log.error("can\'t find " + pack.maxmertkit + " file.");
+      process.stdin.destroy();
+    }
+    if (data != null) {
+      maxmertkitjson = JSON.parse(data);
+      return request.post("" + pack.homepage + "/" + maxmertkitjson.author + "/publish").attach(path.basename(file), file).end(function(res) {
+        return console.log(res);
+      });
+    }
+  });
+};
+
+exports.checkPack = function() {
+  return fs.readFile(pack.maxmertkit, function(err, data) {
+    var maxmertkitjson,
+      _this = this;
+    if (err) {
+      log.error("can\'t find " + pack.maxmertkit + " file.");
+      process.stdin.destroy();
+    }
+    if (data != null) {
+      maxmertkitjson = JSON.parse(data);
+      return request.get("" + pack.homepage + "/widgets/" + maxmertkitjson.name + "/" + maxmertkitjson.version).set('Accept', 'application/json').end(function(res) {
+        if (!res.ok) {
+          log.requestError("Getting information about " + pack.name + " if failed.");
+          return process.stdin.destroy();
+        } else {
+          return console.log(res.body);
+        }
+      });
+    }
   });
 };
 
@@ -167,9 +198,7 @@ exports.publish = function(author) {
         return process.stdin.destroy();
       } else {
         log.success("Authorization succeed.");
-        _this.pack(function() {
-          return this.sendPack();
-        });
+        _this.checkPack();
         return process.stdin.destroy();
       }
     });

@@ -134,7 +134,7 @@ exports.install = ( widget, callback ) ->
 
 exports.pack = ->
 
-	packFile = "/tmp/#{pack.author}@#{pack.version}.tar"
+	packFile = "/tmp/#{pack.name}@#{pack.version}.tar"
 
 	fstream.Reader
 		type: "Directory"
@@ -151,12 +151,44 @@ exports.pack = ->
 
 
 exports.sendPack = (file) ->
-	console.log path.basename( file ), file
-	request
-		.post( "#{pack.homepage}/upload" )
-		.attach( path.basename( file ), file )
-		.end ( res ) ->
-			console.log res
+	
+	fs.readFile pack.maxmertkit, ( err, data ) ->
+
+		if err
+			log.error("can\'t find #{pack.maxmertkit} file.")
+			process.stdin.destroy()
+
+		if data?
+			maxmertkitjson = JSON.parse data
+
+			request
+				.post( "#{pack.homepage}/#{maxmertkitjson.author}/publish" )
+				.attach( path.basename( file ), file )
+				.end ( res ) ->
+					console.log res
+
+
+exports.checkPack = ->
+
+	fs.readFile pack.maxmertkit, ( err, data ) ->
+
+		if err
+			log.error("can\'t find #{pack.maxmertkit} file.")
+			process.stdin.destroy()
+
+		if data?
+			maxmertkitjson = JSON.parse data
+
+			request
+				.get( "#{pack.homepage}/widgets/#{maxmertkitjson.name}/#{maxmertkitjson.version}" )
+				.set('Accept', 'application/json')
+				.end (res) => 
+					if not res.ok
+						log.requestError("Getting information about #{pack.name} if failed.")
+						process.stdin.destroy()
+					else
+						console.log res.body
+
 
 exports.publish = ( author ) ->
 
@@ -174,8 +206,10 @@ exports.publish = ( author ) ->
 					process.stdin.destroy()
 				else
 					log.success("Authorization succeed.")
-					@.pack ->
-						@.sendPack()
+					@.checkPack()
+
+					# @.pack ->
+					# 	@.sendPack()
 					process.stdin.destroy()
 
 
