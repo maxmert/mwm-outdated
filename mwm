@@ -1,6 +1,6 @@
 #!/usr/bin/env node;
 
-var async, fs, log, pack, path, program, widgets;
+var fs, log, pack, path, program, widgets;
 
 pack = require('./package.json');
 
@@ -10,59 +10,20 @@ widgets = require('./lib/widgets');
 
 program = require('nomnom').colors();
 
-async = require('async');
-
 log = require('./lib/logger');
 
 fs = require('fs');
 
-program.command('install').option('widgets', {
-  position: 1,
-  help: 'names of widgets to install',
-  list: true
-}).option('silent', {
-  abbr: 's',
-  "default": false,
-  flag: true,
-  help: 'no log output during installation'
-}).callback(function(options) {
-  var widget, widgetList, _i, _len, _ref;
-  if ((options.widgets != null) && options.widgets.length > 0) {
-    widgetList = [];
-    _ref = options.widgets;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      widget = _ref[_i];
-      widgetList.push({
-        name: widget,
-        options: options
-      });
-    }
-    return async.every(widgetList, widgets.isExist, function(res) {
-      if (res === true) {
-        return async.forEachSeries(widgetList, widgets.install, function(res) {});
-      } else {
-        return console.log("Some of the widgets do not exist at " + pack.homepage + ". Installation aborted!");
-      }
-    });
-  } else {
-    return widgets.installJSON();
-  }
-}).help('Installing widgets to maxmertkit css framework.');
-
 program.command('init').callback(function(options) {
   return widgets.init(options);
-}).help('Initializing new widget or theme in current directory');
+}).help('Initializing new widget or theme in the current directory.');
 
-program.command('publish').callback(function(options) {
-  return fs.readFile('maxmertkit.json', function(err, data) {
-    var maxmertkitjson;
-    maxmertkitjson = JSON.parse(data);
-    if (err) {
-      return log.error("You don\'t have maxmertkit.json file.");
-    } else {
-      return widgets.publish(maxmertkitjson.author);
-    }
-  });
-}).help('Publish your widget to mwm-site');
+program.command('pack').callback(function(options) {
+  return widgets.pack(options);
+}).help('Create .tar file in current folder.');
+
+program.command('check').callback(function(options) {
+  return widgets.onServerIsExists(options);
+}).help('Check if package with that name already exists.');
 
 program.parse();

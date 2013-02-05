@@ -1,4 +1,4 @@
-var dialog, fs, fstream, log, pack, path, request, tar;
+var async, dialog, fs, fstream, log, pack, path, request, tar;
 
 pack = require('../package.json');
 
@@ -12,222 +12,235 @@ log = require('./logger');
 
 tar = require('tar');
 
+async = require('async');
+
 fs = require('fs');
 
 fstream = require('fstream');
 
 /*
-Check if widget is exists at the server
+Returns the montent of maxmertkit.json file
 */
 
 
-exports.isExist = function(widget, callback) {
-  return request.get("" + pack.homepage + "/widgets/" + widget.name).set('Accept', 'application/json').end(function(res) {
-    if (res.statusCode === 502 || res.statusCode === 404 || !res.body.done) {
-      if (widget.options.silent !== true) {
-        log.requestError("" + pack.homepage + "/widgets/" + widget.name, widget.name);
-      }
-      return callback(false);
+exports.maxmertkit = function() {
+  var json, rawjson;
+  rawjson = fs.readFileSync(path.join('.', pack.maxmertkit));
+  if (!(rawjson != null)) {
+    log.error("couldn\'t read " + pack.maxmertkit + " file.");
+    return process.stdin.destroy();
+  } else {
+    return json = JSON.parse(rawjson);
+  }
+};
+
+/*
+Initializing new widget or theme in current directory
+*/
+
+
+exports.init = function(options) {
+  var types,
+    _this = this;
+  types = ['widget', 'theme'];
+  return async.series({
+    type: function(callback) {
+      return dialog.choose(types, function(i) {
+        return callback(null, types[i]);
+      });
+    },
+    name: function(callback) {
+      var defaultPkgName;
+      defaultPkgName = 'test';
+      return dialog.prompt("name: (test) ", function(pkgName) {
+        if (pkgName === '') {
+          pkgName = defaultPkgName;
+        }
+        return callback(null, pkgName);
+      });
+    },
+    version: function(callback) {
+      var defaultVersion;
+      defaultVersion = '0.0.0';
+      return dialog.prompt("version: (0.0.0) ", function(version) {
+        if (version === '') {
+          version = defaultVersion;
+        }
+        return callback(null, version);
+      });
+    },
+    description: function(callback) {
+      return dialog.prompt("description: ", function(description) {
+        return callback(null, description);
+      });
+    },
+    repository: function(callback) {
+      return dialog.prompt("repository: ", function(repository) {
+        return callback(null, repository);
+      });
+    },
+    author: function(callback) {
+      return dialog.prompt("author: ", function(author) {
+        return callback(null, author);
+      });
+    },
+    license: function(callback) {
+      var defaultLicense;
+      defaultLicense = 'BSD';
+      return dialog.prompt("license: (BSD) ", function(license) {
+        if (license === '') {
+          license = defaultLicense;
+        }
+        return callback(null, license);
+      });
+    }
+  }, function(err, maxmertkitjson) {
+    return _this.writeConfirm(maxmertkitjson, options);
+  });
+};
+
+/*
+Confirm writing json to the maxmertkit.json file
+*/
+
+
+exports.writeConfirm = function(json, options) {
+  var _this = this;
+  return dialog.confirm("Is everything correct? \n\n " + (JSON.stringify(json, null, 4)) + "\n-> ", function(ok) {
+    console.log("");
+    if (!ok) {
+      log.error("Initializing canceled");
+      return process.stdin.destroy();
     } else {
-      if (widget.options.silent !== true) {
-        log.requestSuccess("" + pack.homepage + "/widgets/" + widget.name, widget.name);
-      }
-      return callback(true);
+      return fs.exists(pack.maxmertkit, function(exists) {
+        if (!exists) {
+          _this.write(json, options);
+          return process.stdin.destroy();
+        } else {
+          log.error("File " + pack.maxmertkit + " already exists.");
+          return dialog.confirm("Do you want to overwrite it? -> ", function(ok) {
+            if (!ok) {
+              log.error("initialization canceled.");
+              return process.stdin.destroy();
+            } else {
+              _this.write(json, options);
+              return process.stdin.destroy();
+            }
+          });
+        }
+      });
     }
   });
 };
 
 /*
-Init new widget/theme
+Writing json to the maxmertkit.json file
 */
 
 
-exports.init = function(options) {
-  var type, writeJSON;
-  writeJSON = function(json) {
-    return fs.writeFile(pack.maxmertkit, JSON.stringify(json, null, 4), function(err) {
-      if (err) {
-        log.error("while initializing – " + err);
-      }
-      log.success("file " + pack.maxmertkit + " successfully created.");
-      return process.stdin.destroy();
-    });
-  };
-  type = ['widget', 'theme'];
-  console.log('Choose what you will create');
-  return dialog.choose(type, function(i) {
-    return dialog.prompt("" + type[i] + " name: (test) ", function(pkgName) {
-      if (pkgName === '') {
-        pkgName = 'test';
-      }
-      return dialog.prompt("version: (0.0.0) ", function(version) {
-        if (version === '') {
-          version = '0.0.0';
-        }
-        return dialog.prompt("description: ", function(description) {
-          return dialog.prompt("repository: ", function(repository) {
-            return dialog.prompt("author: ", function(author) {
-              return dialog.prompt("license: (BSD) ", function(license) {
-                var maxmertkitjson;
-                if (license === '') {
-                  license = 'BSD';
-                }
-                maxmertkitjson = {
-                  type: type[i],
-                  name: pkgName,
-                  version: version,
-                  description: description,
-                  repository: repository,
-                  author: author,
-                  license: license
-                };
-                console.log("");
-                return dialog.confirm("Is everything correct? \n\n " + (JSON.stringify(maxmertkitjson, null, 4)) + "\n-> ", function(ok) {
-                  console.log("");
-                  if (!ok) {
-                    log.error("Initializing canceled");
-                    return process.stdin.destroy();
-                  } else {
-                    return fs.exists(pack.maxmertkit, function(exists) {
-                      if (!exists) {
-                        return writeJSON(maxmertkitjson);
-                      } else {
-                        log.error("File " + pack.maxmertkit + " already exists.");
-                        return dialog.confirm("Do you want to overwrite it? -> ", function(ok) {
-                          if (!ok) {
-                            log.error("initialization canceled.");
-                            return process.stdin.destroy();
-                          } else {
-                            return writeJSON(maxmertkitjson);
-                          }
-                        });
-                      }
-                    });
-                  }
-                });
-              });
-            });
-          });
-        });
-      });
-    });
+exports.write = function(json, options) {
+  return fs.writeFile(pack.maxmertkit, JSON.stringify(json, null, 4), function(err) {
+    if (err) {
+      log.error("initializing – " + err + ".");
+    }
+    return log.success("file " + pack.maxmertkit + " successfully created.");
   });
 };
 
-exports.install = function(widget, callback) {
-  var fileName, req, stream;
-  fileName = "" + widget.name + "@" + widget.version + ".tar";
-  stream = fs.createWriteStream(fileName);
-  req = request.get("" + pack.homepage + "/widgets/" + widget.name + "/" + widget.version + "/tar");
-  req.pipe(stream);
-  stream.on('close', function() {
-    return fs.createReadStream(fileName).pipe(tar.Extract({
-      path: './'
-    })).on('error', function(err) {
-      return log.error(err);
-    }).on('end', function() {
-      fs.unlink(fileName);
-      return log.success("Installation of " + fileName + " complete.");
-    });
-  });
-  return callback();
-};
+/*
+Packing widget or theme in current folder. The folders name should be the same as your package name in maxmertkit.json
+*/
 
-exports.pack = function() {
-  var packFile,
+
+exports.pack = function(options, callback) {
+  var fileName, maxmertkitjson,
     _this = this;
-  packFile = "/tmp/" + pack.name + "@" + pack.version + ".tar";
-  return fstream.Reader({
-    type: "Directory",
-    path: '.'
-  }).pipe(tar.Pack({})).on('error', function() {
-    return log.error('Failed to create package.');
-  }).pipe(fstream.Writer(packFile).on("close", function() {
-    log.success("Finished to create package");
-    return _this.sendPack(packFile);
-  }));
+  maxmertkitjson = this.maxmertkit();
+  if (path.basename(path.resolve('.')) === ("" + maxmertkitjson.name)) {
+    fileName = "" + maxmertkitjson.name + "@" + maxmertkitjson.version + ".tar";
+    return fstream.Reader({
+      type: "Directory",
+      path: '.'
+    }).pipe(tar.Pack({})).on('error', function(err) {
+      log.error('Failed to create package.');
+      if (!(callback != null)) {
+        return process.stdin.destroy();
+      } else {
+        return callback(err, fileName);
+      }
+    }).pipe(fstream.Writer(path.join('/tmp/', fileName)).on("close", function() {
+      log.success("Finished to create package");
+      if (!(callback != null)) {
+        return _this.restore(fileName, callback);
+      } else {
+        return callback(null, fileName);
+      }
+    }));
+  } else {
+    return log.error("The folders name (" + (path.basename(path.resolve('.'))) + ") should be the same as your package name in maxmertkit.json (" + maxmertkitjson.name + ").");
+  }
 };
 
-exports.sendPack = function(file) {
-  return fs.readFile(pack.maxmertkit, function(err, data) {
-    var maxmertkitjson;
-    if (err) {
-      log.error("can\'t find " + pack.maxmertkit + " file.");
-      process.stdin.destroy();
-    }
-    if (data != null) {
-      maxmertkitjson = JSON.parse(data);
-      return request.post("" + pack.homepage + "/" + maxmertkitjson.author + "/publish").attach(path.basename(file), file).end(function(res) {
-        return console.log(res);
+/*
+Restore package from /tmp folder to the current folder
+*/
+
+
+exports.restore = function(fileName, callback) {
+  return fs.readFile(path.join('/tmp/', fileName), function(err, data) {
+    if (err != null) {
+      log.error("Failed to restore " + fileName + " from /tmp folder. Maybe there is no such file or folder.");
+      if (!(callback != null)) {
+        return process.stdin.destroy();
+      } else {
+        return callback(err, fileName);
+      }
+    } else {
+      return fs.writeFile(path.join('.', fileName), data, function(err) {
+        if (err != null) {
+          log.error("Failed to restore " + fileName + " from /tmp folder. Maybe you do not have permissions to write in current folder.");
+          if (!(callback != null)) {
+            return process.stdin.destroy();
+          } else {
+            return callback(err, fileName);
+          }
+        } else {
+          log.success("Finished to restore package");
+          if (!(callback != null)) {
+            return process.stdin.destroy();
+          } else {
+            return callback(null, fileName);
+          }
+        }
       });
     }
   });
 };
 
-exports.checkPack = function() {
-  return fs.readFile(pack.maxmertkit, function(err, data) {
-    var maxmertkitjson,
-      _this = this;
-    if (err) {
-      log.error("can\'t find " + pack.maxmertkit + " file.");
-      process.stdin.destroy();
-    }
-    if (data != null) {
-      maxmertkitjson = JSON.parse(data);
-      return request.get("" + pack.homepage + "/widgets/" + maxmertkitjson.name + "/" + maxmertkitjson.version).set('Accept', 'application/json').end(function(res) {
-        if (!res.ok) {
-          log.requestError("Getting information about " + pack.name + " if failed.");
+/*
+Check if widget or theme is exists
+*/
+
+
+exports.onServerIsExists = function(options, callback) {
+  var widget;
+  widget = this.maxmertkit();
+  return request.get("" + pack.homepage + "/widgets/" + widget.name).set('X-Requested-With', 'XMLHttpRequest').end(function(res) {
+    if (res.ok && res.status !== 500 && res.status !== 404) {
+      if (res.body.done) {
+        log.success("widget with name " + widget.name + " exists.");
+        if (!(callback != null)) {
           return process.stdin.destroy();
         } else {
-          return console.log(res.body);
+          return callback(null, fileName);
         }
-      });
-    }
-  });
-};
-
-exports.publish = function(author) {
-  var _this = this;
-  return dialog.password('Password: ', function(pass) {
-    return request.post("" + pack.homepage + "/loginAJAX").send({
-      username: author,
-      password: pass
-    }).set('Accept', 'application/json').end(function(res) {
-      if (!res.ok) {
-        log.error("Authorization Failed. Check the author name in maxmert.json or your password. Or maybe you need to register at " + pack.homepage + "?");
-        return process.stdin.destroy();
       } else {
-        log.success("Authorization succeed.");
-        _this.checkPack();
-        return process.stdin.destroy();
-      }
-    });
-  });
-};
-
-exports.installJSON = function() {
-  return fs.readFile(pack.maxmertkit, function(err, data) {
-    var maxmertkitjson, version, widget, _ref, _results;
-    if (err) {
-      log.error("can\'t find " + pack.maxmertkit + " file.");
-      process.stdin.destroy();
-    }
-    if (data != null) {
-      maxmertkitjson = JSON.parse(data);
-      if (!(maxmertkitjson.dependences != null)) {
-        console.log("There is no dependences in " + pack.maxmertkit + " file.");
-        return process.stdin.destroy();
-      } else {
-        _ref = maxmertkitjson.dependences;
-        _results = [];
-        for (widget in _ref) {
-          version = _ref[widget];
-          _results.push(exports.install({
-            name: widget,
-            version: version
-          }, function() {}));
+        log.error("widget with name " + widget.name + " does not exists.");
+        if (!(callback != null)) {
+          return process.stdin.destroy();
+        } else {
+          return callback(true, fileName);
         }
-        return _results;
       }
     }
   });

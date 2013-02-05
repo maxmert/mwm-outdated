@@ -4,239 +4,453 @@ dialog = require 'commander'
 path = require 'path'
 log = require './logger'
 tar = require 'tar'
+async = require 'async'
 
 fs = require 'fs'
 fstream = require 'fstream'
 
 
+###
+Returns the montent of maxmertkit.json file
+###
+exports.maxmertkit = ->
+	
+	rawjson = fs.readFileSync path.join( '.', pack.maxmertkit )
+	
+	if not rawjson?
+		log.error("couldn\'t read #{pack.maxmertkit} file.")
+		process.stdin.destroy()
 
+	else
+		json = JSON.parse rawjson
 
 
 
 
 ###
-Check if widget is exists at the server
-###
-exports.isExist = ( widget, callback ) ->
-
-	request
-		.get( "#{pack.homepage}/widgets/#{widget.name}" )
-		.set('Accept', 'application/json')
-		.end (res) ->
-			
-			if res.statusCode is 502 or res.statusCode is 404 or not res.body.done
-				log.requestError("#{pack.homepage}/widgets/#{widget.name}", widget.name) if widget.options.silent isnt on
-				callback( false )
-				
-			else
-				log.requestSuccess("#{pack.homepage}/widgets/#{widget.name}", widget.name) if widget.options.silent isnt on
-				callback( true )
-
-
-
-###
-Init new widget/theme
+Initializing new widget or theme in current directory
 ###
 exports.init = ( options ) ->
 
-	# Writes <pack.maxmertkit> json file
-	writeJSON = ( json ) ->
-		fs.writeFile pack.maxmertkit, JSON.stringify(json, null, 4), ( err ) ->
-													
-			if err then log.error("while initializing – #{err}")
+	types = ['widget', 'theme']
 
-			log.success("file #{pack.maxmertkit} successfully created.")
-			process.stdin.destroy()
-
-
-
-	type = ['widget', 'theme']
-
-
-	console.log 'Choose what you will create'
-	
-	dialog.choose type, (i) ->
-		# console.log 'You chose %s', type[i]
+	async.series
 		
-		dialog.prompt "#{type[i]} name: (test) ", ( pkgName ) ->
-			pkgName = 'test' if pkgName is ''
-			# console.log 'Hello %s', pkgName
+		type: ( callback ) ->
+			dialog.choose types, (i) ->
+				callback null, types[i]
 
+		name: ( callback ) ->
+			defaultPkgName = 'test'
+			dialog.prompt "name: (test) ", ( pkgName ) ->
+				if pkgName is '' then pkgName = defaultPkgName
+				callback null, pkgName
+
+		version: ( callback ) ->
+			defaultVersion = '0.0.0'
 			dialog.prompt "version: (0.0.0) ", ( version ) ->
-				version = '0.0.0' if version is ''
+				if version is '' then version = defaultVersion
+				callback null, version
 
-				dialog.prompt "description: ", ( description ) ->
+		description: ( callback ) ->
+			dialog.prompt "description: ", ( description ) ->
+				callback null, description
 
-					dialog.prompt "repository: ", ( repository ) ->
-				
-						dialog.prompt "author: ", ( author ) ->
+		repository: ( callback ) ->
+			dialog.prompt "repository: ", ( repository ) ->
+				callback null, repository
 
-							dialog.prompt "license: (BSD) ", ( license ) ->
-								license = 'BSD' if license is ''
+		author: ( callback ) ->
+			dialog.prompt "author: ", ( author ) ->
+				callback null, author
 
-								maxmertkitjson = 
-									type: type[i]
-									name: pkgName
-									version: version
-									description: description
-									repository: repository
-									author: author
-									license: license
-								console.log ""
-							
-								dialog.confirm "Is everything correct? \n\n #{JSON.stringify(maxmertkitjson, null, 4)}\n-> ", ( ok ) ->
-									
-									console.log ""
+		license: ( callback ) ->
+			defaultLicense = 'BSD'
+			dialog.prompt "license: (BSD) ", ( license ) ->
+				if license is '' then license = defaultLicense
+				callback null, license
 
-									if not ok
-										log.error("Initializing canceled")
-										process.stdin.destroy()
-
-									else
-										fs.exists pack.maxmertkit, ( exists ) ->
-											
-											if not exists
-												writeJSON maxmertkitjson
-
-											else #if exists
-												log.error("File #{pack.maxmertkit} already exists.")
-
-												dialog.confirm "Do you want to overwrite it? -> ", ( ok ) ->
-
-													if not ok
-														log.error("initialization canceled.")
-														process.stdin.destroy()
-
-													else
-														writeJSON maxmertkitjson
-
-
-
-exports.install = ( widget, callback ) ->
-
-	fileName = "#{widget.name}@#{widget.version}.tar"
-	stream = fs.createWriteStream( fileName )
-	req = request.get( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}/tar" )
-	req.pipe(stream)
-	
-	stream.on 'close', ->
-		fs
-			.createReadStream( fileName )
-			.pipe( tar.Extract( path: './' ) )
-			.on 'error', ( err )->
-				log.error err
-			.on 'end', ->
-				fs.unlink fileName
-				log.success "Installation of #{fileName} complete."
-
-	callback()
-
-
-exports.pack = ->
-
-	packFile = "/tmp/#{pack.name}@#{pack.version}.tar"
-
-	fstream.Reader
-		type: "Directory"
-		path: '.'
-	
-	.pipe(tar.Pack({}))
-		.on 'error', =>
-			log.error 'Failed to create package.'
-
-	.pipe fstream.Writer( packFile )
-		.on "close", =>
-			log.success "Finished to create package"
-			@.sendPack packFile
-
-
-exports.sendPack = (file) ->
-	
-	fs.readFile pack.maxmertkit, ( err, data ) ->
-
-		if err
-			log.error("can\'t find #{pack.maxmertkit} file.")
-			process.stdin.destroy()
-
-		if data?
-			maxmertkitjson = JSON.parse data
-
-			request
-				.post( "#{pack.homepage}/#{maxmertkitjson.author}/publish" )
-				.attach( path.basename( file ), file )
-				.end ( res ) ->
-					console.log res
-
-
-exports.checkPack = ->
-
-	fs.readFile pack.maxmertkit, ( err, data ) ->
-
-		if err
-			log.error("can\'t find #{pack.maxmertkit} file.")
-			process.stdin.destroy()
-
-		if data?
-			maxmertkitjson = JSON.parse data
-
-			request
-				.get( "#{pack.homepage}/widgets/#{maxmertkitjson.name}/#{maxmertkitjson.version}" )
-				.set('Accept', 'application/json')
-				.end (res) => 
-					if not res.ok
-						log.requestError("Getting information about #{pack.name} if failed.")
-						process.stdin.destroy()
-					else
-						console.log res.body
-
-
-exports.publish = ( author ) ->
-
-	dialog.password 'Password: ', ( pass ) =>
-		request
-			.post( "#{pack.homepage}/loginAJAX" )
-			.send
-				username: author
-				password: pass
-			.set('Accept', 'application/json')
-			.end (res) =>
-				
-				if not res.ok
-					log.error("Authorization Failed. Check the author name in maxmert.json or your password. Or maybe you need to register at #{pack.homepage}?")
-					process.stdin.destroy()
-				else
-					log.success("Authorization succeed.")
-					@.checkPack()
-
-					# @.pack ->
-					# 	@.sendPack()
-					process.stdin.destroy()
+	, ( err, maxmertkitjson ) =>
+		
+		@.writeConfirm maxmertkitjson, options
 
 
 
 
 
-exports.installJSON = () ->
+###
+Confirm writing json to the maxmertkit.json file
+###
+exports.writeConfirm = ( json, options ) ->
 
-	fs.readFile pack.maxmertkit, ( err, data ) ->
+	dialog.confirm "Is everything correct? \n\n #{JSON.stringify(json, null, 4)}\n-> ", ( ok ) =>
 
-		if err
-			log.error("can\'t find #{pack.maxmertkit} file.")
-			process.stdin.destroy()
+			console.log ""
 
-		if data?
-			maxmertkitjson = JSON.parse data
-
-			if not maxmertkitjson.dependences?
-				console.log "There is no dependences in #{pack.maxmertkit} file."
+			if not ok
+				log.error("Initializing canceled")
 				process.stdin.destroy()
 
 			else
-				for widget, version of maxmertkitjson.dependences
-					exports.install 
-						name: widget
-						version: version
-					, ->
+				fs.exists pack.maxmertkit, ( exists ) =>
+
+					if not exists
+						@.write json, options
+						process.stdin.destroy()
+
+					else #if exists
+						log.error("File #{pack.maxmertkit} already exists.")
+
+						dialog.confirm "Do you want to overwrite it? -> ", ( ok ) =>
+
+							if not ok
+								log.error("initialization canceled.")
+								process.stdin.destroy()
+
+							else
+								@.write json, options
+								process.stdin.destroy()
+
+
+
+
+###
+Writing json to the maxmertkit.json file
+###
+exports.write = ( json, options ) ->
+
+	fs.writeFile pack.maxmertkit, JSON.stringify(json, null, 4), ( err ) ->
+
+		if err then log.error "initializing – #{err}."
+		log.success "file #{pack.maxmertkit} successfully created."
+
+
+
+
+###
+Packing widget or theme in current folder. The folders name should be the same as your package name in maxmertkit.json
+###
+exports.pack = ( options, callback ) ->
+
+	maxmertkitjson = @.maxmertkit()
+
+	if path.basename( path.resolve('.') ) is "#{maxmertkitjson.name}"
+
+		fileName = "#{maxmertkitjson.name}@#{maxmertkitjson.version}.tar"
+
+		fstream.Reader
+			type: "Directory"
+			path: '.'
+		
+		.pipe(tar.Pack({}))
+			.on 'error', (err) =>
+				log.error 'Failed to create package.'
+				if not callback? then process.stdin.destroy() else callback err, fileName
+
+		.pipe fstream.Writer( path.join '/tmp/', fileName )
+			.on "close", =>
+				log.success "Finished to create package"
+				if not callback? then @.restore( fileName, callback ) else callback null, fileName
+
+
+	else
+
+		log.error "The folders name (#{path.basename( path.resolve('.') )}) should be the same as your package name in maxmertkit.json (#{maxmertkitjson.name})."
+
+
+
+
+###
+Restore package from /tmp folder to the current folder
+###
+exports.restore = ( fileName, callback ) ->
+	
+	fs.readFile path.join( '/tmp/', fileName ), ( err, data ) ->
+		if err?
+			log.error "Failed to restore #{fileName} from /tmp folder. Maybe there is no such file or folder."
+			if not callback? then process.stdin.destroy() else callback err, fileName
+		
+		else
+
+			fs.writeFile path.join( '.', fileName ), data, ( err ) ->
+
+				if err?
+					log.error "Failed to restore #{fileName} from /tmp folder. Maybe you do not have permissions to write in current folder."
+					if not callback? then process.stdin.destroy() else callback err, fileName
+
+				else
+					log.success "Finished to restore package"
+					if not callback? then process.stdin.destroy() else callback null, fileName
+
+
+
+
+
+
+
+
+
+# ==============================
+# ============================== SERVER FEATURES
+# ==============================
+
+
+
+###
+Check if widget or theme is exists
+###
+exports.onServerIsExists = ( options, callback ) ->
+
+	widget = @.maxmertkit()
+
+	request
+		.get( "#{pack.homepage}/widgets/#{widget.name}" )
+		.set( 'X-Requested-With', 'XMLHttpRequest' )
+		.end ( res ) ->
+			if res.ok and res.status isnt 500 and res.status isnt 404
+				if res.body.done
+					log.success "widget with name #{widget.name} exists."
+					if not callback? then process.stdin.destroy() else callback null, fileName
+				else
+					log.error "widget with name #{widget.name} does not exists."
+					if not callback? then process.stdin.destroy() else callback yes, fileName
+
+
+
+
+
+
+
+
+
+
+
+
+# exports.pack = ->
+
+# 	packFile = "/tmp/#{pack.name}@#{pack.version}.tar"
+
+# 	fstream.Reader
+# 		type: "Directory"
+# 		path: '.'
+	
+# 	.pipe(tar.Pack({}))
+# 		.on 'error', =>
+# 			log.error 'Failed to create package.'
+
+# 	.pipe fstream.Writer( packFile )
+# 		.on "close", =>
+# 			log.success "Finished to create package"
+# 			@.sendPack packFile
+
+
+
+
+# ###
+# Check if widget is exists at the server
+# ###
+# exports.isExist = ( widget, callback ) ->
+
+# 	request
+# 		.get( "#{pack.homepage}/widgets/#{widget.name}" )
+# 		.set('Accept', 'application/json')
+# 		.end (res) ->
+			
+# 			if res.statusCode is 502 or res.statusCode is 404 or not res.body.done
+# 				log.requestError("#{pack.homepage}/widgets/#{widget.name}", widget.name) if widget.options.silent isnt on
+# 				callback( false )
+				
+# 			else
+# 				log.requestSuccess("#{pack.homepage}/widgets/#{widget.name}", widget.name) if widget.options.silent isnt on
+# 				callback( true )
+
+
+
+# ###
+# Init new widget/theme
+# ###
+# exports.init = ( options ) ->
+
+# 	# Writes <pack.maxmertkit> json file
+# 	writeJSON = ( json ) ->
+# 		fs.writeFile pack.maxmertkit, JSON.stringify(json, null, 4), ( err ) ->
+													
+# 			if err then log.error("while initializing – #{err}")
+
+# 			log.success("file #{pack.maxmertkit} successfully created.")
+# 			process.stdin.destroy()
+
+
+
+# 	type = ['widget', 'theme']
+
+
+# 	console.log 'Choose what you will create'
+	
+# 	dialog.choose type, (i) ->
+# 		# console.log 'You chose %s', type[i]
+		
+# 		dialog.prompt "#{type[i]} name: (test) ", ( pkgName ) ->
+# 			pkgName = 'test' if pkgName is ''
+# 			# console.log 'Hello %s', pkgName
+
+# 			dialog.prompt "version: (0.0.0) ", ( version ) ->
+# 				version = '0.0.0' if version is ''
+
+# 				dialog.prompt "description: ", ( description ) ->
+
+# 					dialog.prompt "repository: ", ( repository ) ->
+				
+# 						dialog.prompt "author: ", ( author ) ->
+
+# 							dialog.prompt "license: (BSD) ", ( license ) ->
+# 								license = 'BSD' if license is ''
+
+# 								maxmertkitjson = 
+# 									type: type[i]
+# 									name: pkgName
+# 									version: version
+# 									description: description
+# 									repository: repository
+# 									author: author
+# 									license: license
+# 								console.log ""
+							
+# 								dialog.confirm "Is everything correct? \n\n #{JSON.stringify(maxmertkitjson, null, 4)}\n-> ", ( ok ) ->
+									
+# 									console.log ""
+
+# 									if not ok
+# 										log.error("Initializing canceled")
+# 										process.stdin.destroy()
+
+# 									else
+# 										fs.exists pack.maxmertkit, ( exists ) ->
+											
+# 											if not exists
+# 												writeJSON maxmertkitjson
+
+# 											else #if exists
+# 												log.error("File #{pack.maxmertkit} already exists.")
+
+# 												dialog.confirm "Do you want to overwrite it? -> ", ( ok ) ->
+
+# 													if not ok
+# 														log.error("initialization canceled.")
+# 														process.stdin.destroy()
+
+# 													else
+# 														writeJSON maxmertkitjson
+
+
+
+# exports.install = ( widget, callback ) ->
+
+# 	fileName = "#{widget.name}@#{widget.version}.tar"
+# 	stream = fs.createWriteStream( fileName )
+# 	req = request.get( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}/tar" )
+# 	req.pipe(stream)
+	
+# 	stream.on 'close', ->
+# 		fs
+# 			.createReadStream( fileName )
+# 			.pipe( tar.Extract( path: './' ) )
+# 			.on 'error', ( err )->
+# 				log.error err
+# 			.on 'end', ->
+# 				fs.unlink fileName
+# 				log.success "Installation of #{fileName} complete."
+
+# 	callback()
+
+
+# exports.sendPack = (file) ->
+	
+# 	fs.readFile pack.maxmertkit, ( err, data ) ->
+
+# 		if err
+# 			log.error("can\'t find #{pack.maxmertkit} file.")
+# 			process.stdin.destroy()
+
+# 		if data?
+# 			maxmertkitjson = JSON.parse data
+
+# 			request
+# 				.post( "#{pack.homepage}/#{maxmertkitjson.author}/publish" )
+# 				.attach( path.basename( file ), file )
+# 				.end ( res ) ->
+# 					console.log res
+
+
+# exports.checkPack = ->
+
+# 	fs.readFile pack.maxmertkit, ( err, data ) =>
+
+# 		if err
+# 			log.error("can\'t find #{pack.maxmertkit} file.")
+# 			process.stdin.destroy()
+
+# 		if data?
+# 			maxmertkitjson = JSON.parse data
+
+# 			request
+# 				.get( "#{pack.homepage}/widgets/#{maxmertkitjson.name}/#{maxmertkitjson.version}" )
+# 				.set('Accept', 'application/json')
+# 				.end (res) => 
+# 					if not res.ok
+# 						log.requestError("Getting information about #{pack.name} if failed.")
+# 						process.stdin.destroy()
+# 					else
+# 						@.pack()
+
+
+# exports.publish = ( author ) ->
+
+# 	dialog.password 'Password: ', ( pass ) =>
+# 		request
+# 			.post( "#{pack.homepage}/loginAJAX" )
+# 			.send
+# 				username: author
+# 				password: pass
+# 			.set('Accept', 'application/json')
+# 			.end (res) =>
+				
+# 				if not res.ok
+# 					log.error("Authorization Failed. Check the author name in maxmert.json or your password. Or maybe you need to register at #{pack.homepage}?")
+# 					process.stdin.destroy()
+# 				else
+# 					log.success("Authorization succeed.")
+# 					@.checkPack()
+
+					# @.pack ->
+					# 	@.sendPack()
+					# process.stdin.destroy()
+
+
+
+
+
+# exports.installJSON = () ->
+
+# 	fs.readFile pack.maxmertkit, ( err, data ) ->
+
+# 		if err
+# 			log.error("can\'t find #{pack.maxmertkit} file.")
+# 			process.stdin.destroy()
+
+# 		if data?
+# 			maxmertkitjson = JSON.parse data
+
+# 			if not maxmertkitjson.dependences?
+# 				console.log "There is no dependences in #{pack.maxmertkit} file."
+# 				process.stdin.destroy()
+
+# 			else
+# 				for widget, version of maxmertkitjson.dependences
+# 					exports.install 
+# 						name: widget
+# 						version: version
+# 					, ->
 
 				# console.log exports.install
 
