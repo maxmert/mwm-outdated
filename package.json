@@ -15,7 +15,7 @@
 		"superagent": "*",
 		"async": "*",
 		"cli-color": "*",
-		"tar": "0.1.14",
+		"adm-zip": "*",
 		"fstream": "*",
 		"multipart": "*"
 	},

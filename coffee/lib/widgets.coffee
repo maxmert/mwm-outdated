@@ -3,7 +3,7 @@ request = require 'superagent'
 dialog = require 'commander'
 path = require 'path'
 log = require './logger'
-tar = require 'tar'
+admZip = require 'adm-zip'
 async = require 'async'
 
 fs = require 'fs'
@@ -134,23 +134,57 @@ exports.pack = ( options, callback ) ->
 
 	maxmertkitjson = @.maxmertkit()
 
+	# Check if package name is the same as folder name
 	if path.basename( path.resolve('.') ) is "#{maxmertkitjson.name}"
 
-		fileName = "#{maxmertkitjson.name}@#{maxmertkitjson.version}.tar"
+		fileName = "#{maxmertkitjson.name}@#{maxmertkitjson.version}.zip"
 
-		fstream.Reader
-			type: "Directory"
-			path: '.'
-		
-		.pipe(tar.Pack({}))
-			.on 'error', (err) =>
+		zip = new admZip()
+
+		fs.readdir '.', ( err, files ) =>
+			if err
 				log.error 'Failed to create package.'
 				if not callback? then process.stdin.destroy() else callback err, fileName
 
-		.pipe fstream.Writer( path.join '/tmp/', fileName )
-			.on "close", =>
-				log.success "Finished to create package"
-				if not callback? then @.restore( fileName, callback ) else callback null, fileName
+			else
+				async.forEachSeries files, ( file, callback ) =>
+
+					if file.charAt(0) isnt '.' and file isnt 'dependences'
+
+						if fs.lstatSync( file ).isDirectory()
+							zip.addLocalFolder( file )
+						
+						else
+							zip.addLocalFile( file )
+
+					callback()
+				, ( err ) =>
+
+					if err
+						log.error 'Failed to create package.'
+						if not callback? then process.stdin.destroy() else callback err, fileName
+					else
+						zip.writeZip path.join( '/tmp/', fileName )
+						log.success "Finished to create package"
+						if not callback? then @.restore( fileName, callback ) else callback null, fileName
+
+
+				# files.forEach ( file ) ->
+				# 	if file.charAt(0) isnt '.' and file isnt 'dependences'
+				# 		file
+		# fstream.Reader
+		# 	type: "Directory"
+		# 	path: '.'
+		
+		# .pipe(tar.Pack({}))
+		# 	.on 'error', (err) =>
+		# 		log.error 'Failed to create package.'
+		# 		if not callback? then process.stdin.destroy() else callback err, fileName
+
+		# .pipe fstream.Writer( path.join '/tmp/', fileName )
+		# 	.on "close", =>
+		# 		log.success "Finished to create package"
+		# 		if not callback? then @.restore( fileName, callback ) else callback null, fileName
 
 
 	else

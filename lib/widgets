@@ -1,4 +1,4 @@
-var async, dialog, fs, fstream, log, pack, path, request, tar;
+var admZip, async, dialog, fs, fstream, log, pack, path, request;
 
 pack = require('../package.json');
 
@@ -10,7 +10,7 @@ path = require('path');
 
 log = require('./logger');
 
-tar = require('tar');
+admZip = require('adm-zip');
 
 async = require('async');
 
@@ -153,29 +153,50 @@ Packing widget or theme in current folder. The folders name should be the same a
 
 
 exports.pack = function(options, callback) {
-  var fileName, maxmertkitjson,
+  var fileName, maxmertkitjson, zip,
     _this = this;
   maxmertkitjson = this.maxmertkit();
   if (path.basename(path.resolve('.')) === ("" + maxmertkitjson.name)) {
-    fileName = "" + maxmertkitjson.name + "@" + maxmertkitjson.version + ".tar";
-    return fstream.Reader({
-      type: "Directory",
-      path: '.'
-    }).pipe(tar.Pack({})).on('error', function(err) {
-      log.error('Failed to create package.');
-      if (!(callback != null)) {
-        return process.stdin.destroy();
+    fileName = "" + maxmertkitjson.name + "@" + maxmertkitjson.version + ".zip";
+    zip = new admZip();
+    return fs.readdir('.', function(err, files) {
+      if (err) {
+        log.error('Failed to create package.');
+        if (!(callback != null)) {
+          return process.stdin.destroy();
+        } else {
+          return callback(err, fileName);
+        }
       } else {
-        return callback(err, fileName);
+        return async.forEachSeries(files, function(file, callback) {
+          if (file.charAt(0) !== '.' && file !== 'dependences') {
+            if (fs.lstatSync(file).isDirectory()) {
+              zip.addLocalFolder(file);
+            } else {
+              zip.addLocalFile(file);
+            }
+          }
+          return callback();
+        }, function(err) {
+          if (err) {
+            log.error('Failed to create package.');
+            if (!(callback != null)) {
+              return process.stdin.destroy();
+            } else {
+              return callback(err, fileName);
+            }
+          } else {
+            zip.writeZip(path.join('/tmp/', fileName));
+            log.success("Finished to create package");
+            if (!(callback != null)) {
+              return _this.restore(fileName, callback);
+            } else {
+              return callback(null, fileName);
+            }
+          }
+        });
       }
-    }).pipe(fstream.Writer(path.join('/tmp/', fileName)).on("close", function() {
-      log.success("Finished to create package");
-      if (!(callback != null)) {
-        return _this.restore(fileName, callback);
-      } else {
-        return callback(null, fileName);
-      }
-    }));
+    });
   } else {
     return log.error("The folders name (" + (path.basename(path.resolve('.'))) + ") should be the same as your package name in maxmertkit.json (" + maxmertkitjson.name + ").");
   }
