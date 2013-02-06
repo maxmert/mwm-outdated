@@ -1,4 +1,4 @@
-var admZip, async, dialog, fs, fstream, log, pack, path, request;
+var async, dialog, fs, fstream, log, ncp, pack, path, request, tar;
 
 pack = require('../package.json');
 
@@ -10,11 +10,13 @@ path = require('path');
 
 log = require('./logger');
 
-admZip = require('adm-zip');
-
 async = require('async');
 
+tar = require('tar');
+
 fs = require('fs');
+
+ncp = require('ncp').ncp;
 
 fstream = require('fstream');
 
@@ -153,53 +155,84 @@ Packing widget or theme in current folder. The folders name should be the same a
 
 
 exports.pack = function(options, callback) {
-  var fileName, maxmertkitjson, zip,
+  var directoryName, fileName, maxmertkitjson,
     _this = this;
   maxmertkitjson = this.maxmertkit();
   if (path.basename(path.resolve('.')) === ("" + maxmertkitjson.name)) {
-    fileName = "" + maxmertkitjson.name + "@" + maxmertkitjson.version + ".zip";
-    zip = new admZip();
-    return fs.readdir('.', function(err, files) {
-      if (err) {
-        log.error('Failed to create package.');
-        if (!(callback != null)) {
-          return process.stdin.destroy();
-        } else {
-          return callback(err, fileName);
-        }
-      } else {
-        return async.forEachSeries(files, function(file, callback) {
-          if (file.charAt(0) !== '.' && file !== 'dependences') {
-            if (fs.lstatSync(file).isDirectory()) {
-              zip.addLocalFolder(file);
-            } else {
-              zip.addLocalFile(file);
-            }
-          }
-          return callback();
-        }, function(err) {
-          if (err) {
+    directoryName = "/tmp/" + maxmertkitjson.name;
+    fileName = "" + maxmertkitjson.name + "@" + maxmertkitjson.version + ".tar";
+    return async.series({
+      dir: function(callback) {
+        return fs.mkdir(directoryName, 0x1ff, function() {
+          return callback(null, directoryName);
+        });
+      },
+      store: function(callback) {
+        return _this.store(callback);
+      },
+      pack: function(callback) {
+        return fstream.Reader({
+          path: directoryName,
+          type: 'Directory'
+        }).pipe(tar.Pack({})).pipe(fstream.Writer("/tmp/" + fileName).on('close', function(err) {
+          if (err != null) {
             log.error('Failed to create package.');
             if (!(callback != null)) {
               return process.stdin.destroy();
             } else {
-              return callback(err, fileName);
+              return callback(err, directoryName);
             }
           } else {
-            zip.writeZip(path.join('/tmp/', fileName));
-            log.success("Finished to create package");
-            if (!(callback != null)) {
-              return _this.restore(fileName, callback);
-            } else {
-              return callback(null, fileName);
-            }
+            return callback(null, directoryName);
           }
-        });
+        }));
+      },
+      restore: function(callback) {
+        return _this.restore(fileName, callback);
       }
+    }, function(err, res) {
+      return log.success("Finished to create package");
     });
   } else {
     return log.error("The folders name (" + (path.basename(path.resolve('.'))) + ") should be the same as your package name in maxmertkit.json (" + maxmertkitjson.name + ").");
   }
+};
+
+/*
+Store current folder in /tmp/ folder.
+*/
+
+
+exports.store = function(callback) {
+  var directoryName, maxmertkitjson;
+  maxmertkitjson = this.maxmertkit();
+  directoryName = "/tmp/" + maxmertkitjson.name;
+  return ncp('.', directoryName, {
+    filter: function(name) {
+      var currentName;
+      currentName = path.relative('.', name).split(path.sep)[0];
+      if (currentName.charAt(0) === '.' || path.relative('.', name).indexOf('dependences') !== -1) {
+        return false;
+      } else {
+        return true;
+      }
+    }
+  }, function(err) {
+    if (err) {
+      log.error("Failed to store current directory to " + directoryName + " folder. Do you have permissions?");
+      if (!(callback != null)) {
+        return process.stdin.destroy();
+      } else {
+        return callback(err, directoryName);
+      }
+    } else {
+      if (!(callback != null)) {
+        return process.stdin.destroy();
+      } else {
+        return callback(null, directoryName);
+      }
+    }
+  });
 };
 
 /*
@@ -226,7 +259,6 @@ exports.restore = function(fileName, callback) {
             return callback(err, fileName);
           }
         } else {
-          log.success("Finished to restore package");
           if (!(callback != null)) {
             return process.stdin.destroy();
           } else {
@@ -236,6 +268,20 @@ exports.restore = function(fileName, callback) {
       });
     }
   });
+};
+
+/*
+Unpacking widget or theme in current folder.
+*/
+
+
+exports.unpack = function(fileName, callback) {
+  var file, maxmertkitjson, zip, zipEntries;
+  maxmertkitjson = this.maxmertkit();
+  file = fileName || ("" + maxmertkitjson.name + "@" + maxmertkitjson.version + ".zip");
+  zip = new admZip(file);
+  zipEntries = zip.getEntries();
+  return console.log(zipEntries);
 };
 
 /*

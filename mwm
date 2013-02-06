@@ -20,7 +20,11 @@ program.command('init').callback(function(options) {
 
 program.command('pack').callback(function(options) {
   return widgets.pack(options);
-}).help('Create .tar file in current folder.');
+}).help('Create .zip file in current folder.');
+
+program.command('unpack').callback(function(options) {
+  return widgets.unpack(null, options);
+}).help('Unpack .zip file in current folder.');
 
 program.command('check').callback(function(options) {
   return widgets.onServerIsExists(options);

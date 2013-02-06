@@ -30,7 +30,19 @@ program
 		widgets.pack options
 
 
-	.help 'Create .tar file in current folder.'
+	.help 'Create .zip file in current folder.'
+
+
+
+program
+	.command('unpack')
+
+	.callback (options) ->
+
+		widgets.unpack null, options
+
+
+	.help 'Unpack .zip file in current folder.'
 
 
 
