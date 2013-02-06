@@ -58,6 +58,44 @@ program
 
 
 
+# ==============================
+# ============================== SERVER FEATURES
+# ==============================
+
+
+program
+	.command('exist')
+
+	.callback (options) ->
+
+		widgets.onServerIsExistsVersion null, options
+
+
+	.help 'Check if widget or theme with name specified in maxmertkit.json is exist on the server.'
+
+
+
+
+
+
+program
+	.command('publish')
+
+	.callback (options) ->
+
+		widgets.onServerPublish null, options
+
+
+	.help 'Publish current version of widget or theme.'
+	
+
+
+
+
+
+
+
+
 # program
 # 	.command('install')
 

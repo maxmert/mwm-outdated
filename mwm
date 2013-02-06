@@ -30,4 +30,12 @@ program.command('check').callback(function(options) {
   return widgets.onServerIsExists(options);
 }).help('Check if package with that name already exists.');
 
+program.command('exist').callback(function(options) {
+  return widgets.onServerIsExistsVersion(null, options);
+}).help('Check if widget or theme with name specified in maxmertkit.json is exist on the server.');
+
+program.command('publish').callback(function(options) {
+  return widgets.onServerPublish(null, options);
+}).help('Publish current version of widget or theme.');
+
 program.parse();

@@ -1,4 +1,4 @@
-var async, dialog, fs, fstream, log, ncp, pack, path, request, tar;
+var async, dialog, fs, fstream, log, ncp, pack, path, request, rmdirSyncForce, tar;
 
 pack = require('../package.json');
 
@@ -149,6 +149,28 @@ exports.write = function(json, options) {
   });
 };
 
+rmdirSyncForce = function(path) {
+  var file, fileStats, files, filesLength, _i, _len;
+  if (path[path.length - 1] !== '/') {
+    path = path + '/';
+  }
+  files = fs.readdirSync(path);
+  filesLength = files.length;
+  if (filesLength) {
+    for (_i = 0, _len = files.length; _i < _len; _i++) {
+      file = files[_i];
+      fileStats = fs.statSync(path + file);
+      if (fileStats.isFile()) {
+        fs.unlinkSync(path + file);
+      }
+      if (fileStats.isDirectory()) {
+        rmdirSyncForce(path + file);
+      }
+    }
+  }
+  return fs.rmdirSync(path);
+};
+
 /*
 Packing widget or theme in current folder. The folders name should be the same as your package name in maxmertkit.json
 */
@@ -162,6 +184,14 @@ exports.pack = function(options, callback) {
     directoryName = "/tmp/" + maxmertkitjson.name;
     fileName = "" + maxmertkitjson.name + "@" + maxmertkitjson.version + ".tar";
     return async.series({
+      rmdir: function(callback) {
+        return fs.exists(directoryName, function(exists) {
+          if (exists) {
+            rmdirSyncForce(directoryName, callback);
+          }
+          return callback(null, 'yes');
+        });
+      },
       dir: function(callback) {
         return fs.mkdir(directoryName, 0x1ff, function() {
           return callback(null, directoryName);
@@ -180,10 +210,10 @@ exports.pack = function(options, callback) {
             if (!(callback != null)) {
               return process.stdin.destroy();
             } else {
-              return callback(err, directoryName);
+              return callback(err, fileName);
             }
           } else {
-            return callback(null, directoryName);
+            return callback(null, fileName);
           }
         }));
       },
@@ -191,10 +221,20 @@ exports.pack = function(options, callback) {
         return _this.restore(fileName, callback);
       }
     }, function(err, res) {
-      return log.success("Finished to create package");
+      log.success("Finished to create package");
+      if (!(callback != null)) {
+        return process.stdin.destroy();
+      } else {
+        return callback(null, fileName);
+      }
     });
   } else {
-    return log.error("The folders name (" + (path.basename(path.resolve('.'))) + ") should be the same as your package name in maxmertkit.json (" + maxmertkitjson.name + ").");
+    log.error("The folders name (" + (path.basename(path.resolve('.'))) + ") should be the same as your package name in maxmertkit.json (" + maxmertkitjson.name + ").");
+    if (!(callback != null)) {
+      return process.stdin.destroy();
+    } else {
+      return callback(false, fileName);
+    }
   }
 };
 
@@ -276,12 +316,26 @@ Unpacking widget or theme in current folder.
 
 
 exports.unpack = function(fileName, callback) {
-  var file, maxmertkitjson, zip, zipEntries;
+  var maxmertkitjson;
   maxmertkitjson = this.maxmertkit();
-  file = fileName || ("" + maxmertkitjson.name + "@" + maxmertkitjson.version + ".zip");
-  zip = new admZip(file);
-  zipEntries = zip.getEntries();
-  return console.log(zipEntries);
+  fileName = "" + maxmertkitjson.name + "@" + maxmertkitjson.version + ".tar";
+  return fs.createReadStream(path.join('.', fileName)).pipe(tar.Extract({
+    path: '.'
+  })).on('error', function(err) {
+    log.error("Failed to unpack " + fileName + " width error:\n" + err);
+    if (!(callback != null) || typeof callback === 'object') {
+      return process.stdin.destroy();
+    } else {
+      return callback(err, fileName);
+    }
+  }).on('end', function() {
+    log.success("File " + fileName + " unpacked.");
+    if (!(callback != null) || typeof callback === 'object') {
+      return process.stdin.destroy();
+    } else {
+      return callback(null, fileName);
+    }
+  });
 };
 
 /*
@@ -295,20 +349,131 @@ exports.onServerIsExists = function(options, callback) {
   return request.get("" + pack.homepage + "/widgets/" + widget.name).set('X-Requested-With', 'XMLHttpRequest').end(function(res) {
     if (res.ok && res.status !== 500 && res.status !== 404) {
       if (res.body.done) {
-        log.success("widget with name " + widget.name + " exists.");
-        if (!(callback != null)) {
+        log.requestSuccess("widget with name " + widget.name + " exists.");
+        if (!(callback != null) || typeof callback === 'object') {
           return process.stdin.destroy();
         } else {
-          return callback(null, fileName);
+          return callback(null, widget.name);
         }
       } else {
-        log.error("widget with name " + widget.name + " does not exists.");
-        if (!(callback != null)) {
+        log.requestError("widget with name " + widget.name + " does not exist.");
+        if (!(callback != null) || typeof callback === 'object') {
           return process.stdin.destroy();
         } else {
-          return callback(true, fileName);
+          return callback(true, widget.name);
         }
       }
+    }
+  });
+};
+
+/*
+Check if widget or theme with current version is exists
+*/
+
+
+exports.onServerIsExistsVersion = function(options, callback) {
+  var widget,
+    _this = this;
+  widget = this.maxmertkit();
+  return async.series({
+    exists: function(callback) {
+      return _this.onServerIsExists(options, callback);
+    }
+  }, function(err, res) {
+    if (err) {
+      if (!(callback != null) || typeof callback === 'object') {
+        return process.stdin.destroy();
+      } else {
+        return callback(err, widget.name);
+      }
+    } else {
+      return request.get("" + pack.homepage + "/widgets/" + widget.name + "/" + widget.version).set('X-Requested-With', 'XMLHttpRequest').end(function(res) {
+        if (res.ok && res.status !== 500 && res.status !== 404) {
+          if (res.body.done) {
+            log.requestSuccess("widget with name " + widget.name + " exists.");
+            if (!(callback != null) || typeof callback === 'object') {
+              return process.stdin.destroy();
+            } else {
+              return callback(null, widget.name);
+            }
+          } else {
+            log.requestError("widget with name " + widget.name + " does not exist.");
+            if (!(callback != null) || typeof callback === 'object') {
+              return process.stdin.destroy();
+            } else {
+              return callback(true, widget.name);
+            }
+          }
+        }
+      });
+    }
+  });
+};
+
+/*
+Publish current version of widget or theme
+*/
+
+
+exports.onServerPublish = function(options, callback) {
+  var fileName, widget,
+    _this = this;
+  widget = this.maxmertkit();
+  fileName = "" + widget.name + "@" + widget.version + ".tar";
+  return async.series({
+    pack: function(callback) {
+      return _this.pack(options, callback);
+    },
+    password: function(callback) {
+      return dialog.password('Enter your password: ', function(password) {
+        return callback(null, password);
+      });
+    }
+  }, function(err, res) {
+    if (err) {
+      log.error("Could not publish widget.");
+      if (!(callback != null) || typeof callback === 'object') {
+        return process.stdin.destroy();
+      } else {
+        return callback(err, widget.name);
+      }
+    } else {
+      return request.post("" + pack.homepage + "/widgets/" + widget.name + "/" + widget.version + "/publish").attach('pack', fileName).field('packName', res.pack).field('password', res.password).end(function(res) {
+        if (res.ok && res.status !== 500 && res.status !== 404) {
+          if (res.body.done) {
+            log.requestSuccess("widget " + widget.name + "@" + widget.version + " successfully published.");
+            if (!(callback != null) || typeof callback === 'object') {
+              return process.stdin.destroy();
+            } else {
+              return callback(null, widget.name);
+            }
+          } else {
+            if (res.body.version != null) {
+              log.requestError("widget " + widget.name + "@" + widget.version + " already exists. Please change version number.");
+              if (!(callback != null) || typeof callback === 'object') {
+                return process.stdin.destroy();
+              } else {
+                return callback(true, widget.name);
+              }
+            } else {
+              log.requestError("widget with name " + widget.name + "@" + widget.version + " could not be publish. Check user and password!", 401);
+              if (!(callback != null) || typeof callback === 'object') {
+                return process.stdin.destroy();
+              } else {
+                return callback(true, widget.name);
+              }
+            }
+          }
+        } else {
+          log.requestError("Could not publish " + widget.name + "@" + widget.version + ".");
+          if (!(callback != null) || typeof callback === 'object') {
+            return process.stdin.destroy();
+          } else {
+            return callback(true, widget.name);
+          }
+        }
+      });
     }
   });
 };

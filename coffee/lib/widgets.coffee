@@ -127,6 +127,24 @@ exports.write = ( json, options ) ->
 
 
 
+rmdirSyncForce = ( path ) ->
+	if path[path.length - 1] isnt '/'
+		path = path + '/'
+
+	files = fs.readdirSync path
+	filesLength = files.length
+
+	if filesLength
+		for file in files
+			fileStats = fs.statSync path+file
+			if fileStats.isFile()
+				fs.unlinkSync(path + file)
+			if fileStats.isDirectory()
+				rmdirSyncForce(path + file)
+
+	fs.rmdirSync path
+
+
 
 ###
 Packing widget or theme in current folder. The folders name should be the same as your package name in maxmertkit.json
@@ -141,15 +159,27 @@ exports.pack = ( options, callback ) ->
 		directoryName = "/tmp/#{maxmertkitjson.name}"
 		fileName = "#{maxmertkitjson.name}@#{maxmertkitjson.version}.tar"
 
+		# Need to do a lot of things one after another
 		async.series
 
+			# Remove directory in /tmp folder is it exists
+			rmdir: ( callback ) =>
+				fs.exists directoryName, ( exists ) ->
+					if exists
+						rmdirSyncForce directoryName, callback
+					
+					callback null, 'yes'
+
+			# Create directory in /tmp folder
 			dir: ( callback ) =>
 				fs.mkdir directoryName, 0o0777, () ->
 					callback( null, directoryName )
 
+			# Copy current widget or theme to /tmp without dependencies
 			store: ( callback ) =>				
 				@.store callback
 
+			# Pack current widget
 			pack: ( callback ) =>
 				fstream.Reader
 					path: directoryName
@@ -158,49 +188,23 @@ exports.pack = ( options, callback ) ->
 				.pipe fstream.Writer( "/tmp/#{fileName}" ).on 'close', ( err ) ->
 					if err?
 						log.error 'Failed to create package.'
-						if not callback? then process.stdin.destroy() else callback err, directoryName
+						if not callback? then process.stdin.destroy() else callback err, fileName
 					else
-						callback(null, directoryName)
+						callback(null, fileName)
 
+			# Restore .tar file to the current directory
 			restore: ( callback ) =>
 				@.restore( fileName, callback )
 
 
 		, ( err, res ) ->
 			log.success "Finished to create package"
-
-# 		zip = new admZip()
-
-# 		fs.readdir '.', ( err, files ) =>
-# 			if err
-# 				log.error 'Failed to create package.'
-# 				if not callback? then process.stdin.destroy() else callback err, fileName
-
-# 			else
-# 				async.forEachSeries files, ( file, callback ) =>
-
-# 					if file.charAt(0) isnt '.' and file isnt 'dependences'
-
-# 						if fs.lstatSync( file ).isDirectory()
-# 							zip.addLocalFolder( file )
-						
-# 						else
-# 							zip.addLocalFile( file )
-
-# 					callback()
-# 				, ( err ) =>
-
-# 					if err
-# 						log.error 'Failed to create package.'
-# 						if not callback? then process.stdin.destroy() else callback err, fileName
-# 					else
-# 						zip.writeZip path.join( '/tmp/', fileName )
-# 						log.success "Finished to create package"
-# 						if not callback? then @.restore( fileName, callback ) else callback null, fileName
+			if not callback? then process.stdin.destroy() else callback null, fileName
 
 	else
 
 		log.error "The folders name (#{path.basename( path.resolve('.') )}) should be the same as your package name in maxmertkit.json (#{maxmertkitjson.name})."
+		if not callback? then process.stdin.destroy() else callback no, fileName
 
 
 
@@ -260,13 +264,17 @@ Unpacking widget or theme in current folder.
 exports.unpack = ( fileName, callback ) ->
 
 	maxmertkitjson = @.maxmertkit()
-
-	file = fileName or "#{maxmertkitjson.name}@#{maxmertkitjson.version}.zip"
-
-	zip = new admZip file
-	zipEntries = zip.getEntries()
-
-	console.log zipEntries
+	fileName = "#{maxmertkitjson.name}@#{maxmertkitjson.version}.tar"
+	fs
+		.createReadStream( path.join '.', fileName )
+		.pipe tar.Extract
+			path: '.'
+		.on 'error', ( err ) ->
+			log.error "Failed to unpack #{fileName} width error:\n#{err}"
+			if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback err, fileName
+		.on 'end', () ->
+			log.success "File #{fileName} unpacked."
+			if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback null, fileName
 
 
 
@@ -292,13 +300,101 @@ exports.onServerIsExists = ( options, callback ) ->
 		.end ( res ) ->
 			if res.ok and res.status isnt 500 and res.status isnt 404
 				if res.body.done
-					log.success "widget with name #{widget.name} exists."
-					if not callback? then process.stdin.destroy() else callback null, fileName
+					log.requestSuccess "widget with name #{widget.name} exists."
+					if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback null, widget.name
 				else
-					log.error "widget with name #{widget.name} does not exists."
-					if not callback? then process.stdin.destroy() else callback yes, fileName
+					log.requestError "widget with name #{widget.name} does not exist."
+					if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback yes, widget.name
 
 
+
+
+
+###
+Check if widget or theme with current version is exists
+###
+exports.onServerIsExistsVersion = ( options, callback ) ->
+
+	widget = @.maxmertkit()
+
+	async.series
+
+		exists: ( callback ) =>
+			@.onServerIsExists( options, callback )
+		
+	, ( err, res ) =>
+		
+		if err
+			if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback err, widget.name
+		else
+			
+			request
+				.get( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}" )
+				.set( 'X-Requested-With', 'XMLHttpRequest' )
+				.end ( res ) ->
+					if res.ok and res.status isnt 500 and res.status isnt 404
+						if res.body.done
+							log.requestSuccess "widget with name #{widget.name} exists."
+							if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback null, widget.name
+						else
+							log.requestError "widget with name #{widget.name} does not exist."
+							if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback yes, widget.name
+
+
+
+
+
+###
+Publish current version of widget or theme
+###
+exports.onServerPublish = ( options, callback ) ->
+
+	widget = @.maxmertkit()
+
+	fileName = "#{widget.name}@#{widget.version}.tar"
+
+	async.series
+
+		# exists: ( callback ) =>
+		# 	@.onServerIsExistsVersion( options, callback )
+
+		pack: ( callback ) =>
+			@.pack( options, callback )
+
+		password: ( callback ) =>
+			dialog.password 'Enter your password: ', ( password ) ->
+				callback null, password
+
+	, ( err, res ) =>
+		
+		if err
+			log.error "Could not publish widget."
+			if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback err, widget.name
+		else
+			request
+				.post( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}/publish" )
+				.attach( 'pack', fileName )
+				.field( 'packName', res.pack)
+				.field( 'password', res.password)
+				.end ( res ) ->
+					if res.ok and res.status isnt 500 and res.status isnt 404
+						
+						if res.body.done
+							log.requestSuccess "widget #{widget.name}@#{widget.version} successfully published."
+							if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback null, widget.name
+						
+						else
+							if res.body.version? 
+								log.requestError "widget #{widget.name}@#{widget.version} already exists. Please change version number."
+								if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback yes, widget.name
+
+							else
+								log.requestError "widget with name #{widget.name}@#{widget.version} could not be publish. Check user and password!", 401
+								if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback yes, widget.name
+
+					else
+						log.requestError "Could not publish #{widget.name}@#{widget.version}."
+						if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback yes, widget.name
 
 
 
