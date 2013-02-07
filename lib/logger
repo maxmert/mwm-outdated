@@ -21,7 +21,7 @@ logStatusSuccess = log.xterm(34);
 
 logWidgetName = log.xterm(61);
 
-exports.requestError = function(msg, widget, type, status) {
+exports.requestError = function(msg, type, status, widget) {
   if (type == null) {
     type = 'ERRR';
   }
@@ -31,7 +31,7 @@ exports.requestError = function(msg, widget, type, status) {
   return console.log("" + (logName(pack.name)) + " " + (logTypeError(type)) + " " + (logStatusError(status)) + " " + (logWidgetName(widget)) + " – " + msg);
 };
 
-exports.requestSuccess = function(msg, widget, type, status) {
+exports.requestSuccess = function(msg, type, status, widget) {
   if (type == null) {
     type = 'http';
   }

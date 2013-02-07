@@ -420,13 +420,16 @@ exports.onServerPublish = function(options, callback) {
   var fileName, widget,
     _this = this;
   widget = this.maxmertkit();
+  if (!(widget.dependencies != null)) {
+    widget.dependencies = [];
+  }
   fileName = "" + widget.name + "@" + widget.version + ".tar";
   return async.series({
     pack: function(callback) {
       return _this.pack(options, callback);
     },
     password: function(callback) {
-      return dialog.password('Enter your password: ', function(password) {
+      return dialog.password('\nEnter your password: ', function(password) {
         return callback(null, password);
       });
     }
@@ -439,34 +442,16 @@ exports.onServerPublish = function(options, callback) {
         return callback(err, widget.name);
       }
     } else {
-      return request.post("" + pack.homepage + "/widgets/" + widget.name + "/" + widget.version + "/publish").attach('pack', fileName).field('packName', res.pack).field('password', res.password).end(function(res) {
-        if (res.ok && res.status !== 500 && res.status !== 404) {
-          if (res.body.done) {
-            log.requestSuccess("widget " + widget.name + "@" + widget.version + " successfully published.");
-            if (!(callback != null) || typeof callback === 'object') {
-              return process.stdin.destroy();
-            } else {
-              return callback(null, widget.name);
-            }
+      return request.post("" + pack.homepage + "/widgets/" + widget.name + "/" + widget.version + "/publish").set('X-Requested-With', 'XMLHttpRequest').attach('pack', fileName).field('packName', res.pack).field('name', widget.name).field('version', widget.version).field('password', res.password).field('username', widget.author).end(function(res) {
+        if (res.ok) {
+          log.requestSuccess("widget " + widget.name + "@" + widget.version + " successfully published.");
+          if (!(callback != null) || typeof callback === 'object') {
+            return process.stdin.destroy();
           } else {
-            if (res.body.version != null) {
-              log.requestError("widget " + widget.name + "@" + widget.version + " already exists. Please change version number.");
-              if (!(callback != null) || typeof callback === 'object') {
-                return process.stdin.destroy();
-              } else {
-                return callback(true, widget.name);
-              }
-            } else {
-              log.requestError("widget with name " + widget.name + "@" + widget.version + " could not be publish. Check user and password!", 401);
-              if (!(callback != null) || typeof callback === 'object') {
-                return process.stdin.destroy();
-              } else {
-                return callback(true, widget.name);
-              }
-            }
+            return callback(null, widget.name);
           }
         } else {
-          log.requestError("Could not publish " + widget.name + "@" + widget.version + ".");
+          log.requestError(res.body.msg, 'ERRR', res.status);
           if (!(callback != null) || typeof callback === 'object') {
             return process.stdin.destroy();
           } else {

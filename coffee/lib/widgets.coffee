@@ -350,7 +350,9 @@ Publish current version of widget or theme
 exports.onServerPublish = ( options, callback ) ->
 
 	widget = @.maxmertkit()
+	widget.dependencies = [] if not widget.dependencies?
 
+	
 	fileName = "#{widget.name}@#{widget.version}.tar"
 
 	async.series
@@ -362,7 +364,7 @@ exports.onServerPublish = ( options, callback ) ->
 			@.pack( options, callback )
 
 		password: ( callback ) =>
-			dialog.password 'Enter your password: ', ( password ) ->
+			dialog.password '\nEnter your password: ', ( password ) ->
 				callback null, password
 
 	, ( err, res ) =>
@@ -370,30 +372,25 @@ exports.onServerPublish = ( options, callback ) ->
 		if err
 			log.error "Could not publish widget."
 			if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback err, widget.name
+
 		else
 			request
 				.post( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}/publish" )
+				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				.attach( 'pack', fileName )
 				.field( 'packName', res.pack)
+				.field( 'name', widget.name)
+				.field( 'version', widget.version)
 				.field( 'password', res.password)
+				.field( 'username', widget.author )
+				# .field( 'dependencies', widget.dependencies )
 				.end ( res ) ->
-					if res.ok and res.status isnt 500 and res.status isnt 404
-						
-						if res.body.done
-							log.requestSuccess "widget #{widget.name}@#{widget.version} successfully published."
-							if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback null, widget.name
-						
-						else
-							if res.body.version? 
-								log.requestError "widget #{widget.name}@#{widget.version} already exists. Please change version number."
-								if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback yes, widget.name
-
-							else
-								log.requestError "widget with name #{widget.name}@#{widget.version} could not be publish. Check user and password!", 401
-								if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback yes, widget.name
+					if res.ok
+						log.requestSuccess "widget #{widget.name}@#{widget.version} successfully published."
+						if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback null, widget.name
 
 					else
-						log.requestError "Could not publish #{widget.name}@#{widget.version}."
+						log.requestError res.body.msg, 'ERRR', res.status						
 						if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback yes, widget.name
 
 
