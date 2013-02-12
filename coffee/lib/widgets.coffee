@@ -387,17 +387,57 @@ exports.onServerPublish = ( options, callback ) ->
 				.end ( res ) ->
 					if res.ok
 						log.requestSuccess "widget #{widget.name}@#{widget.version} successfully published."
+						fs.unlink "#{widget.name}@#{widget.version}.tar", (err) ->
+							if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback null, widget.name
+
+					else
+						log.requestError res.body.msg, 'ERRR', res.status
+						fs.unlink "#{widget.name}@#{widget.version}.tar", (err) ->				
+							if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback yes, widget.name
+
+
+
+
+
+
+###
+Unpublish current version of widget or theme
+###
+exports.onServerUnpublish = ( options, callback ) ->
+
+	widget = @.maxmertkit()
+
+	fileName = "#{widget.name}@#{widget.version}.tar"
+
+	async.series
+
+		password: ( callback ) =>
+			dialog.password '\nEnter your password: ', ( password ) ->
+				callback null, password
+
+	, ( err, res ) =>
+
+		if err
+			log.error "Could not unpublish widget."
+			if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback err, widget.name
+
+		else
+			request
+				.del( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}" )
+				.set( 'X-Requested-With', 'XMLHttpRequest' )
+				.field( 'packName', fileName)
+				.field( 'name', widget.name)
+				.field( 'version', widget.version)
+				.field( 'password', res.password)
+				.field( 'username', widget.author )
+				.end ( res ) ->
+					if res.ok
+						log.requestSuccess "widget #{widget.name}@#{widget.version} successfully unpublished."
 						if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback null, widget.name
 
 					else
 						log.requestError res.body.msg, 'ERRR', res.status						
 						if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback yes, widget.name
-
-
-
-
-
-
 
 
 

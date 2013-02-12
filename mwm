@@ -38,4 +38,8 @@ program.command('publish').callback(function(options) {
   return widgets.onServerPublish(null, options);
 }).help('Publish current version of widget or theme.');
 
+program.command('unpublish').callback(function(options) {
+  return widgets.onServerUnpublish(null, options);
+}).help('Publish current version of widget or theme.');
+
 program.parse();

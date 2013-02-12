@@ -87,6 +87,19 @@ program
 
 
 	.help 'Publish current version of widget or theme.'
+
+
+
+
+program
+	.command('unpublish')
+
+	.callback (options) ->
+
+		widgets.onServerUnpublish null, options
+
+
+	.help 'Publish current version of widget or theme.'
 	
 
 
