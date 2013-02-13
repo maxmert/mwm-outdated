@@ -251,7 +251,7 @@ exports.store = function(callback) {
     filter: function(name) {
       var currentName;
       currentName = path.relative('.', name).split(path.sep)[0];
-      if (currentName.charAt(0) === '.' || path.relative('.', name).indexOf('dependences') !== -1) {
+      if (currentName.charAt(0) === '.' || path.relative('.', name).indexOf('dependences') !== -1 || path.relative('.', name).indexOf('.tar') !== -1) {
         return false;
       } else {
         return true;

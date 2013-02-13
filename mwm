@@ -26,9 +26,9 @@ program.command('unpack').callback(function(options) {
   return widgets.unpack(null, options);
 }).help('Unpack .zip file in current folder.');
 
-program.command('check').callback(function(options) {
+program.command('exists').callback(function(options) {
   return widgets.onServerIsExists(options);
-}).help('Check if package with that name already exists.');
+}).help('Check if package with that name exists on server.');
 
 program.command('exist').callback(function(options) {
   return widgets.onServerIsExistsVersion(null, options);

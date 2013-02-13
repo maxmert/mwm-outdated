@@ -222,7 +222,7 @@ exports.store = ( callback ) ->
 		filter: (name) ->
 			currentName =  path.relative('.',name).split( path.sep )[0]
 			
-			if currentName.charAt(0) is '.' or path.relative('.',name).indexOf('dependences') isnt -1
+			if currentName.charAt(0) is '.' or path.relative('.',name).indexOf('dependences') isnt -1 or path.relative('.',name).indexOf('.tar') isnt -1
 				no
 			else
 				yes

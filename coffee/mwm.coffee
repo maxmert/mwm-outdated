@@ -47,14 +47,17 @@ program
 
 
 program
-	.command('check')
+	.command('exists')
 
 	.callback (options) ->
 
 		widgets.onServerIsExists options
 
 
-	.help 'Check if package with that name already exists.'
+	.help 'Check if package with that name exists on server.'
+
+
+# TODO: Create checking widget before publishing
 
 
 
