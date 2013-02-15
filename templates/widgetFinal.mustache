@@ -1,0 +1,22 @@
+@import 'params'\n
+@import 'imports'\n
+\n
+{{{data}}}\n
+\n
+@if type-of( $themes ) == list or $themes == default\n
+\n
+\n\t	@each $theme in $themes
+\n		
+\n\t		$index: 1
+\n
+\n\t		@if length( $themes ) > 1
+\n\t\t			$index: index( $themes, $theme )
+\n		
+\n\t		%#{${{name}}}-#{$theme}
+\n\t\t			@include {{name}}( $index )
+\n
+\n\t		@if $dependences == null or ( type-of( $dependences ) == list and index( $dependences, ${{name}} ) == false )
+\n			
+\n\t\t			.#{getClassName( ${{name}}, $theme )}
+\n\t\t\t				@extend %#{${{name}}}-#{$theme}
+		

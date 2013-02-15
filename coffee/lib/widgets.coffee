@@ -1,10 +1,12 @@
 pack = require '../package.json'
+templates = require '../templates.json'
 request = require 'superagent'
 dialog = require 'commander'
 path = require 'path'
 log = require './logger'
 async = require 'async'
 tar = require 'tar'
+mustache = require 'mustache'
 
 fs = require 'fs'
 ncp = require('ncp').ncp
@@ -102,7 +104,7 @@ exports.writeConfirm = ( json, options ) ->
 					else #if exists
 						log.error("File #{pack.maxmertkit} already exists.")
 
-						dialog.confirm "Do you want to overwrite it? -> ", ( ok ) =>
+						dialog.confirm "Do you want to overwrite it and all other files in that folder? -> ", ( ok ) =>
 
 							if not ok
 								log.error("initialization canceled.")
@@ -117,6 +119,7 @@ exports.writeConfirm = ( json, options ) ->
 
 ###
 Writing json to the maxmertkit.json file
+Init other files
 ###
 exports.write = ( json, options ) ->
 
@@ -124,6 +127,19 @@ exports.write = ( json, options ) ->
 
 		if err then log.error "initializing – #{err}."
 		log.success "file #{pack.maxmertkit} successfully created."
+
+	
+	# Initialize _index.sass
+	fs.writeFile '_index.sass', mustache.render( templates.widget, json ) , ( err ) ->
+		
+		if err?
+			log.error "Coluldn\'t initialize _index.sass file."
+			process.stdin.destroy()
+
+		else
+			log.success "file _index.sass successfully created."
+	
+
 
 
 
@@ -178,6 +194,10 @@ exports.pack = ( options, callback ) ->
 			# Copy current widget or theme to /tmp without dependencies
 			store: ( callback ) =>				
 				@.store callback
+
+			# Do code precompilation
+			precompile: ( callback ) =>
+				@.precompile directoryName, callback
 
 			# Pack current widget
 			pack: ( callback ) =>
@@ -278,7 +298,94 @@ exports.unpack = ( fileName, callback ) ->
 
 
 
+###
+Prepare main file of widget for publishing
+###
+exports.precompile = ( directoryName, callback ) ->
 
+	maxmertkitjson = @.maxmertkit()
+	fileName = path.join( directoryName, '_index.sass' )
+
+	async.series
+
+		widget: ( callback ) ->
+
+			fs.readFile fileName, ( err, data ) ->
+
+				if err? then callback( err, null )
+
+				callback null, data
+
+	, ( err, data ) ->
+
+		if err?
+			log.error "Failed to precompile #{fileName}."
+			if not callback? then process.stdin.destroy() else callback err, fileName
+
+		else
+			maxmertkitjson.data = data.widget
+
+			result = mustache.render templates.widgetFinal, maxmertkitjson
+
+			fs.writeFile fileName, result, ( err ) ->
+
+					if err?
+						log.error "Failed to precompile #{fileName}."
+						if not callback? then process.stdin.destroy() else callback err, fileName
+
+					else
+						if not callback? then process.stdin.destroy() else callback null, fileName
+
+
+
+
+###
+Install all dependences
+###
+exports.install = ->
+
+	maxmertkitjson = @.maxmertkit()
+
+	if not maxmertkitjson.dependences? or maxmertkitjson.dependences.length <= 0
+		log.error "Couldn\'t install your dependences because you don\'t have any."
+		process.stdin.destroy()
+
+	else
+
+		deps = maxmertkitjson.dependences
+		dependences = []
+
+		for name, version of deps
+			dependences.push name: name, version: version
+
+		async.series
+
+			exists: ( callback ) =>
+		
+				async.every dependences, @onServerIsExistsVersion, (err, results) =>
+					if err
+						callback err, null
+
+					else
+						callback null, yes
+
+			get: ( callback ) =>
+
+				async.every dependences, @onServerGetDependencyWidget, ( err, results ) =>
+
+					if err
+						callback err, null
+
+					else
+						callback null, yes
+
+
+		, ( err, data ) ->
+
+			if err?
+				console.log '\n'
+				log.error "Installation aborted because some widgets or their versions don\'t exists on server."
+				process.stdin.destroy()
 
 
 # ==============================
@@ -288,23 +395,59 @@ exports.unpack = ( fileName, callback ) ->
 
 
 ###
+Get dependency from server
+###
+exports.onServerGetDependencyWidget = ( widget, callback ) ->
+
+
+	writer = fs.createWriteStream("/tmp/#{widget.name}@#{widget.version}.tar")
+
+	req = request
+		.get( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}/tar" )
+		.set( 'X-Requested-With', 'XMLHttpRequest' )
+		.set('Accept', 'application/tar')
+	
+	req.pipe writer
+		# .end ( res ) ->
+		# 	if res.ok
+		# 		console.log res
+		# 		# log.requestSuccess res.body.msg, 'OK', res.status
+		# 		if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback null, widget.name
+			
+		# 	else
+		# 		log.requestError res.body.msg, 'ERRR', res.status
+		# 		if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback yes, widget.name
+
+
+
+
+
+###
 Check if widget or theme is exists
 ###
-exports.onServerIsExists = ( options, callback ) ->
+exports.onServerIsExistsApp = ( options, callback ) ->
 
 	widget = @.maxmertkit()
+	if options.version? and options.version is yes
+		@onServerIsExistsVersion widget, callback
+	else
+		@onServerIsExists widget, callback
+
+
+exports.onServerIsExists = ( widget, callback ) ->
 
 	request
 		.get( "#{pack.homepage}/widgets/#{widget.name}" )
 		.set( 'X-Requested-With', 'XMLHttpRequest' )
 		.end ( res ) ->
-			if res.ok and res.status isnt 500 and res.status isnt 404
-				if res.body.done
-					log.requestSuccess "widget with name #{widget.name} exists."
-					if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback null, widget.name
-				else
-					log.requestError "widget with name #{widget.name} does not exist."
-					if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback yes, widget.name
+			if res.ok
+				log.requestSuccess res.body.msg, 'OK', res.status
+				if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback null, widget.name
+			
+			else
+				log.requestError res.body.msg, 'ERRR', res.status
+				if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback yes, widget.name
+
 
 
 
@@ -313,14 +456,19 @@ exports.onServerIsExists = ( options, callback ) ->
 ###
 Check if widget or theme with current version is exists
 ###
-exports.onServerIsExistsVersion = ( options, callback ) ->
+exports.onServerIsExistsVersionApp = ( options, callback ) ->
 
 	widget = @.maxmertkit()
+
+	@onServerIsExistsVersion widget, callback
+
+
+exports.onServerIsExistsVersion = ( widget, callback ) ->
 
 	async.series
 
 		exists: ( callback ) =>
-			@.onServerIsExists( options, callback )
+			exports.onServerIsExists( widget, callback )
 		
 	, ( err, res ) =>
 		
@@ -332,13 +480,13 @@ exports.onServerIsExistsVersion = ( options, callback ) ->
 				.get( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				.end ( res ) ->
-					if res.ok and res.status isnt 500 and res.status isnt 404
-						if res.body.done
-							log.requestSuccess "widget with name #{widget.name} exists."
-							if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback null, widget.name
-						else
-							log.requestError "widget with name #{widget.name} does not exist."
-							if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback yes, widget.name
+					
+					if res.ok
+						log.requestSuccess res.body.msg, 'OK', res.status
+						if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback null, widget.name
+					else
+						log.requestError res.body.msg, 'ERRR', res.status
+						if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback yes, widget.name
 
 
 

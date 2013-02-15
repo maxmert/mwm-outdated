@@ -26,12 +26,20 @@ program.command('unpack').callback(function(options) {
   return widgets.unpack(null, options);
 }).help('Unpack .zip file in current folder.');
 
-program.command('exists').callback(function(options) {
-  return widgets.onServerIsExists(options);
+program.command('exists').option('version', {
+  abbr: 'v',
+  help: 'Check also current version of widget',
+  flag: true
+}).callback(function(options) {
+  return widgets.onServerIsExistsApp(options);
 }).help('Check if package with that name exists on server.');
 
+program.command('install').callback(function(options) {
+  return widgets.install(options);
+}).help('Install all widget dependences.');
+
 program.command('exist').callback(function(options) {
-  return widgets.onServerIsExistsVersion(null, options);
+  return widgets.onServerIsExistsVersionApp(null, options);
 }).help('Check if widget or theme with name specified in maxmertkit.json is exist on the server.');
 
 program.command('publish').callback(function(options) {

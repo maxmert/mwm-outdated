@@ -49,15 +49,32 @@ program
 program
 	.command('exists')
 
+	.option 'version'
+
+		abbr: 'v'
+		help: 'Check also current version of widget'
+		flag: yes
+
 	.callback (options) ->
 
-		widgets.onServerIsExists options
+		widgets.onServerIsExistsApp options
 
 
 	.help 'Check if package with that name exists on server.'
 
 
-# TODO: Create checking widget before publishing
+
+program
+	.command('install')
+
+	.callback (options) ->
+
+		widgets.install options
+
+
+	.help 'Install all widget dependences.'
+
+
 
 
 
@@ -71,7 +88,7 @@ program
 
 	.callback (options) ->
 
-		widgets.onServerIsExistsVersion null, options
+		widgets.onServerIsExistsVersionApp null, options
 
 
 	.help 'Check if widget or theme with name specified in maxmertkit.json is exist on the server.'
