@@ -10,117 +10,150 @@ log = require './lib/logger'
 fs = require 'fs'
 
 
+
 program
 	.command('init')
 
-	.callback (options) ->
+	.option 'theme'
+		abbr: 't'
+		help: 'Initialize a new theme in the current directory.'
+		flag: yes
 
-		widgets.init options
-
-
-	.help 'Initializing new widget or theme in the current directory.'
-
-
-
-program
-	.command('pack')
-
-	.callback (options) ->
-
-		widgets.pack options
-
-
-	.help 'Create .zip file in current folder.'
-
-
-
-program
-	.command('unpack')
-
-	.callback (options) ->
-
-		widgets.unpack null, options
-
-
-	.help 'Unpack .zip file in current folder.'
-
-
-
-program
-	.command('exists')
-
-	.option 'version'
-
-		abbr: 'v'
-		help: 'Check also current version of widget'
+	.option 'modifyer'
+		abbr: 'm'
+		help: 'Initialize a new modifyer in the current directory.'
 		flag: yes
 
 	.callback (options) ->
 
-		widgets.onServerIsExistsApp options
+		widgets.initApp options
 
 
-	.help 'Check if package with that name exists on server.'
-
-
-
-program
-	.command('install')
-
-	.callback (options) ->
-
-		widgets.install options
-
-
-	.help 'Install all widget dependences.'
-
-
-
-
-
-# ==============================
-# ============================== SERVER FEATURES
-# ==============================
-
-
-program
-	.command('exist')
-
-	.callback (options) ->
-
-		widgets.onServerIsExistsVersionApp null, options
-
-
-	.help 'Check if widget or theme with name specified in maxmertkit.json is exist on the server.'
+	.help 'Initializing new widget in the current directory.'
 
 
 
 
 
 
-program
-	.command('publish')
-
-	.callback (options) ->
-
-		widgets.onServerPublish null, options
-
-
-	.help 'Publish current version of widget or theme.'
 
 
 
 
-program
-	.command('unpublish')
-
-	.callback (options) ->
-
-		widgets.onServerUnpublish null, options
 
 
-	.help 'Publish current version of widget or theme.'
+# program
+# 	.command('pack')
+
+# 	.callback (options) ->
+
+# 		widgets.pack options
+
+
+# 	.help 'Create .zip file in current folder.'
+
+
+
+# program
+# 	.command('unpack')
+
+# 	.callback (options) ->
+
+# 		widgets.unpack null, options
+
+
+# 	.help 'Unpack .zip file in current folder.'
+
+
+
+# program
+# 	.command('exists')
+
+# 	.option 'version'
+
+# 		abbr: 'v'
+# 		help: 'Check also current version of widget'
+# 		flag: yes
+
+# 	.callback (options) ->
+
+# 		widgets.onServerIsExistsApp options
+
+
+# 	.help 'Check if package with that name exists on server.'
+
+
+
+# program
+# 	.command('install')
+
+# 	.callback (options) ->
+
+# 		widgets.install options
+
+
+# 	.help 'Install all widget dependences.'
+
+
+
+
+
+# # ==============================
+# # ============================== SERVER FEATURES
+# # ==============================
+
+
+
+# program
+# 	.command('publish')
+
+# 	.callback (options) ->
+
+# 		widgets.onServerPublish null, options
+
+
+# 	.help 'Publish current version of widget or theme.'
+
+
+
+
+# program
+# 	.command('unpublish')
+
+# 	.callback (options) ->
+
+# 		widgets.onServerUnpublish null, options
+
+
+# 	.help 'Publish current version of widget or theme.'
 	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

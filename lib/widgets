@@ -1,4 +1,4 @@
-var async, dialog, fs, fstream, log, mustache, ncp, pack, path, request, rmdirSyncForce, tar, templates;
+var async, dialog, fs, fstream, log, mustache, ncp, pack, path, request, tar, templates;
 
 pack = require('../package.json');
 
@@ -25,7 +25,7 @@ ncp = require('ncp').ncp;
 fstream = require('fstream');
 
 /*
-Returns the montent of maxmertkit.json file
+Returns the сontent of maxmertkit.json file
 */
 
 
@@ -41,19 +41,31 @@ exports.maxmertkit = function() {
 };
 
 /*
-Initializing new widget or theme in current directory
+Initializing a new widget/theme/modifyer in the current directory
 */
 
 
-exports.init = function(options) {
-  var types,
-    _this = this;
-  types = ['widget', 'theme'];
+exports.initApp = function(options) {
+  if (!options.theme && !options.modifyer) {
+    return this.initWidgetSubapp(options);
+  } else if (options.theme) {
+    return this.initThemeSubapp(options);
+  } else if (options.modifyer) {
+    return this.initModifyerSubapp(options);
+  }
+};
+
+exports.initCommonSubapp = function(options, callback) {
+  var _this = this;
   return async.series({
     type: function(callback) {
-      return dialog.choose(types, function(i) {
-        return callback(null, types[i]);
-      });
+      if (!options.theme && !options.modifyer) {
+        return callback(null, 'widget');
+      } else if (options.theme) {
+        return callback(null, 'theme');
+      } else if (options.modifyer) {
+        return callback(null, 'modifyer');
+      }
     },
     name: function(callback) {
       var defaultPkgName;
@@ -101,35 +113,33 @@ exports.init = function(options) {
       });
     }
   }, function(err, maxmertkitjson) {
-    return _this.writeConfirm(maxmertkitjson, options);
+    return _this.initWriteConfirm(pack.maxmertkit, maxmertkitjson, callback);
   });
 };
 
-/*
-Confirm writing json to the maxmertkit.json file
-*/
-
-
-exports.writeConfirm = function(json, options) {
+exports.initWriteConfirm = function(file, json, callback) {
   var _this = this;
+  console.log("\n\nWriting file " + file + "\n");
   return dialog.confirm("Is everything correct? \n\n " + (JSON.stringify(json, null, 4)) + "\n-> ", function(ok) {
     console.log("");
     if (!ok) {
       log.error("Initializing canceled");
+      callback(ok, null);
       return process.stdin.destroy();
     } else {
-      return fs.exists(pack.maxmertkit, function(exists) {
+      return fs.exists(file, function(exists) {
         if (!exists) {
-          _this.write(json, options);
+          _this.initWrite(file, json, callback);
           return process.stdin.destroy();
         } else {
-          log.error("File " + pack.maxmertkit + " already exists.");
+          log.error("File " + file + " already exists.");
           return dialog.confirm("Do you want to overwrite it and all other files in that folder? -> ", function(ok) {
             if (!ok) {
               log.error("initialization canceled.");
+              callback(ok, null);
               return process.stdin.destroy();
             } else {
-              _this.write(json, options);
+              _this.initWrite(file, json, callback);
               return process.stdin.destroy();
             }
           });
@@ -139,513 +149,81 @@ exports.writeConfirm = function(json, options) {
   });
 };
 
-/*
-Writing json to the maxmertkit.json file
-Init other files
-*/
-
-
-exports.write = function(json, options) {
-  fs.writeFile(pack.maxmertkit, JSON.stringify(json, null, 4), function(err) {
+exports.initWrite = function(file, json, callback) {
+  return fs.writeFile(file, JSON.stringify(json, null, 4), function(err) {
     if (err) {
       log.error("initializing – " + err + ".");
-    }
-    return log.success("file " + pack.maxmertkit + " successfully created.");
-  });
-  return fs.writeFile('_index.sass', mustache.render(templates.widget, json), function(err) {
-    if (err != null) {
-      log.error("Coluldn\'t initialize _index.sass file.");
-      return process.stdin.destroy();
+      return callback(err, null);
     } else {
-      return log.success("file _index.sass successfully created.");
+      log.success("file " + file + " successfully created.");
+      return callback(null, json);
     }
   });
 };
 
-rmdirSyncForce = function(path) {
-  var file, fileStats, files, filesLength, _i, _len;
-  if (path[path.length - 1] !== '/') {
-    path = path + '/';
-  }
-  files = fs.readdirSync(path);
-  filesLength = files.length;
-  if (filesLength) {
-    for (_i = 0, _len = files.length; _i < _len; _i++) {
-      file = files[_i];
-      fileStats = fs.statSync(path + file);
-      if (fileStats.isFile()) {
-        fs.unlinkSync(path + file);
-      }
-      if (fileStats.isDirectory()) {
-        rmdirSyncForce(path + file);
-      }
-    }
-  }
-  return fs.rmdirSync(path);
-};
-
-/*
-Packing widget or theme in current folder. The folders name should be the same as your package name in maxmertkit.json
-*/
-
-
-exports.pack = function(options, callback) {
-  var directoryName, fileName, maxmertkitjson,
-    _this = this;
-  maxmertkitjson = this.maxmertkit();
-  if (path.basename(path.resolve('.')) === ("" + maxmertkitjson.name)) {
-    directoryName = "/tmp/" + maxmertkitjson.name;
-    fileName = "" + maxmertkitjson.name + "@" + maxmertkitjson.version + ".tar";
-    return async.series({
-      rmdir: function(callback) {
-        return fs.exists(directoryName, function(exists) {
-          if (exists) {
-            rmdirSyncForce(directoryName, callback);
-          }
-          return callback(null, 'yes');
-        });
-      },
-      dir: function(callback) {
-        return fs.mkdir(directoryName, 0x1ff, function() {
-          return callback(null, directoryName);
-        });
-      },
-      store: function(callback) {
-        return _this.store(callback);
-      },
-      precompile: function(callback) {
-        return _this.precompile(directoryName, callback);
-      },
-      pack: function(callback) {
-        return fstream.Reader({
-          path: directoryName,
-          type: 'Directory'
-        }).pipe(tar.Pack({})).pipe(fstream.Writer("/tmp/" + fileName).on('close', function(err) {
-          if (err != null) {
-            log.error('Failed to create package.');
-            if (!(callback != null)) {
-              return process.stdin.destroy();
-            } else {
-              return callback(err, fileName);
-            }
-          } else {
-            return callback(null, fileName);
-          }
-        }));
-      },
-      restore: function(callback) {
-        return _this.restore(fileName, callback);
-      }
-    }, function(err, res) {
-      log.success("Finished to create package");
-      if (!(callback != null)) {
-        return process.stdin.destroy();
-      } else {
-        return callback(null, fileName);
-      }
-    });
-  } else {
-    log.error("The folders name (" + (path.basename(path.resolve('.'))) + ") should be the same as your package name in maxmertkit.json (" + maxmertkitjson.name + ").");
-    if (!(callback != null)) {
-      return process.stdin.destroy();
-    } else {
-      return callback(false, fileName);
-    }
-  }
-};
-
-/*
-Store current folder in /tmp/ folder.
-*/
-
-
-exports.store = function(callback) {
-  var directoryName, maxmertkitjson;
-  maxmertkitjson = this.maxmertkit();
-  directoryName = "/tmp/" + maxmertkitjson.name;
-  return ncp('.', directoryName, {
-    filter: function(name) {
-      var currentName;
-      currentName = path.relative('.', name).split(path.sep)[0];
-      if (currentName.charAt(0) === '.' || path.relative('.', name).indexOf('dependences') !== -1 || path.relative('.', name).indexOf('.tar') !== -1) {
-        return false;
-      } else {
-        return true;
-      }
-    }
-  }, function(err) {
-    if (err) {
-      log.error("Failed to store current directory to " + directoryName + " folder. Do you have permissions?");
-      if (!(callback != null)) {
-        return process.stdin.destroy();
-      } else {
-        return callback(err, directoryName);
-      }
-    } else {
-      if (!(callback != null)) {
-        return process.stdin.destroy();
-      } else {
-        return callback(null, directoryName);
-      }
-    }
-  });
-};
-
-/*
-Restore package from /tmp folder to the current folder
-*/
-
-
-exports.restore = function(fileName, callback) {
-  return fs.readFile(path.join('/tmp/', fileName), function(err, data) {
-    if (err != null) {
-      log.error("Failed to restore " + fileName + " from /tmp folder. Maybe there is no such file or folder.");
-      if (!(callback != null)) {
-        return process.stdin.destroy();
-      } else {
-        return callback(err, fileName);
-      }
-    } else {
-      return fs.writeFile(path.join('.', fileName), data, function(err) {
-        if (err != null) {
-          log.error("Failed to restore " + fileName + " from /tmp folder. Maybe you do not have permissions to write in current folder.");
-          if (!(callback != null)) {
-            return process.stdin.destroy();
-          } else {
-            return callback(err, fileName);
-          }
-        } else {
-          if (!(callback != null)) {
-            return process.stdin.destroy();
-          } else {
-            return callback(null, fileName);
-          }
-        }
-      });
-    }
-  });
-};
-
-/*
-Unpacking widget or theme in current folder.
-*/
-
-
-exports.unpack = function(fileName, callback) {
-  var maxmertkitjson;
-  maxmertkitjson = this.maxmertkit();
-  fileName = "" + maxmertkitjson.name + "@" + maxmertkitjson.version + ".tar";
-  return fs.createReadStream(path.join('.', fileName)).pipe(tar.Extract({
-    path: '.'
-  })).on('error', function(err) {
-    log.error("Failed to unpack " + fileName + " width error:\n" + err);
-    if (!(callback != null) || typeof callback === 'object') {
-      return process.stdin.destroy();
-    } else {
-      return callback(err, fileName);
-    }
-  }).on('end', function() {
-    log.success("File " + fileName + " unpacked.");
-    if (!(callback != null) || typeof callback === 'object') {
-      return process.stdin.destroy();
-    } else {
-      return callback(null, fileName);
-    }
-  });
-};
-
-/*
-Prepare main file of widget for publishing
-*/
-
-
-exports.precompile = function(directoryName, callback) {
-  var fileName, maxmertkitjson;
-  maxmertkitjson = this.maxmertkit();
-  fileName = path.join(directoryName, '_index.sass');
-  return async.series({
-    widget: function(callback) {
-      return fs.readFile(fileName, function(err, data) {
-        if (err != null) {
-          callback(err, null);
-        }
-        return callback(null, data);
-      });
-    }
-  }, function(err, data) {
-    var result;
-    if (err != null) {
-      log.error("Failed to precompile " + fileName + ".");
-      if (!(callback != null)) {
-        return process.stdin.destroy();
-      } else {
-        return callback(err, fileName);
-      }
-    } else {
-      maxmertkitjson.data = data.widget;
-      result = mustache.render(templates.widgetFinal, maxmertkitjson);
-      return fs.writeFile(fileName, result, function(err) {
-        if (err != null) {
-          log.error("Failed to precompile " + fileName + ".");
-          if (!(callback != null)) {
-            return process.stdin.destroy();
-          } else {
-            return callback(err, fileName);
-          }
-        } else {
-          if (!(callback != null)) {
-            return process.stdin.destroy();
-          } else {
-            return callback(null, fileName);
-          }
-        }
-      });
-    }
-  });
-};
-
-/*
-Install all dependences
-*/
-
-
-exports.install = function() {
-  var dependences, deps, maxmertkitjson, name, version,
-    _this = this;
-  maxmertkitjson = this.maxmertkit();
-  if (!(maxmertkitjson.dependences != null) || maxmertkitjson.dependences.length <= 0) {
-    log.error("Couldn\'t install your dependences because you don\'t have any.");
-    return process.stdin.destroy();
-  } else {
-    deps = maxmertkitjson.dependences;
-    dependences = [];
-    for (name in deps) {
-      version = deps[name];
-      dependences.push({
-        name: name,
-        version: version
-      });
-    }
-    return async.series({
-      exists: function(callback) {
-        return async.every(dependences, _this.onServerIsExistsVersion, function(err, results) {
-          if (err) {
-            return callback(err, null);
-          } else {
-            return callback(null, true);
-          }
-        });
-      },
-      get: function(callback) {
-        return async.every(dependences, _this.onServerGetDependencyWidget, function(err, results) {
-          if (err) {
-            return callback(err, null);
-          } else {
-            return callback(null, true);
-          }
-        });
-      }
-    }, function(err, data) {
-      if (err != null) {
-        console.log('\n');
-        log.error("Installation aborted because some widgets or their versions don\'t exists on server.");
-        return process.stdin.destroy();
-      }
-    });
-  }
-};
-
-/*
-Get dependency from server
-*/
-
-
-exports.onServerGetDependencyWidget = function(widget, callback) {
-  var req, writer;
-  writer = fs.createWriteStream("/tmp/" + widget.name + "@" + widget.version + ".tar");
-  req = request.get("" + pack.homepage + "/widgets/" + widget.name + "/" + widget.version + "/tar").set('X-Requested-With', 'XMLHttpRequest').set('Accept', 'application/tar');
-  return req.pipe(writer);
-};
-
-/*
-Check if widget or theme is exists
-*/
-
-
-exports.onServerIsExistsApp = function(options, callback) {
-  var widget;
-  widget = this.maxmertkit();
-  if ((options.version != null) && options.version === true) {
-    return this.onServerIsExistsVersion(widget, callback);
-  } else {
-    return this.onServerIsExists(widget, callback);
-  }
-};
-
-exports.onServerIsExists = function(widget, callback) {
-  return request.get("" + pack.homepage + "/widgets/" + widget.name).set('X-Requested-With', 'XMLHttpRequest').end(function(res) {
-    if (res.ok) {
-      log.requestSuccess(res.body.msg, 'OK', res.status);
-      if (!(callback != null) || typeof callback === 'object') {
-        return process.stdin.destroy();
-      } else {
-        return callback(null, widget.name);
-      }
-    } else {
-      log.requestError(res.body.msg, 'ERRR', res.status);
-      if (!(callback != null) || typeof callback === 'object') {
-        return process.stdin.destroy();
-      } else {
-        return callback(true, widget.name);
-      }
-    }
-  });
-};
-
-/*
-Check if widget or theme with current version is exists
-*/
-
-
-exports.onServerIsExistsVersionApp = function(options, callback) {
-  var widget;
-  widget = this.maxmertkit();
-  return this.onServerIsExistsVersion(widget, callback);
-};
-
-exports.onServerIsExistsVersion = function(widget, callback) {
+exports.initWidgetSubapp = function(options) {
   var _this = this;
   return async.series({
-    exists: function(callback) {
-      return exports.onServerIsExists(widget, callback);
+    common: function(callback) {
+      return _this.initCommonSubapp(options, callback);
     }
   }, function(err, res) {
-    if (err) {
-      if (!(callback != null) || typeof callback === 'object') {
-        return process.stdin.destroy();
-      } else {
-        return callback(err, widget.name);
-      }
-    } else {
-      return request.get("" + pack.homepage + "/widgets/" + widget.name + "/" + widget.version).set('X-Requested-With', 'XMLHttpRequest').end(function(res) {
-        if (res.ok) {
-          log.requestSuccess(res.body.msg, 'OK', res.status);
-          if (!(callback != null) || typeof callback === 'object') {
-            return process.stdin.destroy();
-          } else {
-            return callback(null, widget.name);
-          }
-        } else {
-          log.requestError(res.body.msg, 'ERRR', res.status);
-          if (!(callback != null) || typeof callback === 'object') {
-            return process.stdin.destroy();
-          } else {
-            return callback(true, widget.name);
-          }
-        }
-      });
-    }
+    return console.log('ok');
   });
 };
 
-/*
-Publish current version of widget or theme
-*/
-
-
-exports.onServerPublish = function(options, callback) {
-  var fileName, widget,
+exports.initThemeSubapp = function(options) {
+  var fileName,
     _this = this;
-  widget = this.maxmertkit();
-  if (!(widget.dependencies != null)) {
-    widget.dependencies = [];
-  }
-  fileName = "" + widget.name + "@" + widget.version + ".tar";
+  fileName = 'theme.json';
   return async.series({
-    pack: function(callback) {
-      return _this.pack(options, callback);
+    common: function(callback) {
+      return _this.initCommonSubapp(options, callback);
     },
-    password: function(callback) {
-      return dialog.password('\nEnter your password: ', function(password) {
-        return callback(null, password);
+    theme: function(callback) {
+      return request.get("" + pack.homepage + "/defaults/theme").set('X-Requested-With', 'XMLHttpRequest').set('Accept', 'application/json').end(function(res) {
+        if (res.ok) {
+          return _this.initWrite(fileName, res.body, callback);
+        } else {
+          log.requestError(res.body.msg, 'ERRR', res.status);
+          return callback(res.error, null);
+        }
       });
     }
   }, function(err, res) {
-    if (err) {
-      log.error("Could not publish widget.");
-      if (!(callback != null) || typeof callback === 'object') {
-        return process.stdin.destroy();
-      } else {
-        return callback(err, widget.name);
-      }
+    if (err != null) {
+      log.error("An error while initialized theme.");
+      return process.stdin.destroy();
     } else {
-      return request.post("" + pack.homepage + "/widgets/" + widget.name + "/" + widget.version + "/publish").set('X-Requested-With', 'XMLHttpRequest').attach('pack', fileName).field('packName', res.pack).field('name', widget.name).field('version', widget.version).field('password', res.password).field('username', widget.author).end(function(res) {
-        if (res.ok) {
-          log.requestSuccess("widget " + widget.name + "@" + widget.version + " successfully published.");
-          return fs.unlink("" + widget.name + "@" + widget.version + ".tar", function(err) {
-            if (!(callback != null) || typeof callback === 'object') {
-              return process.stdin.destroy();
-            } else {
-              return callback(null, widget.name);
-            }
-          });
-        } else {
-          log.requestError(res.body.msg, 'ERRR', res.status);
-          return fs.unlink("" + widget.name + "@" + widget.version + ".tar", function(err) {
-            if (!(callback != null) || typeof callback === 'object') {
-              return process.stdin.destroy();
-            } else {
-              return callback(true, widget.name);
-            }
-          });
-        }
-      });
+      return process.stdin.destroy();
     }
   });
 };
 
-/*
-Unpublish current version of widget or theme
-*/
-
-
-exports.onServerUnpublish = function(options, callback) {
-  var fileName, widget,
+exports.initModifyerSubapp = function(options) {
+  var fileName,
     _this = this;
-  widget = this.maxmertkit();
-  fileName = "" + widget.name + "@" + widget.version + ".tar";
+  fileName = 'modifyer.json';
   return async.series({
-    password: function(callback) {
-      return dialog.password('\nEnter your password: ', function(password) {
-        return callback(null, password);
+    common: function(callback) {
+      return _this.initCommonSubapp(options, callback);
+    },
+    theme: function(callback) {
+      return request.get("" + pack.homepage + "/defaults/modifyer").set('X-Requested-With', 'XMLHttpRequest').set('Accept', 'application/json').end(function(res) {
+        if (res.ok) {
+          return _this.initWrite(fileName, res.body, callback);
+        } else {
+          log.requestError(res.body.msg, 'ERRR', res.status);
+          return callback(res.error, null);
+        }
       });
     }
   }, function(err, res) {
-    if (err) {
-      log.error("Could not unpublish widget.");
-      if (!(callback != null) || typeof callback === 'object') {
-        return process.stdin.destroy();
-      } else {
-        return callback(err, widget.name);
-      }
+    if (err != null) {
+      log.error("An error while initialized modifyer.");
+      return process.stdin.destroy();
     } else {
-      return request.del("" + pack.homepage + "/widgets/" + widget.name + "/" + widget.version).set('X-Requested-With', 'XMLHttpRequest').field('packName', fileName).field('name', widget.name).field('version', widget.version).field('password', res.password).field('username', widget.author).end(function(res) {
-        if (res.ok) {
-          log.requestSuccess("widget " + widget.name + "@" + widget.version + " successfully unpublished.");
-          if (!(callback != null) || typeof callback === 'object') {
-            return process.stdin.destroy();
-          } else {
-            return callback(null, widget.name);
-          }
-        } else {
-          log.requestError(res.body.msg, 'ERRR', res.status);
-          if (!(callback != null) || typeof callback === 'object') {
-            return process.stdin.destroy();
-          } else {
-            return callback(true, widget.name);
-          }
-        }
-      });
+      return process.stdin.destroy();
     }
   });
 };

@@ -14,40 +14,16 @@ log = require('./lib/logger');
 
 fs = require('fs');
 
-program.command('init').callback(function(options) {
-  return widgets.init(options);
-}).help('Initializing new widget or theme in the current directory.');
-
-program.command('pack').callback(function(options) {
-  return widgets.pack(options);
-}).help('Create .zip file in current folder.');
-
-program.command('unpack').callback(function(options) {
-  return widgets.unpack(null, options);
-}).help('Unpack .zip file in current folder.');
-
-program.command('exists').option('version', {
-  abbr: 'v',
-  help: 'Check also current version of widget',
+program.command('init').option('theme', {
+  abbr: 't',
+  help: 'Initialize a new theme in the current directory.',
+  flag: true
+}).option('modifyer', {
+  abbr: 'm',
+  help: 'Initialize a new modifyer in the current directory.',
   flag: true
 }).callback(function(options) {
-  return widgets.onServerIsExistsApp(options);
-}).help('Check if package with that name exists on server.');
-
-program.command('install').callback(function(options) {
-  return widgets.install(options);
-}).help('Install all widget dependences.');
-
-program.command('exist').callback(function(options) {
-  return widgets.onServerIsExistsVersionApp(null, options);
-}).help('Check if widget or theme with name specified in maxmertkit.json is exist on the server.');
-
-program.command('publish').callback(function(options) {
-  return widgets.onServerPublish(null, options);
-}).help('Publish current version of widget or theme.');
-
-program.command('unpublish').callback(function(options) {
-  return widgets.onServerUnpublish(null, options);
-}).help('Publish current version of widget or theme.');
+  return widgets.initApp(options);
+}).help('Initializing new widget in the current directory.');
 
 program.parse();
