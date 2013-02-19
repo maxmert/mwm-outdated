@@ -7,6 +7,8 @@ log = require './logger'
 async = require 'async'
 tar = require 'tar'
 mustache = require 'mustache'
+_ = require 'underscore'
+wrench = require 'wrench'
 
 fs = require 'fs'
 ncp = require('ncp').ncp
@@ -30,6 +32,18 @@ exports.maxmertkit = ->
 
 
 
+foldersExist = ( pth, callback ) ->
+
+	paths = pth.split path.sep
+	current = ''
+	
+	for index, pt of paths
+		
+		current = path.join current, pt
+		if not fs.existsSync(current) then callback true, current
+
+	callback null, pth
+
 
 
 
@@ -38,23 +52,7 @@ exports.maxmertkit = ->
 
 
 # **Initializing**
-# a new widget/theme/modifyer in the current directory
-
-exports.initApp = ( options ) ->
-
-	if not options.theme and not options.modifyer
-
-		@initWidgetSubapp options
-
-	else if options.theme
-
-		@initThemeSubapp options
-
-	else if options.modifyer
-
-		@initModifyerSubapp options
-
-
+# maxmertkit.json file with main info about project
 
 exports.initCommonSubapp = ( options, callback ) ->
 
@@ -110,6 +108,10 @@ exports.initCommonSubapp = ( options, callback ) ->
 
 
 
+
+# Function with json write confirmation.
+# Uses with maxmertkit.json, theme.json and modifyer.json
+
 exports.initWriteConfirm = ( file, json, callback ) ->
 
 	console.log "\n\nWriting file #{file}\n"
@@ -146,6 +148,8 @@ exports.initWriteConfirm = ( file, json, callback ) ->
 
 
 
+# Function with json write.
+# Uses with maxmertkit.json, theme.json and modifyer.json
 
 exports.initWrite = ( file, json, callback ) ->
 
@@ -179,6 +183,10 @@ exports.initWidgetSubapp = ( options ) ->
 
 		console.log 'ok'
 
+
+
+# **Initialization**
+# of the theme
 
 exports.initThemeSubapp = ( options ) ->
 
@@ -216,6 +224,9 @@ exports.initThemeSubapp = ( options ) ->
 		else
 			process.stdin.destroy()
 
+
+# **Initialization**
+# of the modifyer
 
 exports.initModifyerSubapp = ( options ) ->
 
@@ -283,7 +294,7 @@ exports.Publish = ( options ) ->
 
 
 # **Publish**
-# current version of widget.
+# current version of modifyer.
 exports.PublishModifyer = ( options ) ->
 
 	maxmertkit = @maxmertkit()
@@ -341,9 +352,73 @@ exports.PublishModifyer = ( options ) ->
 
 
 
+							
 
 
 
+
+
+
+# **Install**
+# all dependences
+exports.Install = ( options ) ->
+
+	
+
+		
+
+
+
+
+install = ( json, pth ) ->
+
+	async.series
+
+		modifyers: ( callback ) ->
+
+			if json.modifyers?
+
+				foldersExist path.join( pth, 'dependences/modifyers' ), ( err, pth ) ->
+					if err?
+						fs.mkdirSync pth
+
+				modifyers = []
+				
+				_.each json.modifyers, ( version, name ) ->
+					modifyers.push
+						name: name
+						version: version
+
+				
+
+				async.every modifyers, exports.installModifyer, ( err ) ->
+
+					if err? then process.stdin.destroy()
+
+
+	, ( err, res ) ->
+		process.stdin.destroy()
+
+
+
+# **Install**
+# modifyers dependences
+
+exports.installModifyer = ( modifyer ) ->
+
+	request
+		.get( "#{pack.homepage}/modifyers/#{modifyer.name}/#{modifyer.version}" )
+		.set( 'X-Requested-With', 'XMLHttpRequest' )
+		.end ( res ) ->
+
+			if res.ok
+				log.requestSuccess "modifyer #{modifyer.name}@#{modifyer.version} successfully installed."
+
+
+
+			else
+				log.requestError res.body.msg, 'ERRR', res.status
+				res.error
 
 
 

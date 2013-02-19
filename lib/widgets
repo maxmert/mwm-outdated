@@ -1,4 +1,4 @@
-var async, dialog, fs, fstream, log, mustache, ncp, pack, path, request, tar, templates;
+var async, dialog, foldersExist, fs, fstream, install, log, mustache, ncp, pack, path, request, tar, templates, wrench, _;
 
 pack = require('../package.json');
 
@@ -18,6 +18,10 @@ tar = require('tar');
 
 mustache = require('mustache');
 
+_ = require('underscore');
+
+wrench = require('wrench');
+
 fs = require('fs');
 
 ncp = require('ncp').ncp;
@@ -35,14 +39,18 @@ exports.maxmertkit = function() {
   }
 };
 
-exports.initApp = function(options) {
-  if (!options.theme && !options.modifyer) {
-    return this.initWidgetSubapp(options);
-  } else if (options.theme) {
-    return this.initThemeSubapp(options);
-  } else if (options.modifyer) {
-    return this.initModifyerSubapp(options);
+foldersExist = function(pth, callback) {
+  var current, index, paths, pt;
+  paths = pth.split(path.sep);
+  current = '';
+  for (index in paths) {
+    pt = paths[index];
+    current = path.join(current, pt);
+    if (!fs.existsSync(current)) {
+      callback(true, current);
+    }
   }
+  return callback(null, pth);
 };
 
 exports.initCommonSubapp = function(options, callback) {
@@ -273,6 +281,48 @@ exports.PublishModifyer = function(options) {
           return process.stdin.destroy();
         }
       });
+    }
+  });
+};
+
+exports.Install = function(options) {};
+
+install = function(json, pth) {
+  return async.series({
+    modifyers: function(callback) {
+      var modifyers;
+      if (json.modifyers != null) {
+        foldersExist(path.join(pth, 'dependences/modifyers'), function(err, pth) {
+          if (err != null) {
+            return fs.mkdirSync(pth);
+          }
+        });
+        modifyers = [];
+        _.each(json.modifyers, function(version, name) {
+          return modifyers.push({
+            name: name,
+            version: version
+          });
+        });
+        return async.every(modifyers, exports.installModifyer, function(err) {
+          if (err != null) {
+            return process.stdin.destroy();
+          }
+        });
+      }
+    }
+  }, function(err, res) {
+    return process.stdin.destroy();
+  });
+};
+
+exports.installModifyer = function(modifyer) {
+  return request.get("" + pack.homepage + "/modifyers/" + modifyer.name + "/" + modifyer.version).set('X-Requested-With', 'XMLHttpRequest').end(function(res) {
+    if (res.ok) {
+      return log.requestSuccess("modifyer " + modifyer.name + "@" + modifyer.version + " successfully installed.");
+    } else {
+      log.requestError(res.body.msg, 'ERRR', res.status);
+      return res.error;
     }
   });
 };

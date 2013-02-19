@@ -1,0 +1,176 @@
+var async, dialog, fs, initJSON, initWrite, initWriteConfirm, log, maxmertkit, modifyers, pack, path, request, wrench;
+
+pack = require('../package.json');
+
+async = require('async');
+
+request = require('superagent');
+
+fs = require('fs');
+
+dialog = require('commander');
+
+wrench = require('wrench');
+
+path = require('path');
+
+modifyers = require('./modifyers');
+
+log = require('./logger');
+
+maxmertkit = require('./maxmertkit');
+
+exports.init = function(options) {
+  var _this = this;
+  return async.series({
+    "default": function(callback) {
+      return initJSON(options, callback);
+    }
+  }, function(err, res) {
+    if (err != null) {
+      return log.error("An error while initialize maxmertkit.json");
+    } else {
+      if (options.modifyer) {
+        return modifyers.init(options);
+      }
+    }
+  });
+};
+
+exports.publish = function(options) {
+  var mjson;
+  mjson = maxmertkit.json();
+  switch (mjson.type) {
+    case 'modifyer':
+      return modifyers.publish(options);
+  }
+};
+
+exports.install = function(options) {
+  return wrench.readdirRecursive('.', function(error, files) {
+    var file, index, mjson, pth, _results;
+    _results = [];
+    for (index in files) {
+      file = files[index];
+      if (path.basename(file) === 'maxmertkit.json') {
+        mjson = maxmertkit.json(file);
+        if (mjson.modifyers != null) {
+          pth = path.join(path.dirname(file), 'dependencies/modifyers');
+          wrench.mkdirSyncRecursive(pth, 0x1ff);
+          _results.push(modifyers.install(pth, mjson.modifyers));
+        } else {
+          _results.push(void 0);
+        }
+      } else {
+        _results.push(void 0);
+      }
+    }
+    return _results;
+  });
+};
+
+initJSON = function(options, callback) {
+  var _this = this;
+  return async.series({
+    type: function(callback) {
+      if (!options.theme && !options.modifyer) {
+        return callback(null, 'widget');
+      } else if (options.theme) {
+        return callback(null, 'theme');
+      } else if (options.modifyer) {
+        return callback(null, 'modifyer');
+      }
+    },
+    name: function(callback) {
+      var defaultPkgName;
+      defaultPkgName = 'test';
+      return dialog.prompt("name: (test) ", function(pkgName) {
+        if (pkgName === '') {
+          pkgName = defaultPkgName;
+        }
+        return callback(null, pkgName);
+      });
+    },
+    version: function(callback) {
+      var defaultVersion;
+      defaultVersion = '0.0.0';
+      return dialog.prompt("version: (0.0.0) ", function(version) {
+        if (version === '') {
+          version = defaultVersion;
+        }
+        return callback(null, version);
+      });
+    },
+    description: function(callback) {
+      return dialog.prompt("description: ", function(description) {
+        return callback(null, description);
+      });
+    },
+    repository: function(callback) {
+      return dialog.prompt("repository: ", function(repository) {
+        return callback(null, repository);
+      });
+    },
+    author: function(callback) {
+      return dialog.prompt("author: ", function(author) {
+        return callback(null, author);
+      });
+    },
+    license: function(callback) {
+      var defaultLicense;
+      defaultLicense = 'BSD';
+      return dialog.prompt("license: (BSD) ", function(license) {
+        if (license === '') {
+          license = defaultLicense;
+        }
+        return callback(null, license);
+      });
+    }
+  }, function(err, maxmertkitjson) {
+    return initWriteConfirm(pack.maxmertkit, maxmertkitjson, callback);
+  });
+};
+
+initWriteConfirm = function(file, json, callback) {
+  var _this = this;
+  console.log("\n\nWriting file " + file + "\n");
+  return dialog.confirm("Is everything correct? \n\n " + (JSON.stringify(json, null, 4)) + "\n-> ", function(ok) {
+    console.log("");
+    if (!ok) {
+      log.error("Initializing canceled");
+      callback(ok, null);
+      return process.stdin.destroy();
+    } else {
+      return fs.exists(file, function(exists) {
+        if (!exists) {
+          initWrite(file, json, callback);
+          return process.stdin.destroy();
+        } else {
+          log.error("File " + file + " already exists.");
+          return dialog.confirm("Do you want to overwrite it and all other files in that folder? -> ", function(ok) {
+            if (!ok) {
+              log.error("initialization canceled.");
+              callback(ok, null);
+              return process.stdin.destroy();
+            } else {
+              initWrite(file, json, callback);
+              return process.stdin.destroy();
+            }
+          });
+        }
+      });
+    }
+  });
+};
+
+initWrite = function(file, json, callback) {
+  return fs.writeFile(file, JSON.stringify(json, null, 4), function(err) {
+    if (err) {
+      log.error("initializing – " + err + ".");
+      return callback(err, null);
+    } else {
+      log.success("file " + file + " successfully created.");
+      return callback(null, json);
+    }
+  });
+};

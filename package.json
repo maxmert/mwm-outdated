@@ -19,6 +19,8 @@
 		"fstream": "*",
 		"ncp": "0.3.0",
 		"mustache": "0.7.2",
+		"underscore": "1.4.4",
+		"wrench": "*",
 
 		"grunt": "0.3.17",
 		"grunt-jstemplater": "0.1.6"
