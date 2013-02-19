@@ -33,6 +33,15 @@ program
 
 
 
+program
+	.command('publish')
+
+	.callback (options) ->
+
+		widgets.Publish null, options
+
+
+	.help 'Publish current version of widget/theme/modifyer.'
 
 
 

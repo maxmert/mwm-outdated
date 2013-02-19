@@ -13,9 +13,9 @@ ncp = require('ncp').ncp
 fstream = require 'fstream'
 
 
-###
-Returns the сontent of maxmertkit.json file
-###
+
+# Returns the сontent of maxmertkit.json file
+
 exports.maxmertkit = ->
 	
 	rawjson = fs.readFileSync path.join( '.', pack.maxmertkit )
@@ -37,22 +37,22 @@ exports.maxmertkit = ->
 
 
 
-###
-Initializing a new widget/theme/modifyer in the current directory
-###
+# **Initializing**
+# a new widget/theme/modifyer in the current directory
+
 exports.initApp = ( options ) ->
 
 	if not options.theme and not options.modifyer
 
-		@initWidgetSubapp( options )
+		@initWidgetSubapp options
 
 	else if options.theme
 
-		@initThemeSubapp( options )
+		@initThemeSubapp options
 
 	else if options.modifyer
 
-		@initModifyerSubapp( options )
+		@initModifyerSubapp options
 
 
 
@@ -252,6 +252,92 @@ exports.initModifyerSubapp = ( options ) ->
 
 		else
 			process.stdin.destroy()
+
+
+
+
+
+
+
+#### Server side
+
+
+
+# **Publish**
+# current version of widget/theme/modifyer.
+# First get type, then call publishing function.
+exports.Publish = ( options ) ->
+
+	maxmertkit = @maxmertkit()
+
+	switch maxmertkit.type
+
+		when 'widget'
+			@PublishWidget options
+
+		when 'theme'
+			@PublishTheme options
+
+		when 'modifyer'
+			@PublishModifyer options
+
+
+# **Publish**
+# current version of widget.
+exports.PublishModifyer = ( options ) ->
+
+	maxmertkit = @maxmertkit()
+
+	fileName = 'modifyer.json'
+
+	async.series
+
+		modifyer: ( callback ) =>
+			
+			rawjson = fs.readFileSync path.join( '.', fileName )
+	
+			if not rawjson?
+				log.error("couldn\'t read #{fileName} file.")
+				callback true, null
+
+			else
+				json = JSON.parse rawjson
+				callback null, json
+
+
+		password: ( callback ) =>
+			
+			dialog.password '\nEnter your password: ', ( password ) ->
+				callback null, password
+
+	, ( err, res ) =>
+
+		if err?
+			log.error "Publishing canceled."
+			process.stdin.destroy()
+
+		else
+			
+			request
+				.post( "#{pack.homepage}/modifyers/#{maxmertkit.name}/#{maxmertkit.version}" )
+				.set( 'X-Requested-With', 'XMLHttpRequest' )
+				.send
+					modifyer: res.modifyer
+					password: res.password
+					name: maxmertkit.name
+					version: maxmertkit.version
+					username: maxmertkit.author
+				
+				.end ( res ) ->
+					
+					if res.ok
+						log.requestSuccess "modifyer #{maxmertkit.name}@#{maxmertkit.version} successfully published."
+						process.stdin.destroy()
+
+					else
+						log.requestError res.body.msg, 'ERRR', res.status
+						process.stdin.destroy()
+
 
 
 

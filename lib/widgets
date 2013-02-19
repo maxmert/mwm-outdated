@@ -24,11 +24,6 @@ ncp = require('ncp').ncp;
 
 fstream = require('fstream');
 
-/*
-Returns the сontent of maxmertkit.json file
-*/
-
-
 exports.maxmertkit = function() {
   var json, rawjson;
   rawjson = fs.readFileSync(path.join('.', pack.maxmertkit));
@@ -39,11 +34,6 @@ exports.maxmertkit = function() {
     return json = JSON.parse(rawjson);
   }
 };
-
-/*
-Initializing a new widget/theme/modifyer in the current directory
-*/
-
 
 exports.initApp = function(options) {
   if (!options.theme && !options.modifyer) {
@@ -224,6 +214,65 @@ exports.initModifyerSubapp = function(options) {
       return process.stdin.destroy();
     } else {
       return process.stdin.destroy();
+    }
+  });
+};
+
+exports.Publish = function(options) {
+  var maxmertkit;
+  maxmertkit = this.maxmertkit();
+  switch (maxmertkit.type) {
+    case 'widget':
+      return this.PublishWidget(options);
+    case 'theme':
+      return this.PublishTheme(options);
+    case 'modifyer':
+      return this.PublishModifyer(options);
+  }
+};
+
+exports.PublishModifyer = function(options) {
+  var fileName, maxmertkit,
+    _this = this;
+  maxmertkit = this.maxmertkit();
+  fileName = 'modifyer.json';
+  return async.series({
+    modifyer: function(callback) {
+      var json, rawjson;
+      rawjson = fs.readFileSync(path.join('.', fileName));
+      if (!(rawjson != null)) {
+        log.error("couldn\'t read " + fileName + " file.");
+        return callback(true, null);
+      } else {
+        json = JSON.parse(rawjson);
+        return callback(null, json);
+      }
+    },
+    password: function(callback) {
+      return dialog.password('\nEnter your password: ', function(password) {
+        return callback(null, password);
+      });
+    }
+  }, function(err, res) {
+    if (err != null) {
+      log.error("Publishing canceled.");
+      return process.stdin.destroy();
+    } else {
+      return request.post("" + pack.homepage + "/modifyers/" + maxmertkit.name + "/" + maxmertkit.version).set('X-Requested-With', 'XMLHttpRequest').send({
+        modifyer: res.modifyer,
+        password: res.password,
+        name: maxmertkit.name,
+        version: maxmertkit.version,
+        username: maxmertkit.author
+      }).end(function(res) {
+        if (res.ok) {
+          log.requestSuccess("modifyer " + maxmertkit.name + "@" + maxmertkit.version + " successfully published.");
+          return process.stdin.destroy();
+        } else {
+          log.requestError(res.body.msg, 'ERRR', res.status);
+          return process.stdin.destroy();
+        }
+      });
     }
   });
 };

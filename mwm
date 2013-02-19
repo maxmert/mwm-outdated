@@ -26,4 +26,8 @@ program.command('init').option('theme', {
   return widgets.initApp(options);
 }).help('Initializing new widget in the current directory.');
 
+program.command('publish').callback(function(options) {
+  return widgets.Publish(null, options);
+}).help('Publish current version of widget/theme/modifyer.');
+
 program.parse();

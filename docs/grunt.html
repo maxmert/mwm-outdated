@@ -1,0 +1,30 @@
+<!DOCTYPE html>  <html> <head>   <title>grunt.coffee</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="grunt.html">                 grunt.coffee               </a>                                           <a class="source" href="mwm.html">                 mwm.coffee               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               grunt.coffee             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre><span class="nv">module.exports = </span><span class="nf">(grunt) -&gt;</span>
+  <span class="nx">grunt</span><span class="p">.</span><span class="nx">loadNpmTasks</span> <span class="s">&#39;grunt-jstemplater&#39;</span>
+
+  <span class="nx">grunt</span><span class="p">.</span><span class="nx">initConfig</span>
+    <span class="nv">pkg: </span><span class="nx">grunt</span><span class="p">.</span><span class="nx">file</span><span class="p">.</span><span class="nx">readJSON</span> <span class="s">&#39;package.json&#39;</span>
+    <span class="nv">meta:</span>
+      <span class="nv">banner: </span><span class="s">&#39;/*\n\n&lt;%= pkg.name %&gt; v&lt;%= pkg.version %&gt;\nhttp://double.fm\n\nIncludes jQuery.js\nhttp://jquery.com\n\nCopyright &lt;%= grunt.template.today(&quot;yyyy&quot;) %&gt; Double.fm\n\nDate: &lt;%= grunt.template.today() %&gt;\n\n*/&#39;</span>
+
+
+
+    <span class="nv">template:</span>
+      <span class="nv">prod:</span>
+        <span class="nv">src: </span><span class="s">&#39;templates/**/*.mustache&#39;</span>
+        <span class="nv">dest: </span><span class="s">&#39;templates.json&#39;</span>
+        <span class="nv">variables:</span>
+          <span class="nv">name: </span><span class="s">&#39;TEMPLATES&#39;</span>
+          <span class="nv">staticPath: </span><span class="s">&#39;templates&#39;</span>
+          <span class="nv">nodejs: </span><span class="kc">yes</span>
+
+
+
+    <span class="nv">watch:</span>
+      <span class="nv">prod:</span>
+        <span class="nv">files: </span><span class="p">[</span><span class="s">&#39;&lt;config:template.prod.src&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;grunt.js&#39;</span><span class="p">]</span>
+        <span class="nv">tasks: </span><span class="s">&#39;template&#39;</span>
+
+
+  <span class="nx">grunt</span><span class="p">.</span><span class="nx">registerTask</span> <span class="s">&#39;default&#39;</span><span class="p">,</span> <span class="s">&#39;template&#39;</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 
