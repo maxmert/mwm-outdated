@@ -5,6 +5,7 @@
 pack = require './package.json'
 path = require 'path'
 common = require './lib/common'
+archives = require './lib/archives'
 program = require('nomnom').colors()
 log = require './lib/logger'
 fs = require 'fs'
@@ -47,6 +48,18 @@ program
 
 
 program
+	.command('unpublish')
+
+	.callback (options) ->
+
+		common.unpublish options
+
+	.help 'Unpublishing current version of widget/modifyer/theme.'
+
+
+
+
+program
 	.command('install')
 
 	.callback (options) ->
@@ -54,6 +67,18 @@ program
 		common.install options
 
 	.help 'Installing all dependences, themes and modifyers.'
+
+
+
+
+program
+	.command('pack')
+
+	.callback (options) ->
+
+		archives.pack '.', null
+
+	.help 'Pack current version of widget/modifyer/theme to a tar file.'
 
 
 

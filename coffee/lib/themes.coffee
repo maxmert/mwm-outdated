@@ -5,6 +5,7 @@ request = require 'superagent'
 fs = require 'fs'
 path = require 'path'
 dialog = require 'commander'
+_ = require 'underscore'
 
 log = require './logger'
 maxmertkit = require './maxmertkit'
@@ -12,24 +13,24 @@ maxmertkit = require './maxmertkit'
 
 
 # **Initializing**
-# modifyer.json file with main info about project
+# theme.json file with main info about project
 
 exports.init = ( options ) ->
 
-	fileName = 'modifyer.json'
+	fileName = 'theme.json'
 
 	async.series
 
 		modifyer: ( callback ) =>
 
 			request
-				.get( "#{pack.homepage}/defaults/modifyer" )
+				.get( "#{pack.homepage}/defaults/theme" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				.set('Accept', 'application/json')
 				.end ( res ) =>
 
 					if res.ok
-						write fileName, res.body, callback
+						write fileName, JSON.stringify(res.body, null, 4), callback
 
 					else
 						log.requestError res.body.msg, 'ERRR', res.status
@@ -50,17 +51,17 @@ exports.init = ( options ) ->
 
 
 # **Publish**
-# current version of modifyer.
+# current version of theme.
 
 exports.publish = ( options ) ->
 
 	mjson = maxmertkit.json()
 
-	fileName = 'modifyer.json'
+	fileName = 'theme.json'
 
 	async.series
 
-		modifyer: ( callback ) =>
+		theme: ( callback ) =>
 			
 			rawjson = fs.readFileSync path.join( '.', fileName )
 	
@@ -87,10 +88,10 @@ exports.publish = ( options ) ->
 		else
 			
 			request
-				.post( "#{pack.homepage}/modifyers/#{mjson.name}/#{mjson.version}" )
+				.post( "#{pack.homepage}/themes/#{mjson.name}/#{mjson.version}" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				.send
-					modifyer: res.modifyer
+					theme: res.theme
 					password: res.password
 					name: mjson.name
 					version: mjson.version
@@ -99,7 +100,7 @@ exports.publish = ( options ) ->
 				.end ( res ) ->
 					
 					if res.ok
-						log.requestSuccess "modifyer #{mjson.name}@#{mjson.version} successfully published."
+						log.requestSuccess "theme #{mjson.name}@#{mjson.version} successfully published."
 						process.stdin.destroy()
 
 					else
@@ -112,7 +113,7 @@ exports.publish = ( options ) ->
 
 
 # **Unpublish**
-# current version of modifyer.
+# current version of theme.
 
 exports.unpublish = ( options ) ->
 
@@ -134,7 +135,7 @@ exports.unpublish = ( options ) ->
 		else
 			
 			request
-				.del( "#{pack.homepage}/modifyers/#{mjson.name}/#{mjson.version}" )
+				.del( "#{pack.homepage}/themes/#{mjson.name}/#{mjson.version}" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				.send
 					password: res.password
@@ -145,12 +146,27 @@ exports.unpublish = ( options ) ->
 				.end ( res ) ->
 					
 					if res.ok
-						log.requestSuccess "modifyer #{mjson.name}@#{mjson.version} successfully unpublished."
+						log.requestSuccess "theme #{mjson.name}@#{mjson.version} successfully unpublished."
 						process.stdin.destroy()
 
 					else
 						log.requestError res.body.msg, 'ERRR', res.status
 						process.stdin.destroy()
+
+
+
+
+
+
+
+
+objectLength = ( obj ) ->
+    length = 0
+    for key of obj
+        if obj.hasOwnProperty key then length++
+    
+    length
+
 
 
 
@@ -159,48 +175,87 @@ exports.unpublish = ( options ) ->
 
 
 # **Install**
-# modifyer dependences.
+# theme dependences.
 
 exports.install = ( pth, list ) ->
 
-	for name, version of list
+	fileName = path.join(pth,"_index.sass")
 
-		# Need a closure for correct info view
-		do (name, version, pth) ->
+	fs.writeFileSync fileName, ''
+
+
+	result = null
+	ok = objectLength(list) - 1
+
+	arr = []
+	_.each list, ( version, name ) ->
+		arr.push
+			name: name
+			version: version
+
+
+	result = ''
+
+	async.reduce arr, null, ( result, theme, callback ) ->
+		
+		process.nextTick ->
 			
 			request
-				.get( "#{pack.homepage}/modifyers/#{name}/#{version}" )
+				.get( "#{pack.homepage}/themes/#{theme.name}/#{theme.version}" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				
 				.end ( res ) =>
 					
-					if res.ok
-
-						str = "$mod-#{name}: #{res.body.class}"
-						fileName = path.join(pth,"_#{name}.sass")
-						
-						sass fileName, str, ( err, res ) ->
-
-							if err?
-								log.error "Couldn\'t write file #{fileName}"
-
-							else
-
-								fs.appendFile '_imports.sass', "@import '#{fileName}'\n", ( err ) ->
-									if err?
-										log.error "Couldn\'t append import of #{fileName} to the file _imports.sass"
-
-									else
-										log.requestSuccess "modifyer #{name}@#{version} successfully installed."
+					if not res.ok
+						log.requestError res.body.msg, 'ERRR', res.status
 
 					else
-						log.requestError res.body.msg, 'ERRR', res.status
-						process.stdin.destroy()
+						
+						if not result?
+							result = res.body
 
+						else
+							for nme, value of res.body
+								result[nme] += "\t#{value}"
 
+						log.requestSuccess "theme #{theme.name}@#{theme.version} successfully downloaded."
 
+						callback null, result
 
+	, ( err, res ) ->
+		
+		if err?
+			log.error "An error while installing themes."
+			process.stdin.destroy()
 
+		else
+			
+			if not res?
+				log.error "An error while installing themes."
+				process.stdin.destroy()
+
+			else
+
+				str = ''
+
+				for nme, value of res
+					str += "$#{nme}: #{value}\n"
+
+				sass fileName, str, ( err, res ) ->
+
+					if err?
+						log.error "Couldn\'t write file #{fileName}"
+
+					else
+
+						fs.appendFile '_imports.sass', "@import '#{fileName}'\n", ( err ) ->
+							
+							if err?
+								log.error "Couldn\'t append import of #{fileName} to the file _imports.sass"
+
+							else
+								console.log '\n'
+								log.requestSuccess "all themes successfully installed."
 
 
 
@@ -225,9 +280,9 @@ exports.install = ( pth, list ) ->
 
 # Function with json write.
 
-write = ( file, json, callback ) ->
+write = ( file, data, callback ) ->
 
-	fs.writeFile file, JSON.stringify(json, null, 4), ( err ) ->
+	fs.writeFile file, data, ( err ) ->
 
 		if err
 			log.error "initializing – #{err}."
@@ -236,7 +291,7 @@ write = ( file, json, callback ) ->
 		else
 		
 			log.success "file #{file} successfully created."
-			callback null, json
+			callback null, data
 
 
 
@@ -251,4 +306,3 @@ sass = ( fileName, data, callback ) ->
 
 		else
 			callback null, fileName
-

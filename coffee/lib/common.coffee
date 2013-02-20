@@ -8,8 +8,10 @@ wrench = require 'wrench'
 path = require 'path'
 
 modifyers = require './modifyers'
-log = require './logger'
+themes = require './themes'
+widgets = require './widgets'
 maxmertkit = require './maxmertkit'
+log = require './logger'
 
 
 
@@ -32,7 +34,15 @@ exports.init = ( options ) ->
 		
 		else
 
-			if options.modifyer
+			if not options.theme? and not options.modifyer?
+
+				widgets.init options
+
+			if options.theme
+
+				themes.init options
+
+			else if options.modifyer
 
 				modifyers.init options
 
@@ -42,6 +52,7 @@ exports.init = ( options ) ->
 # **Publish**
 # current version of widget/theme/modifyer.
 # First get type, then call publishing function.
+
 exports.publish = ( options ) ->
 
 	mjson = maxmertkit.json()
@@ -51,15 +62,48 @@ exports.publish = ( options ) ->
 		when 'modifyer'
 			modifyers.publish options
 
+		when 'theme'
+			themes.publish options
 
 
 
 
 
-# ****
+# **Unpublish**
+# current version of widget/theme/modifyer.
+# First get type, then call unpublishing functions.
+
+exports.unpublish = ( options ) ->
+
+	mjson = maxmertkit.json()
+
+	switch mjson.type
+
+		when 'modifyer'
+			modifyers.unpublish options
+
+		when 'theme'
+			themes.unpublish options
+
+
+
+
+
+
+# **Install**
+# all dependences
 exports.install = ( options ) ->
 
-	wrench.readdirRecursive '.', ( error, files ) ->
+	fs.writeFile '_imports.sass', "/* Generated with mwm – maxmertkit widget manager */\n", ( err ) ->
+		if err? then log.error "An error while creating _imports.sass"
+
+	install '.'
+
+
+
+install = ( pth, inscludes = null ) ->
+
+	wrench.readdirRecursive pth, ( error, files ) ->
 
 		for index, file of files
 
@@ -67,11 +111,23 @@ exports.install = ( options ) ->
 
 				mjson = maxmertkit.json( file )
 
+				if mjson.dependences?
+
+					pth = path.join( path.dirname( file ), 'dependences/widgets')
+					wrench.mkdirSyncRecursive pth, 0o0777
+					widgets.install pth, mjson.dependences, install( pth, yes )
+
 				if mjson.modifyers?
 
-					pth = path.join( path.dirname( file ), 'dependencies/modifyers')
+					pth = path.join( path.dirname( file ), 'dependences/modifyers')
 					wrench.mkdirSyncRecursive pth, 0o0777
 					modifyers.install pth, mjson.modifyers
+
+				if mjson.themes?
+
+					pth = path.join( path.dirname( file ), 'dependences/themes')
+					wrench.mkdirSyncRecursive pth, 0o0777
+					themes.install pth, mjson.themes
 
 
 

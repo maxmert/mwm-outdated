@@ -1,4 +1,4 @@
-var async, dialog, fs, initJSON, initWrite, initWriteConfirm, log, maxmertkit, modifyers, pack, path, request, wrench;
+var async, dialog, fs, initJSON, initWrite, initWriteConfirm, install, log, maxmertkit, modifyers, pack, path, request, themes, widgets, wrench;
 
 pack = require('../package.json');
 
@@ -16,9 +16,13 @@ path = require('path');
 
 modifyers = require('./modifyers');
 
-log = require('./logger');
+themes = require('./themes');
+
+widgets = require('./widgets');
 
 maxmertkit = require('./maxmertkit');
+
+log = require('./logger');
 
 exports.init = function(options) {
   var _this = this;
@@ -30,7 +34,12 @@ exports.init = function(options) {
     if (err != null) {
       return log.error("An error while initialize maxmertkit.json");
     } else {
-      if (options.modifyer) {
+      if (!(options.theme != null) && !(options.modifyer != null)) {
+        widgets.init(options);
+      }
+      if (options.theme) {
+        return themes.init(options);
+      } else if (options.modifyer) {
         return modifyers.init(options);
       }
     }
@@ -43,21 +52,56 @@ exports.publish = function(options) {
   switch (mjson.type) {
     case 'modifyer':
       return modifyers.publish(options);
+    case 'theme':
+      return themes.publish(options);
+  }
+};
+
+exports.unpublish = function(options) {
+  var mjson;
+  mjson = maxmertkit.json();
+  switch (mjson.type) {
+    case 'modifyer':
+      return modifyers.unpublish(options);
+    case 'theme':
+      return themes.unpublish(options);
   }
 };
 
 exports.install = function(options) {
-  return wrench.readdirRecursive('.', function(error, files) {
-    var file, index, mjson, pth, _results;
+  fs.writeFile('_imports.sass', "/* Generated with mwm – maxmertkit widget manager */\n", function(err) {
+    if (err != null) {
+      return log.error("An error while creating _imports.sass");
+    }
+  });
+  return install('.');
+};
+
+install = function(pth, inscludes) {
+  if (inscludes == null) {
+    inscludes = null;
+  }
+  return wrench.readdirRecursive(pth, function(error, files) {
+    var file, index, mjson, _results;
     _results = [];
     for (index in files) {
       file = files[index];
       if (path.basename(file) === 'maxmertkit.json') {
         mjson = maxmertkit.json(file);
-        if (mjson.modifyers != null) {
-          pth = path.join(path.dirname(file), 'dependencies/modifyers');
+        if (mjson.dependences != null) {
+          pth = path.join(path.dirname(file), 'dependences/widgets');
           wrench.mkdirSyncRecursive(pth, 0x1ff);
-          _results.push(modifyers.install(pth, mjson.modifyers));
+          widgets.install(pth, mjson.dependences, install(pth, true));
+        }
+        if (mjson.modifyers != null) {
+          pth = path.join(path.dirname(file), 'dependences/modifyers');
+          wrench.mkdirSyncRecursive(pth, 0x1ff);
+          modifyers.install(pth, mjson.modifyers);
+        }
+        if (mjson.themes != null) {
+          pth = path.join(path.dirname(file), 'dependences/themes');
+          wrench.mkdirSyncRecursive(pth, 0x1ff);
+          _results.push(themes.install(pth, mjson.themes));
         } else {
           _results.push(void 0);
         }

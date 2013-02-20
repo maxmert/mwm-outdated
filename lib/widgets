@@ -1,328 +1,109 @@
-var async, dialog, foldersExist, fs, fstream, install, log, mustache, ncp, pack, path, request, tar, templates, wrench, _;
+var async, dialog, fs, log, maxmertkit, pack, path, request, _;
 
 pack = require('../package.json');
 
-templates = require('../templates.json');
+async = require('async');
 
 request = require('superagent');
 
-dialog = require('commander');
+fs = require('fs');
 
 path = require('path');
 
-log = require('./logger');
-
-async = require('async');
-
-tar = require('tar');
-
-mustache = require('mustache');
+dialog = require('commander');
 
 _ = require('underscore');
 
-wrench = require('wrench');
+log = require('./logger');
 
-fs = require('fs');
+maxmertkit = require('./maxmertkit');
 
-ncp = require('ncp').ncp;
-
-fstream = require('fstream');
-
-exports.maxmertkit = function() {
-  var json, rawjson;
-  rawjson = fs.readFileSync(path.join('.', pack.maxmertkit));
-  if (!(rawjson != null)) {
-    log.error("couldn\'t read " + pack.maxmertkit + " file.");
-    return process.stdin.destroy();
-  } else {
-    return json = JSON.parse(rawjson);
-  }
-};
-
-foldersExist = function(pth, callback) {
-  var current, index, paths, pt;
-  paths = pth.split(path.sep);
-  current = '';
-  for (index in paths) {
-    pt = paths[index];
-    current = path.join(current, pt);
-    if (!fs.existsSync(current)) {
-      callback(true, current);
-    }
-  }
-  return callback(null, pth);
-};
-
-exports.initCommonSubapp = function(options, callback) {
-  var _this = this;
+exports.init = function(options) {
+  var fileName,
+    _this = this;
+  fileName = 'index.sass';
   return async.series({
-    type: function(callback) {
-      if (!options.theme && !options.modifyer) {
-        return callback(null, 'widget');
-      } else if (options.theme) {
-        return callback(null, 'theme');
-      } else if (options.modifyer) {
-        return callback(null, 'modifyer');
-      }
-    },
-    name: function(callback) {
-      var defaultPkgName;
-      defaultPkgName = 'test';
-      return dialog.prompt("name: (test) ", function(pkgName) {
-        if (pkgName === '') {
-          pkgName = defaultPkgName;
+    widget: function(callback) {
+      return request.get("" + pack.homepage + "/defaults/widget").set('X-Requested-With', 'XMLHttpRequest').set('Accept', 'application/json').end(function(res) {
+        if (res.ok) {
+          return write(fileName, JSON.stringify(res.body, null, 4), callback);
+        } else {
+          log.requestError(res.body.msg, 'ERRR', res.status);
+          return callback(res.error, null);
         }
-        return callback(null, pkgName);
-      });
-    },
-    version: function(callback) {
-      var defaultVersion;
-      defaultVersion = '0.0.0';
-      return dialog.prompt("version: (0.0.0) ", function(version) {
-        if (version === '') {
-          version = defaultVersion;
-        }
-        return callback(null, version);
-      });
-    },
-    description: function(callback) {
-      return dialog.prompt("description: ", function(description) {
-        return callback(null, description);
-      });
-    },
-    repository: function(callback) {
-      return dialog.prompt("repository: ", function(repository) {
-        return callback(null, repository);
-      });
-    },
-    author: function(callback) {
-      return dialog.prompt("author: ", function(author) {
-        return callback(null, author);
-      });
-    },
-    license: function(callback) {
-      var defaultLicense;
-      defaultLicense = 'BSD';
-      return dialog.prompt("license: (BSD) ", function(license) {
-        if (license === '') {
-          license = defaultLicense;
-        }
-        return callback(null, license);
       });
     }
-  }, function(err, maxmertkitjson) {
-    return _this.initWriteConfirm(pack.maxmertkit, maxmertkitjson, callback);
+  }, function(err, res) {
+    if (err != null) {
+      log.error("An error while initialized widget.");
+      return process.stdin.destroy();
+    } else {
+      return process.stdin.destroy();
+    }
   });
 };
 
-exports.initWriteConfirm = function(file, json, callback) {
-  var _this = this;
-  console.log("\n\nWriting file " + file + "\n");
-  return dialog.confirm("Is everything correct? \n\n " + (JSON.stringify(json, null, 4)) + "\n-> ", function(ok) {
-    console.log("");
-    if (!ok) {
-      log.error("Initializing canceled");
-      callback(ok, null);
-      return process.stdin.destroy();
-    } else {
-      return fs.exists(file, function(exists) {
-        if (!exists) {
-          _this.initWrite(file, json, callback);
-          return process.stdin.destroy();
+exports.install = function(pth, list, callback) {
+  var arr;
+  arr = [];
+  _.each(list, function(version, name) {
+    return arr.push({
+      name: name,
+      version: version
+    });
+  });
+  return async.every(arr, function(result, callback) {
+    return process.nextTick(function() {
+      var _this = this;
+      return request.get("" + pack.homepage + "/themes/" + theme.name + "/" + theme.version).set('X-Requested-With', 'XMLHttpRequest').end(function(res) {
+        var nme, value, _ref;
+        if (!res.ok) {
+          return log.requestError(res.body.msg, 'ERRR', res.status);
         } else {
-          log.error("File " + file + " already exists.");
-          return dialog.confirm("Do you want to overwrite it and all other files in that folder? -> ", function(ok) {
-            if (!ok) {
-              log.error("initialization canceled.");
-              callback(ok, null);
-              return process.stdin.destroy();
-            } else {
-              _this.initWrite(file, json, callback);
-              return process.stdin.destroy();
+          if (!(result != null)) {
+            result = res.body;
+          } else {
+            _ref = res.body;
+            for (nme in _ref) {
+              value = _ref[nme];
+              result[nme] += "\t" + value;
             }
-          });
+          }
+          log.requestSuccess("theme " + theme.name + "@" + theme.version + " successfully downloaded.");
+          return callback(null, result);
         }
       });
-    }
-  });
-};
-
-exports.initWrite = function(file, json, callback) {
-  return fs.writeFile(file, JSON.stringify(json, null, 4), function(err) {
-    if (err) {
-      log.error("initializing – " + err + ".");
-      return callback(err, null);
-    } else {
-      log.success("file " + file + " successfully created.");
-      return callback(null, json);
-    }
-  });
-};
-
-exports.initWidgetSubapp = function(options) {
-  var _this = this;
-  return async.series({
-    common: function(callback) {
-      return _this.initCommonSubapp(options, callback);
-    }
+    });
   }, function(err, res) {
-    return console.log('ok');
-  });
-};
-
-exports.initThemeSubapp = function(options) {
-  var fileName,
-    _this = this;
-  fileName = 'theme.json';
-  return async.series({
-    common: function(callback) {
-      return _this.initCommonSubapp(options, callback);
-    },
-    theme: function(callback) {
-      return request.get("" + pack.homepage + "/defaults/theme").set('X-Requested-With', 'XMLHttpRequest').set('Accept', 'application/json').end(function(res) {
-        if (res.ok) {
-          return _this.initWrite(fileName, res.body, callback);
-        } else {
-          log.requestError(res.body.msg, 'ERRR', res.status);
-          return callback(res.error, null);
-        }
-      });
-    }
-  }, function(err, res) {
+    var nme, str, value;
     if (err != null) {
-      log.error("An error while initialized theme.");
+      log.error("An error while installing themes.");
       return process.stdin.destroy();
     } else {
-      return process.stdin.destroy();
-    }
-  });
-};
-
-exports.initModifyerSubapp = function(options) {
-  var fileName,
-    _this = this;
-  fileName = 'modifyer.json';
-  return async.series({
-    common: function(callback) {
-      return _this.initCommonSubapp(options, callback);
-    },
-    theme: function(callback) {
-      return request.get("" + pack.homepage + "/defaults/modifyer").set('X-Requested-With', 'XMLHttpRequest').set('Accept', 'application/json').end(function(res) {
-        if (res.ok) {
-          return _this.initWrite(fileName, res.body, callback);
-        } else {
-          log.requestError(res.body.msg, 'ERRR', res.status);
-          return callback(res.error, null);
-        }
-      });
-    }
-  }, function(err, res) {
-    if (err != null) {
-      log.error("An error while initialized modifyer.");
-      return process.stdin.destroy();
-    } else {
-      return process.stdin.destroy();
-    }
-  });
-};
-
-exports.Publish = function(options) {
-  var maxmertkit;
-  maxmertkit = this.maxmertkit();
-  switch (maxmertkit.type) {
-    case 'widget':
-      return this.PublishWidget(options);
-    case 'theme':
-      return this.PublishTheme(options);
-    case 'modifyer':
-      return this.PublishModifyer(options);
-  }
-};
-
-exports.PublishModifyer = function(options) {
-  var fileName, maxmertkit,
-    _this = this;
-  maxmertkit = this.maxmertkit();
-  fileName = 'modifyer.json';
-  return async.series({
-    modifyer: function(callback) {
-      var json, rawjson;
-      rawjson = fs.readFileSync(path.join('.', fileName));
-      if (!(rawjson != null)) {
-        log.error("couldn\'t read " + fileName + " file.");
-        return callback(true, null);
+      if (!(res != null)) {
+        log.error("An error while installing themes.");
+        return process.stdin.destroy();
       } else {
-        json = JSON.parse(rawjson);
-        return callback(null, json);
-      }
-    },
-    password: function(callback) {
-      return dialog.password('\nEnter your password: ', function(password) {
-        return callback(null, password);
-      });
-    }
-  }, function(err, res) {
-    if (err != null) {
-      log.error("Publishing canceled.");
-      return process.stdin.destroy();
-    } else {
-      return request.post("" + pack.homepage + "/modifyers/" + maxmertkit.name + "/" + maxmertkit.version).set('X-Requested-With', 'XMLHttpRequest').send({
-        modifyer: res.modifyer,
-        password: res.password,
-        name: maxmertkit.name,
-        version: maxmertkit.version,
-        username: maxmertkit.author
-      }).end(function(res) {
-        if (res.ok) {
-          log.requestSuccess("modifyer " + maxmertkit.name + "@" + maxmertkit.version + " successfully published.");
-          return process.stdin.destroy();
-        } else {
-          log.requestError(res.body.msg, 'ERRR', res.status);
-          return process.stdin.destroy();
+        str = '';
+        for (nme in res) {
+          value = res[nme];
+          str += "$" + nme + ": " + value + "\n";
         }
-      });
-    }
-  });
-};
-
-exports.Install = function(options) {};
-
-install = function(json, pth) {
-  return async.series({
-    modifyers: function(callback) {
-      var modifyers;
-      if (json.modifyers != null) {
-        foldersExist(path.join(pth, 'dependences/modifyers'), function(err, pth) {
+        return sass(fileName, str, function(err, res) {
           if (err != null) {
-            return fs.mkdirSync(pth);
-          }
-        });
-        modifyers = [];
-        _.each(json.modifyers, function(version, name) {
-          return modifyers.push({
-            name: name,
-            version: version
-          });
-        });
-        return async.every(modifyers, exports.installModifyer, function(err) {
-          if (err != null) {
-            return process.stdin.destroy();
+            return log.error("Couldn\'t write file " + fileName);
+          } else {
+            return fs.appendFile('_imports.sass', "@import '" + fileName + "'\n", function(err) {
+              if (err != null) {
+                return log.error("Couldn\'t append import of " + fileName + " to the file _imports.sass");
+              } else {
+                console.log('\n');
+                return log.requestSuccess("all themes successfully installed.");
+              }
+            });
           }
         });
       }
-    }
-  }, function(err, res) {
-    return process.stdin.destroy();
-  });
-};
-
-exports.installModifyer = function(modifyer) {
-  return request.get("" + pack.homepage + "/modifyers/" + modifyer.name + "/" + modifyer.version).set('X-Requested-With', 'XMLHttpRequest').end(function(res) {
-    if (res.ok) {
-      return log.requestSuccess("modifyer " + modifyer.name + "@" + modifyer.version + " successfully installed.");
-    } else {
-      log.requestError(res.body.msg, 'ERRR', res.status);
-      return res.error;
     }
   });
 };

@@ -87,6 +87,39 @@ exports.publish = function(options) {
   });
 };
 
+exports.unpublish = function(options) {
+  var mjson,
+    _this = this;
+  mjson = maxmertkit.json();
+  return async.series({
+    password: function(callback) {
+      return dialog.password('\nEnter your password: ', function(password) {
+        return callback(null, password);
+      });
+    }
+  }, function(err, res) {
+    if (err != null) {
+      log.error("Unpublishing canceled.");
+      return process.stdin.destroy();
+    } else {
+      return request.del("" + pack.homepage + "/modifyers/" + mjson.name + "/" + mjson.version).set('X-Requested-With', 'XMLHttpRequest').send({
+        password: res.password,
+        name: mjson.name,
+        version: mjson.version,
+        username: mjson.author
+      }).end(function(res) {
+        if (res.ok) {
+          log.requestSuccess("modifyer " + mjson.name + "@" + mjson.version + " successfully unpublished.");
+          return process.stdin.destroy();
+        } else {
+          log.requestError(res.body.msg, 'ERRR', res.status);
+          return process.stdin.destroy();
+        }
+      });
+    }
+  });
+};
+
 exports.install = function(pth, list) {
   var name, version, _results;
   _results = [];
@@ -103,7 +136,13 @@ exports.install = function(pth, list) {
             if (err != null) {
               return log.error("Couldn\'t write file " + fileName);
             } else {
-              return log.requestSuccess("modifyer " + name + "@" + version + " successfully installed.");
+              return fs.appendFile('_imports.sass', "@import '" + fileName + "'\n", function(err) {
+                if (err != null) {
+                  return log.error("Couldn\'t append import of " + fileName + " to the file _imports.sass");
+                } else {
+                  return log.requestSuccess("modifyer " + name + "@" + version + " successfully installed.");
+                }
+              });
             }
           });
         } else {

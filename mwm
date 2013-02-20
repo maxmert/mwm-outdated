@@ -1,12 +1,14 @@
 #!/usr/bin/env node;
 
-var common, fs, log, pack, path, program;
+var archives, common, fs, log, pack, path, program;
 
 pack = require('./package.json');
 
 path = require('path');
 
 common = require('./lib/common');
+
+archives = require('./lib/archives');
 
 program = require('nomnom').colors();
 
@@ -30,8 +32,16 @@ program.command('publish').callback(function(options) {
   return common.publish(options);
 }).help('Publishing current version of widget/modifyer/theme.');
 
+program.command('unpublish').callback(function(options) {
+  return common.unpublish(options);
+}).help('Unpublishing current version of widget/modifyer/theme.');
+
 program.command('install').callback(function(options) {
   return common.install(options);
 }).help('Installing all dependences, themes and modifyers.');
+
+program.command('pack').callback(function(options) {
+  return archives.pack('.', null);
+}).help('Pack current version of widget/modifyer/theme to a tar file.');
 
 program.parse();
