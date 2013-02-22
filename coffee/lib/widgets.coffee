@@ -1,4 +1,5 @@
 pack = require '../package.json'
+templates = require '../templates.json'
 
 async = require 'async'
 request = require 'superagent'
@@ -6,8 +7,10 @@ fs = require 'fs'
 path = require 'path'
 dialog = require 'commander'
 _ = require 'underscore'
+mustache = require 'mustache'
 
 log = require './logger'
+archives = require './archives'
 maxmertkit = require './maxmertkit'
 
 
@@ -17,24 +20,17 @@ maxmertkit = require './maxmertkit'
 
 exports.init = ( options ) ->
 
-	fileName = 'index.sass'
+	fileName = '_index.sass'
+	paramsFileName = '_params.sass'
+	mjson = maxmertkit.json()
 
 	async.series
 
 		widget: ( callback ) =>
 
-			request
-				.get( "#{pack.homepage}/defaults/widget" )
-				.set( 'X-Requested-With', 'XMLHttpRequest' )
-				.set('Accept', 'application/json')
-				.end ( res ) =>
-
-					if res.ok
-						write fileName, JSON.stringify(res.body, null, 4), callback
-
-					else
-						log.requestError res.body.msg, 'ERRR', res.status
-						callback res.error, null
+			write '_imports.sass', "/* Generated with mwm – maxmertkit widget manager */\n", callback
+			write fileName, mustache.render( templates.widget, mjson ), callback
+			write paramsFileName, mustache.render( templates.params, mjson ), callback
 
 
 	, ( err, res ) =>
@@ -45,6 +41,104 @@ exports.init = ( options ) ->
 
 		else
 			process.stdin.destroy()
+
+
+
+
+
+
+# **Publish**
+# current version of the widget.
+
+exports.publish = ( options ) ->
+
+	mjson = maxmertkit.json()
+
+	async.series
+
+		widget: ( callback ) =>
+			
+			archives.pack '.', callback
+
+
+		password: ( callback ) =>
+			
+			dialog.password '\nEnter your password: ', ( password ) ->
+				callback null, password
+
+	, ( err, res ) =>
+
+		if err?
+			log.error "Publishing canceled."
+			process.stdin.destroy()
+
+		else
+			
+			packFile = path.join '.', "#{mjson.name}@#{mjson.version}.tar"
+
+			request
+				.post( "#{pack.homepage}/widgets/#{mjson.name}/#{mjson.version}" )
+				.set( 'X-Requested-With', 'XMLHttpRequest' )
+				
+				.attach( path.basename( packFile ), packFile )
+				.field( 'password', res.password )
+				.field( 'name', mjson.name )
+				.field( 'version', mjson.version )
+				.field( 'username', mjson.author )
+				
+				.end ( res ) ->
+					
+					if res.ok
+						log.requestSuccess "widget #{mjson.name}@#{mjson.version} successfully published."
+						process.stdin.destroy()
+
+					else
+						log.requestError res.body.msg, 'ERRR', res.status
+						process.stdin.destroy()
+
+
+
+
+
+
+
+# exports.onServerUnpublish = ( options, callback ) ->
+
+# 	widget = @.maxmertkit()
+
+# 	fileName = "#{widget.name}@#{widget.version}.tar"
+
+# 	async.series
+
+# 		password: ( callback ) =>
+# 			dialog.password '\nEnter your password: ', ( password ) ->
+# 				callback null, password
+
+# 	, ( err, res ) =>
+
+# 		if err
+# 			log.error "Could not unpublish widget."
+# 			if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback err, widget.name
+
+# 		else
+# 			request
+# 				.del( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}" )
+# 				.set( 'X-Requested-With', 'XMLHttpRequest' )
+# 				.field( 'packName', fileName)
+# 				.field( 'name', widget.name)
+# 				.field( 'version', widget.version)
+# 				.field( 'password', res.password)
+# 				.field( 'username', widget.author )
+# 				.end ( res ) ->
+# 					if res.ok
+# 						log.requestSuccess "widget #{widget.name}@#{widget.version} successfully unpublished."
+# 						if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback null, widget.name
+
+# 					else
+# 						log.requestError res.body.msg, 'ERRR', res.status						
+# 						if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback yes, widget.name
+
+
 
 
 
@@ -64,19 +158,19 @@ exports.install = ( pth, list, callback ) ->
 			version: version
 
 
-	async.every arr, ( result, callback ) ->
+	async.every arr, ( widget, callback ) ->
 		
 		process.nextTick ->
 			
 			request
-				.get( "#{pack.homepage}/themes/#{theme.name}/#{theme.version}" )
+				.get( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				
 				.end ( res ) =>
 					
 					if not res.ok
 						log.requestError res.body.msg, 'ERRR', res.status
-
+						callback true, null
 					else
 						
 						if not result?
@@ -86,44 +180,25 @@ exports.install = ( pth, list, callback ) ->
 							for nme, value of res.body
 								result[nme] += "\t#{value}"
 
-						log.requestSuccess "theme #{theme.name}@#{theme.version} successfully downloaded."
+						log.requestSuccess "Widget #{widget.name}@#{widget.version} successfully downloaded."
 
 						callback null, result
 
 	, ( err, res ) ->
 		
 		if err?
-			log.error "An error while installing themes."
+			# log.error "An error while installing widgets."
 			process.stdin.destroy()
 
 		else
 			
 			if not res?
-				log.error "An error while installing themes."
+				# log.error "An error while installing widgets."
 				process.stdin.destroy()
 
 			else
 
-				str = ''
-
-				for nme, value of res
-					str += "$#{nme}: #{value}\n"
-
-				sass fileName, str, ( err, res ) ->
-
-					if err?
-						log.error "Couldn\'t write file #{fileName}"
-
-					else
-
-						fs.appendFile '_imports.sass', "@import '#{fileName}'\n", ( err ) ->
-							
-							if err?
-								log.error "Couldn\'t append import of #{fileName} to the file _imports.sass"
-
-							else
-								console.log '\n'
-								log.requestSuccess "all themes successfully installed."
+				
 
 
 
@@ -152,7 +227,20 @@ exports.install = ( pth, list, callback ) ->
 
 
 
+# Function with json write.
 
+write = ( file, data, callback ) ->
+
+	fs.writeFile file, data, ( err ) ->
+
+		if err
+			log.error "initializing – #{err}."
+			callback err, null
+
+		else
+		
+			log.success "file #{file} successfully created."
+			callback null, data
 
 
 

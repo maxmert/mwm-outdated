@@ -50,6 +50,8 @@ exports.publish = function(options) {
   var mjson;
   mjson = maxmertkit.json();
   switch (mjson.type) {
+    case 'widget':
+      return widgets.publish(options);
     case 'modifyer':
       return modifyers.publish(options);
     case 'theme':
@@ -182,7 +184,7 @@ initWriteConfirm = function(file, json, callback) {
     console.log("");
     if (!ok) {
       log.error("Initializing canceled");
-      callback(ok, null);
+      callback(true, null);
       return process.stdin.destroy();
     } else {
       return fs.exists(file, function(exists) {

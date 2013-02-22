@@ -59,6 +59,9 @@ exports.publish = ( options ) ->
 
 	switch mjson.type
 
+		when 'widget'
+			widgets.publish options
+
 		when 'modifyer'
 			modifyers.publish options
 
@@ -235,7 +238,7 @@ initWriteConfirm = ( file, json, callback ) ->
 
 			if not ok
 				log.error("Initializing canceled")
-				callback ok, null
+				callback yes, null
 				process.stdin.destroy()
 
 			else

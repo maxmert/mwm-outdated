@@ -1,1 +1,18 @@
-@mixin {{name}}( $theme-index )\n\t//\n\t//color: nth( $theme-text, $theme-index )\n\t//background-color: nth( $theme-background, $theme-index )\n\t//\n\t//Using of nth( $theme-text, $index ) is nessesary for applying all included themes
+${{name}}: -{{name}}
+\n
+\n@import 'params'
+\n@import 'imports'
+\n
+\n@mixin {{name}}( $index )
+\n\t	// All here
+\n
+\n@if type-of( $themes ) == list or $themes == default
+\n	
+\n\t@each $theme in $themes
+\n
+\n\t\t$index: index( $themes, $theme )
+\n
+\n\t\t// With each theme do
+\n\t\t.#{${{name}}}.#{$theme}
+\n
+\n\t\t\t// and here
