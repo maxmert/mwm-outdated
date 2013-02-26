@@ -101,9 +101,10 @@ exports.store = function(callback) {
   directoryName = "/tmp/" + mjson.name;
   return ncp('.', directoryName, {
     filter: function(name) {
-      var currentName;
+      var currentName, pth;
       currentName = path.relative('.', name).split(path.sep)[0];
-      if (currentName.charAt(0) === '.' || path.relative('.', name).indexOf('dependences') !== -1 || path.relative('.', name).indexOf('.tar') !== -1) {
+      pth = path.relative('.', name);
+      if (currentName.charAt(0) === '.' || pth.indexOf('dependences') !== -1 || pth.indexOf('.tar') !== -1 || pth.indexOf('.sass-cache') !== -1 || pth.indexOf('.sass-cache') !== -1 || pth.indexOf('.css') !== -1 || pth.indexOf('config.rb') !== -1) {
         return false;
       } else {
         return true;
@@ -159,10 +160,12 @@ exports.restore = function(fileName, callback) {
 
 exports.unpack = function(fileName, callback) {
   var mjson;
-  mjson = maxmertkit.json();
-  fileName = "" + mjson.name + "@" + mjson.version + ".tar";
+  if (!(fileName != null)) {
+    mjson = maxmertkit.json();
+    fileName = "" + mjson.name + "@" + mjson.version + ".tar";
+  }
   return fs.createReadStream(path.join('.', fileName)).pipe(tar.Extract({
-    path: '.'
+    path: path.dirname(fileName)
   })).on('error', function(err) {
     log.error("Failed to unpack " + fileName + " width error:\n" + err);
     if (!(callback != null) || typeof callback === 'object') {

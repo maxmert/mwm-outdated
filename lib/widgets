@@ -66,7 +66,7 @@ exports.publish = function(options) {
       return process.stdin.destroy();
     } else {
       packFile = path.join('.', "" + mjson.name + "@" + mjson.version + ".tar");
-      return request.post("" + pack.homepage + "/widgets/" + mjson.name + "/" + mjson.version).set('X-Requested-With', 'XMLHttpRequest').attach(path.basename(packFile), packFile).field('password', res.password).field('name', mjson.name).field('version', mjson.version).field('username', mjson.author).end(function(res) {
+      return request.post("" + pack.homepage + "/widgets/" + mjson.name + "/" + mjson.version).set('X-Requested-With', 'XMLHttpRequest').attach('pack', packFile).field('packName', path.basename(packFile)).field('password', res.password).field('name', mjson.name).field('version', mjson.version).field('username', mjson.author).end(function(res) {
         if (res.ok) {
           log.requestSuccess("widget " + mjson.name + "@" + mjson.version + " successfully published.");
           return process.stdin.destroy();
@@ -79,7 +79,48 @@ exports.publish = function(options) {
   });
 };
 
-exports.install = function(pth, list, callback) {
+exports.unpublish = function(options) {
+  var fileName, mjson,
+    _this = this;
+  mjson = maxmertkit.json();
+  fileName = "" + mjson.name + "@" + mjson.version + ".tar";
+  return async.series({
+    password: function(callback) {
+      return dialog.password('\nEnter your password: ', function(password) {
+        return callback(null, password);
+      });
+    }
+  }, function(err, res) {
+    if (err) {
+      log.error("Could not unpublish widget.");
+      if (!(typeof callback !== "undefined" && callback !== null) || typeof callback === 'object') {
+        return process.stdin.destroy();
+      } else {
+        return callback(err, mjson.name);
+      }
+    } else {
+      return request.del("" + pack.homepage + "/widgets/" + mjson.name + "/" + mjson.version).set('X-Requested-With', 'XMLHttpRequest').field('packName', fileName).field('name', mjson.name).field('version', mjson.version).field('password', res.password).field('username', mjson.author).end(function(res) {
+        if (res.ok) {
+          log.requestSuccess("widget " + mjson.name + "@" + mjson.version + " successfully unpublished.");
+          if (!(typeof callback !== "undefined" && callback !== null) || typeof callback === 'object') {
+            return process.stdin.destroy();
+          } else {
+            return callback(null, mjson.name);
+          }
+        } else {
+          log.requestError(res.body.msg, 'ERRR', res.status);
+          if (!(typeof callback !== "undefined" && callback !== null) || typeof callback === 'object') {
+            return process.stdin.destroy();
+          } else {
+            return callback(true, mjson.name);
+          }
+        }
+      });
+    }
+  });
+};
+
+exports.install = function(pth, list, calll, dependent) {
   var arr;
   arr = [];
   _.each(list, function(version, name) {
@@ -89,37 +130,55 @@ exports.install = function(pth, list, callback) {
     });
   });
   return async.every(arr, function(widget, callback) {
-    return process.nextTick(function() {
-      var _this = this;
-      return request.get("" + pack.homepage + "/widgets/" + widget.name + "/" + widget.version).set('X-Requested-With', 'XMLHttpRequest').end(function(res) {
-        var nme, result, value, _ref;
-        if (!res.ok) {
-          log.requestError(res.body.msg, 'ERRR', res.status);
-          return callback(true, null);
+    var _this = this;
+    this.calll = calll;
+    this.dependent = dependent;
+    return process.nextTick(function(callback, calll, dependent) {
+      var fileName, req;
+      fileName = "" + widget.name + "@" + widget.version + ".tar";
+      return req = request.get("" + pack.homepage + "/widgets/" + widget.name + "/" + widget.version).set('X-Requested-With', 'XMLHttpRequest').end(function(res) {
+        var stream;
+        if (res.ok) {
+          req = request.get("" + pack.homepage + "/widgets/" + widget.name + "/" + widget.version).set('X-Requested-With', 'XMLHttpRequest');
+          stream = fs.createWriteStream(path.join(pth, fileName));
+          req.pipe(stream);
+          return stream.on('close', function() {
+            return archives.unpack(path.join(pth, fileName), function(err) {
+              if (err != null) {
+                log.error("Couldn\'t unpack " + widget.name + "@" + widget.version + ".tar");
+                return callback(true, null);
+              } else {
+                fs.unlink(path.join(pth, fileName));
+                return fs.appendFile('_imports.sass', "@import '" + pth + "/" + widget.name + "/_index.sass'\n", function(err) {
+                  if (err != null) {
+                    return callback(true, null);
+                  } else {
+                    console.log(path.join(pth, widget.name, '_params.sass'));
+                    if (this.dependent) {
+                      fs.writeFileSync(path.join(pth, widget.name, '_params.sass'), "$dependent: true\n");
+                    }
+                    return this.calll(path.join(pth, widget.name), true);
+                  }
+                });
+              }
+            });
+          });
         } else {
-          if (!(typeof result !== "undefined" && result !== null)) {
-            result = res.body;
+          log.requestError(res.body.msg, 'ERRR', res.status);
+          if (!(callback != null) || typeof callback === 'object') {
+            return process.stdin.destroy();
           } else {
-            _ref = res.body;
-            for (nme in _ref) {
-              value = _ref[nme];
-              result[nme] += "\t" + value;
-            }
+            return callback(true, widget.name);
           }
-          log.requestSuccess("Widget " + widget.name + "@" + widget.version + " successfully downloaded.");
-          return callback(null, result);
         }
       });
     });
-  }, function(err, res) {
-    if (err != null) {
+  }, function(res) {
+    if (!(res != null)) {
+      log.error("An error while installing widgets.");
       return process.stdin.destroy();
     } else {
-      if (!(res != null)) {
-        return process.stdin.destroy();
-      } else {
-
-      }
+      return log.success("Done.");
     }
   });
 };

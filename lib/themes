@@ -182,7 +182,11 @@ exports.install = function(pth, list) {
         str = '';
         for (nme in res) {
           value = res[nme];
-          str += "$" + nme + ": " + value + "\n";
+          if (nme === 'theme') {
+            str += "$" + nme + "s: " + value + "\n";
+          } else {
+            str += "$" + nme + ": " + value + "\n";
+          }
         }
         return sass(fileName, str, function(err, res) {
           if (err != null) {
@@ -192,8 +196,7 @@ exports.install = function(pth, list) {
               if (err != null) {
                 return log.error("Couldn\'t append import of " + fileName + " to the file _imports.sass");
               } else {
-                console.log('\n');
-                return log.requestSuccess("all themes successfully installed.");
+                return log.success("all themes successfully installed.");
               }
             });
           }

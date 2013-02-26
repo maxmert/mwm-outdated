@@ -80,7 +80,8 @@ exports.publish = ( options ) ->
 				.post( "#{pack.homepage}/widgets/#{mjson.name}/#{mjson.version}" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				
-				.attach( path.basename( packFile ), packFile )
+				.attach( 'pack', packFile )
+				.field( 'packName', path.basename( packFile ) )
 				.field( 'password', res.password )
 				.field( 'name', mjson.name )
 				.field( 'version', mjson.version )
@@ -99,47 +100,44 @@ exports.publish = ( options ) ->
 
 
 
+# **Unpublish**
+# current version of the widget.
 
+exports.unpublish = ( options ) ->
 
+	mjson = maxmertkit.json()
 
-# exports.onServerUnpublish = ( options, callback ) ->
+	fileName = "#{mjson.name}@#{mjson.version}.tar"
 
-# 	widget = @.maxmertkit()
+	async.series
 
-# 	fileName = "#{widget.name}@#{widget.version}.tar"
+		password: ( callback ) =>
+			dialog.password '\nEnter your password: ', ( password ) ->
+				callback null, password
 
-# 	async.series
+	, ( err, res ) =>
 
-# 		password: ( callback ) =>
-# 			dialog.password '\nEnter your password: ', ( password ) ->
-# 				callback null, password
+		if err
+			log.error "Could not unpublish widget."
+			if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback err, mjson.name
 
-# 	, ( err, res ) =>
+		else
+			request
+				.del( "#{pack.homepage}/widgets/#{mjson.name}/#{mjson.version}" )
+				.set( 'X-Requested-With', 'XMLHttpRequest' )
+				.field( 'packName', fileName)
+				.field( 'name', mjson.name)
+				.field( 'version', mjson.version)
+				.field( 'password', res.password)
+				.field( 'username', mjson.author )
+				.end ( res ) ->
+					if res.ok
+						log.requestSuccess "widget #{mjson.name}@#{mjson.version} successfully unpublished."
+						if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback null, mjson.name
 
-# 		if err
-# 			log.error "Could not unpublish widget."
-# 			if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback err, widget.name
-
-# 		else
-# 			request
-# 				.del( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}" )
-# 				.set( 'X-Requested-With', 'XMLHttpRequest' )
-# 				.field( 'packName', fileName)
-# 				.field( 'name', widget.name)
-# 				.field( 'version', widget.version)
-# 				.field( 'password', res.password)
-# 				.field( 'username', widget.author )
-# 				.end ( res ) ->
-# 					if res.ok
-# 						log.requestSuccess "widget #{widget.name}@#{widget.version} successfully unpublished."
-# 						if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback null, widget.name
-
-# 					else
-# 						log.requestError res.body.msg, 'ERRR', res.status						
-# 						if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback yes, widget.name
-
-
-
+					else
+						log.requestError res.body.msg, 'ERRR', res.status						
+						if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback yes, mjson.name
 
 
 
@@ -149,7 +147,7 @@ exports.publish = ( options ) ->
 # **Install**
 # widget dependences.
 
-exports.install = ( pth, list, callback ) ->
+exports.install = ( pth, list, calll, dependent ) ->
 
 	arr = []
 	_.each list, ( version, name ) ->
@@ -157,51 +155,67 @@ exports.install = ( pth, list, callback ) ->
 			name: name
 			version: version
 
-
 	async.every arr, ( widget, callback ) ->
 		
-		process.nextTick ->
+		@calll = calll
+		@dependent = dependent
+
+		process.nextTick ( callback, calll, dependent ) =>
 			
-			request
+			fileName = "#{widget.name}@#{widget.version}.tar"
+			
+			req = request
 				.get( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
-				
 				.end ( res ) =>
-					
-					if not res.ok
-						log.requestError res.body.msg, 'ERRR', res.status
-						callback true, null
-					else
+
+					if res.ok
+
+						req = request
+							.get( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}" )
+							.set( 'X-Requested-With', 'XMLHttpRequest' )
+
+						stream = fs.createWriteStream( path.join(pth, fileName) )
+
+						req.pipe stream
+
+						stream.on 'close', ->
+							
+							archives.unpack path.join(pth, fileName), ( err ) ->
+								
+								if err?
+									log.error "Couldn\'t unpack #{widget.name}@#{widget.version}.tar"
+									callback yes, null
+								
+								else
+									fs.unlink path.join(pth, fileName)
+
+									fs.appendFile '_imports.sass', "@import '#{pth}/#{widget.name}/_index.sass'\n", ( err ) ->
+
+										if err?
+											callback yes, null
+
+										else
+											console.log path.join(pth, widget.name, '_params.sass')
+											if @dependent
+												fs.writeFileSync path.join(pth, widget.name, '_params.sass'), "$dependent: true\n"
+
+											@calll path.join(pth, widget.name), yes
 						
-						if not result?
-							result = res.body
 
-						else
-							for nme, value of res.body
-								result[nme] += "\t#{value}"
+					else
+						log.requestError res.body.msg, 'ERRR', res.status						
+						if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback yes, widget.name
 
-						log.requestSuccess "Widget #{widget.name}@#{widget.version} successfully downloaded."
 
-						callback null, result
-
-	, ( err, res ) ->
-		
-		if err?
-			# log.error "An error while installing widgets."
+	, ( res ) ->
+		# console.log err
+		if not res?
+			log.error "An error while installing widgets."
 			process.stdin.destroy()
 
 		else
-			
-			if not res?
-				# log.error "An error while installing widgets."
-				process.stdin.destroy()
-
-			else
-
-				
-
-
-
+			log.success "Done."
 
 
 
@@ -241,9 +255,6 @@ write = ( file, data, callback ) ->
 		
 			log.success "file #{file} successfully created."
 			callback null, data
-
-
-
 
 
 

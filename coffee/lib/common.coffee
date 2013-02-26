@@ -82,6 +82,9 @@ exports.unpublish = ( options ) ->
 
 	switch mjson.type
 
+		when 'widget'
+			widgets.unpublish options
+
 		when 'modifyer'
 			modifyers.unpublish options
 
@@ -104,21 +107,17 @@ exports.install = ( options ) ->
 
 
 
-install = ( pth, inscludes = null ) ->
-
+install = ( pth, includes = yes ) ->
+	# console.log pth
 	wrench.readdirRecursive pth, ( error, files ) ->
 
 		for index, file of files
 
+			file = path.join(pth, file)
+
 			if path.basename( file ) is 'maxmertkit.json'
 
 				mjson = maxmertkit.json( file )
-
-				if mjson.dependences?
-
-					pth = path.join( path.dirname( file ), 'dependences/widgets')
-					wrench.mkdirSyncRecursive pth, 0o0777
-					widgets.install pth, mjson.dependences, install( pth, yes )
 
 				if mjson.modifyers?
 
@@ -132,9 +131,14 @@ install = ( pth, inscludes = null ) ->
 					wrench.mkdirSyncRecursive pth, 0o0777
 					themes.install pth, mjson.themes
 
+				if mjson.dependences?
+					
+					pth = path.join( path.dirname( file ), 'dependences/widgets')
+					
+					wrench.rmdirSyncRecursive pth, ->
+					wrench.mkdirSyncRecursive pth, 0o0777
 
-
-
+					widgets.install pth, mjson.dependences, install, includes
 
 
 

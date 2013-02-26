@@ -239,7 +239,11 @@ exports.install = ( pth, list ) ->
 				str = ''
 
 				for nme, value of res
-					str += "$#{nme}: #{value}\n"
+					if nme is 'theme'
+						str += "$#{nme}s: #{value}\n"
+					else
+						str += "$#{nme}: #{value}\n"
+
 
 				sass fileName, str, ( err, res ) ->
 
@@ -254,8 +258,7 @@ exports.install = ( pth, list ) ->
 								log.error "Couldn\'t append import of #{fileName} to the file _imports.sass"
 
 							else
-								console.log '\n'
-								log.requestSuccess "all themes successfully installed."
+								log.success "all themes successfully installed."
 
 
 

@@ -63,6 +63,8 @@ exports.unpublish = function(options) {
   var mjson;
   mjson = maxmertkit.json();
   switch (mjson.type) {
+    case 'widget':
+      return widgets.unpublish(options);
     case 'modifyer':
       return modifyers.unpublish(options);
     case 'theme':
@@ -79,22 +81,18 @@ exports.install = function(options) {
   return install('.');
 };
 
-install = function(pth, inscludes) {
-  if (inscludes == null) {
-    inscludes = null;
+install = function(pth, includes) {
+  if (includes == null) {
+    includes = true;
   }
   return wrench.readdirRecursive(pth, function(error, files) {
     var file, index, mjson, _results;
     _results = [];
     for (index in files) {
       file = files[index];
+      file = path.join(pth, file);
       if (path.basename(file) === 'maxmertkit.json') {
         mjson = maxmertkit.json(file);
-        if (mjson.dependences != null) {
-          pth = path.join(path.dirname(file), 'dependences/widgets');
-          wrench.mkdirSyncRecursive(pth, 0x1ff);
-          widgets.install(pth, mjson.dependences, install(pth, true));
-        }
         if (mjson.modifyers != null) {
           pth = path.join(path.dirname(file), 'dependences/modifyers');
           wrench.mkdirSyncRecursive(pth, 0x1ff);
@@ -103,7 +101,13 @@ install = function(pth, inscludes) {
         if (mjson.themes != null) {
           pth = path.join(path.dirname(file), 'dependences/themes');
           wrench.mkdirSyncRecursive(pth, 0x1ff);
-          _results.push(themes.install(pth, mjson.themes));
+          themes.install(pth, mjson.themes);
+        }
+        if (mjson.dependences != null) {
+          pth = path.join(path.dirname(file), 'dependences/widgets');
+          wrench.rmdirSyncRecursive(pth, function() {});
+          wrench.mkdirSyncRecursive(pth, 0x1ff);
+          _results.push(widgets.install(pth, mjson.dependences, install, includes));
         } else {
           _results.push(void 0);
         }

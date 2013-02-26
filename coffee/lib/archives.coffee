@@ -101,8 +101,8 @@ exports.store = ( callback ) ->
 	ncp '.', directoryName,
 		filter: (name) ->
 			currentName =  path.relative('.',name).split( path.sep )[0]
-			
-			if currentName.charAt(0) is '.' or path.relative('.',name).indexOf('dependences') isnt -1 or path.relative('.',name).indexOf('.tar') isnt -1
+			pth = path.relative('.',name)
+			if currentName.charAt(0) is '.' or pth.indexOf('dependences') isnt -1 or pth.indexOf('.tar') isnt -1 or pth.indexOf('.sass-cache') isnt -1 or pth.indexOf('.sass-cache') isnt -1 or pth.indexOf('.css') isnt -1 or pth.indexOf('config.rb') isnt -1
 				no
 			else
 				yes
@@ -141,13 +141,16 @@ exports.restore = ( fileName, callback ) ->
 # Unpacking widget in current folder.
 
 exports.unpack = ( fileName, callback ) ->
+	
+	if not fileName?
+		mjson = maxmertkit.json()
+		fileName = "#{mjson.name}@#{mjson.version}.tar"
 
-	mjson = maxmertkit.json()
-	fileName = "#{mjson.name}@#{mjson.version}.tar"
+	
 	fs
 		.createReadStream( path.join '.', fileName )
 		.pipe tar.Extract
-			path: '.'
+			path: path.dirname( fileName )
 		.on 'error', ( err ) ->
 			log.error "Failed to unpack #{fileName} width error:\n#{err}"
 			if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback err, fileName
