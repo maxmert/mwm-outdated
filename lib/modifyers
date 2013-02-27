@@ -1,4 +1,4 @@
-var async, dialog, fs, log, maxmertkit, pack, path, request, sass, write;
+var async, dialog, fs, log, maxmertkit, pack, path, request, sass, wrench, write;
 
 pack = require('../package.json');
 
@@ -11,6 +11,8 @@ fs = require('fs');
 path = require('path');
 
 dialog = require('commander');
+
+wrench = require('wrench');
 
 log = require('./logger');
 
@@ -122,6 +124,7 @@ exports.unpublish = function(options) {
 
 exports.install = function(pth, list) {
   var name, version, _results;
+  wrench.mkdirSyncRecursive(pth, 0x1ff);
   _results = [];
   for (name in list) {
     version = list[name];
@@ -136,7 +139,7 @@ exports.install = function(pth, list) {
             if (err != null) {
               return log.error("Couldn\'t write file " + fileName);
             } else {
-              return fs.appendFile('_imports.sass', "@import '" + fileName + "'\n", function(err) {
+              return fs.appendFile(path.join(pth, '../../_imports.sass'), "@import 'dependences/modifyers/_" + name + ".sass'\n", function(err) {
                 if (err != null) {
                   return log.error("Couldn\'t append import of " + fileName + " to the file _imports.sass");
                 } else {

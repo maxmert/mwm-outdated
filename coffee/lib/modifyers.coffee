@@ -5,6 +5,7 @@ request = require 'superagent'
 fs = require 'fs'
 path = require 'path'
 dialog = require 'commander'
+wrench = require 'wrench'
 
 log = require './logger'
 maxmertkit = require './maxmertkit'
@@ -163,6 +164,8 @@ exports.unpublish = ( options ) ->
 
 exports.install = ( pth, list ) ->
 
+	wrench.mkdirSyncRecursive pth, 0o0777
+
 	for name, version of list
 
 		# Need a closure for correct info view
@@ -186,7 +189,7 @@ exports.install = ( pth, list ) ->
 
 							else
 
-								fs.appendFile '_imports.sass', "@import '#{fileName}'\n", ( err ) ->
+								fs.appendFile path.join(pth,'../../_imports.sass'), "@import 'dependences/modifyers/_#{name}.sass'\n", ( err ) ->
 									if err?
 										log.error "Couldn\'t append import of #{fileName} to the file _imports.sass"
 

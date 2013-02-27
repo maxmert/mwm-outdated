@@ -1,4 +1,4 @@
-var archives, async, dialog, fs, log, maxmertkit, mustache, pack, path, request, templates, write, _;
+var archives, async, dialog, fs, log, maxmertkit, modifyers, mustache, pack, path, request, templates, themes, write, _;
 
 pack = require('../package.json');
 
@@ -24,6 +24,10 @@ archives = require('./archives');
 
 maxmertkit = require('./maxmertkit');
 
+themes = require('./themes');
+
+modifyers = require('./modifyers');
+
 exports.init = function(options) {
   var fileName, mjson, paramsFileName,
     _this = this;
@@ -32,7 +36,7 @@ exports.init = function(options) {
   mjson = maxmertkit.json();
   return async.series({
     widget: function(callback) {
-      write('_imports.sass', "/* Generated with mwm – maxmertkit widget manager */\n", callback);
+      write('_imports.sass', "// Generated with mwm – maxmertkit widget manager\n", callback);
       write(fileName, mustache.render(templates.widget, mjson), callback);
       return write(paramsFileName, mustache.render(templates.params, mjson), callback);
     }
@@ -120,19 +124,21 @@ exports.unpublish = function(options) {
   });
 };
 
-exports.install = function(pth, list, calll, dependent) {
+exports.install = function(pth, list, calll, depent) {
   var arr;
   arr = [];
-  _.each(list, function(version, name) {
+  _.each(list, function(info, name) {
     return arr.push({
       name: name,
-      version: version
+      version: info.version,
+      themes: info.themes,
+      modifyers: info.modifyers
     });
   });
   return async.every(arr, function(widget, callback) {
     var _this = this;
     this.calll = calll;
-    this.dependent = dependent;
+    this.depent = depent;
     return process.nextTick(function(callback, calll, dependent) {
       var fileName, req;
       fileName = "" + widget.name + "@" + widget.version + ".tar";
@@ -149,15 +155,32 @@ exports.install = function(pth, list, calll, dependent) {
                 return callback(true, null);
               } else {
                 fs.unlink(path.join(pth, fileName));
-                return fs.appendFile('_imports.sass', "@import '" + pth + "/" + widget.name + "/_index.sass'\n", function(err) {
+                return fs.readFile(path.join(pth, '../../_imports.sass'), function(err, data) {
                   if (err != null) {
-                    return callback(true, null);
+                    log.error("Coluld not read " + (path.join(pth, '../../_imports.sass')) + ".");
+                    return process.stdin.destroy();
                   } else {
-                    console.log(path.join(pth, widget.name, '_params.sass'));
-                    if (this.dependent) {
-                      fs.writeFileSync(path.join(pth, widget.name, '_params.sass'), "$dependent: true\n");
-                    }
-                    return this.calll(path.join(pth, widget.name), true);
+                    data = ("@import 'dependences/widgets/" + widget.name + "/_index.sass'\n") + data;
+                    return fs.writeFile(path.join(pth, '../../_imports.sass'), data, function(err) {
+                      if (err != null) {
+                        return callback(true, null);
+                      } else {
+                        if (this.depent) {
+                          depent = true;
+                        }
+                        if (widget.themes != null) {
+                          depent = true;
+                        }
+                        fs.writeFileSync(path.join(pth, widget.name, '_params.sass'), "$dependent: " + depent + "\n");
+                        this.calll(path.join(pth, widget.name), depent);
+                        if (widget.themes != null) {
+                          themes.install(path.join(pth, widget.name, 'dependences/themes'), widget.themes, depent);
+                        }
+                        if (widget.modifyers != null) {
+                          return modifyers.install(path.join(pth, widget.name, 'dependences/modifyers'), widget.modifyers);
+                        }
+                      }
+                    });
                   }
                 });
               }

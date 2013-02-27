@@ -6,6 +6,7 @@ fs = require 'fs'
 path = require 'path'
 dialog = require 'commander'
 _ = require 'underscore'
+wrench = require 'wrench'
 
 log = require './logger'
 maxmertkit = require './maxmertkit'
@@ -177,7 +178,9 @@ objectLength = ( obj ) ->
 # **Install**
 # theme dependences.
 
-exports.install = ( pth, list ) ->
+exports.install = ( pth, list, depent = null ) ->
+	
+	wrench.mkdirSyncRecursive pth, 0o0777
 
 	fileName = path.join(pth,"_index.sass")
 
@@ -252,13 +255,18 @@ exports.install = ( pth, list ) ->
 
 					else
 
-						fs.appendFile '_imports.sass', "@import '#{fileName}'\n", ( err ) ->
-							
-							if err?
-								log.error "Couldn\'t append import of #{fileName} to the file _imports.sass"
+						if depent?
 
-							else
-								log.success "all themes successfully installed."
+							fs.appendFile path.join(pth,'../../_imports.sass'), "@import 'dependences/themes/_index.sass'\n", ( err ) ->
+								
+								if err?
+									log.error "Couldn\'t append import of #{fileName} to the file _imports.sass"
+
+								else
+									log.success "all themes successfully installed."
+
+						else
+							log.success "all themes successfully installed."
 
 
 

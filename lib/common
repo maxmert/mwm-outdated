@@ -73,17 +73,12 @@ exports.unpublish = function(options) {
 };
 
 exports.install = function(options) {
-  fs.writeFile('_imports.sass', "/* Generated with mwm – maxmertkit widget manager */\n", function(err) {
-    if (err != null) {
-      return log.error("An error while creating _imports.sass");
-    }
-  });
   return install('.');
 };
 
 install = function(pth, includes) {
   if (includes == null) {
-    includes = true;
+    includes = false;
   }
   return wrench.readdirRecursive(pth, function(error, files) {
     var file, index, mjson, _results;
@@ -93,21 +88,24 @@ install = function(pth, includes) {
       file = path.join(pth, file);
       if (path.basename(file) === 'maxmertkit.json') {
         mjson = maxmertkit.json(file);
+        fs.writeFileSync(path.join(path.dirname(file), '_imports.sass'), "");
+        if (mjson.dependences != null) {
+          pth = path.join(path.dirname(file), 'dependences/widgets');
+          wrench.rmdirSyncRecursive(pth, function() {});
+          wrench.mkdirSyncRecursive(pth, 0x1ff);
+          widgets.install(pth, mjson.dependences, install, includes);
+        }
         if (mjson.modifyers != null) {
           pth = path.join(path.dirname(file), 'dependences/modifyers');
+          wrench.rmdirSyncRecursive(pth, function() {});
           wrench.mkdirSyncRecursive(pth, 0x1ff);
           modifyers.install(pth, mjson.modifyers);
         }
         if (mjson.themes != null) {
           pth = path.join(path.dirname(file), 'dependences/themes');
-          wrench.mkdirSyncRecursive(pth, 0x1ff);
-          themes.install(pth, mjson.themes);
-        }
-        if (mjson.dependences != null) {
-          pth = path.join(path.dirname(file), 'dependences/widgets');
           wrench.rmdirSyncRecursive(pth, function() {});
           wrench.mkdirSyncRecursive(pth, 0x1ff);
-          _results.push(widgets.install(pth, mjson.dependences, install, includes));
+          _results.push(themes.install(pth, mjson.themes, true));
         } else {
           _results.push(void 0);
         }

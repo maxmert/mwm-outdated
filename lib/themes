@@ -1,4 +1,4 @@
-var async, dialog, fs, log, maxmertkit, objectLength, pack, path, request, sass, write, _;
+var async, dialog, fs, log, maxmertkit, objectLength, pack, path, request, sass, wrench, write, _;
 
 pack = require('../package.json');
 
@@ -13,6 +13,8 @@ path = require('path');
 dialog = require('commander');
 
 _ = require('underscore');
+
+wrench = require('wrench');
 
 log = require('./logger');
 
@@ -133,8 +135,12 @@ objectLength = function(obj) {
   return length;
 };
 
-exports.install = function(pth, list) {
+exports.install = function(pth, list, depent) {
   var arr, fileName, ok, result;
+  if (depent == null) {
+    depent = null;
+  }
+  wrench.mkdirSyncRecursive(pth, 0x1ff);
   fileName = path.join(pth, "_index.sass");
   fs.writeFileSync(fileName, '');
   result = null;
@@ -192,13 +198,17 @@ exports.install = function(pth, list) {
           if (err != null) {
             return log.error("Couldn\'t write file " + fileName);
           } else {
-            return fs.appendFile('_imports.sass', "@import '" + fileName + "'\n", function(err) {
-              if (err != null) {
-                return log.error("Couldn\'t append import of " + fileName + " to the file _imports.sass");
-              } else {
-                return log.success("all themes successfully installed.");
-              }
-            });
+            if (depent != null) {
+              return fs.appendFile(path.join(pth, '../../_imports.sass'), "@import 'dependences/themes/_index.sass'\n", function(err) {
+                if (err != null) {
+                  return log.error("Couldn\'t append import of " + fileName + " to the file _imports.sass");
+                } else {
+                  return log.success("all themes successfully installed.");
+                }
+              });
+            } else {
+              return log.success("all themes successfully installed.");
+            }
           }
         });
       }

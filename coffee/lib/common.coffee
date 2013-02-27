@@ -100,15 +100,15 @@ exports.unpublish = ( options ) ->
 # all dependences
 exports.install = ( options ) ->
 
-	fs.writeFile '_imports.sass', "/* Generated with mwm – maxmertkit widget manager */\n", ( err ) ->
-		if err? then log.error "An error while creating _imports.sass"
+	# fs.writeFile '_imports.sass', "// Generated with mwm – maxmertkit widget manager\n", ( err ) ->
+	# 	if err? then log.error "An error while creating _imports.sass"
 
 	install '.'
 
 
 
-install = ( pth, includes = yes ) ->
-	# console.log pth
+install = ( pth, includes = no ) ->
+	
 	wrench.readdirRecursive pth, ( error, files ) ->
 
 		for index, file of files
@@ -118,18 +118,7 @@ install = ( pth, includes = yes ) ->
 			if path.basename( file ) is 'maxmertkit.json'
 
 				mjson = maxmertkit.json( file )
-
-				if mjson.modifyers?
-
-					pth = path.join( path.dirname( file ), 'dependences/modifyers')
-					wrench.mkdirSyncRecursive pth, 0o0777
-					modifyers.install pth, mjson.modifyers
-
-				if mjson.themes?
-
-					pth = path.join( path.dirname( file ), 'dependences/themes')
-					wrench.mkdirSyncRecursive pth, 0o0777
-					themes.install pth, mjson.themes
+				fs.writeFileSync path.join(path.dirname( file ),'_imports.sass'), ""
 
 				if mjson.dependences?
 					
@@ -139,6 +128,21 @@ install = ( pth, includes = yes ) ->
 					wrench.mkdirSyncRecursive pth, 0o0777
 
 					widgets.install pth, mjson.dependences, install, includes
+
+				if mjson.modifyers?
+
+					pth = path.join( path.dirname( file ), 'dependences/modifyers')
+					wrench.rmdirSyncRecursive pth, ->
+					wrench.mkdirSyncRecursive pth, 0o0777
+					modifyers.install pth, mjson.modifyers
+
+				if mjson.themes?
+
+					pth = path.join( path.dirname( file ), 'dependences/themes')
+					wrench.rmdirSyncRecursive pth, ->
+					wrench.mkdirSyncRecursive pth, 0o0777
+					themes.install pth, mjson.themes, yes
+
 
 
 

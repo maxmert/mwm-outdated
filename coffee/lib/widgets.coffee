@@ -12,6 +12,8 @@ mustache = require 'mustache'
 log = require './logger'
 archives = require './archives'
 maxmertkit = require './maxmertkit'
+themes = require './themes'
+modifyers = require './modifyers'
 
 
 
@@ -28,7 +30,7 @@ exports.init = ( options ) ->
 
 		widget: ( callback ) =>
 
-			write '_imports.sass', "/* Generated with mwm – maxmertkit widget manager */\n", callback
+			write '_imports.sass', "// Generated with mwm – maxmertkit widget manager\n", callback
 			write fileName, mustache.render( templates.widget, mjson ), callback
 			write paramsFileName, mustache.render( templates.params, mjson ), callback
 
@@ -147,18 +149,20 @@ exports.unpublish = ( options ) ->
 # **Install**
 # widget dependences.
 
-exports.install = ( pth, list, calll, dependent ) ->
+exports.install = ( pth, list, calll, depent ) ->
 
 	arr = []
-	_.each list, ( version, name ) ->
+	_.each list, ( info, name ) ->
 		arr.push
 			name: name
-			version: version
+			version: info.version
+			themes: info.themes
+			modifyers: info.modifyers
 
 	async.every arr, ( widget, callback ) ->
 		
 		@calll = calll
-		@dependent = dependent
+		@depent = depent
 
 		process.nextTick ( callback, calll, dependent ) =>
 			
@@ -190,17 +194,37 @@ exports.install = ( pth, list, calll, dependent ) ->
 								else
 									fs.unlink path.join(pth, fileName)
 
-									fs.appendFile '_imports.sass', "@import '#{pth}/#{widget.name}/_index.sass'\n", ( err ) ->
-
+									fs.readFile path.join(pth,'../../_imports.sass'), ( err, data ) ->
 										if err?
-											callback yes, null
+											log.error "Coluld not read #{path.join(pth,'../../_imports.sass')}."
+											process.stdin.destroy()
 
 										else
-											console.log path.join(pth, widget.name, '_params.sass')
-											if @dependent
-												fs.writeFileSync path.join(pth, widget.name, '_params.sass'), "$dependent: true\n"
+											data = "@import 'dependences/widgets/#{widget.name}/_index.sass'\n" + data
+											
+											fs.writeFile path.join(pth,'../../_imports.sass'), data, ( err ) ->
 
-											@calll path.join(pth, widget.name), yes
+												if err?
+													callback yes, null
+
+												else
+													
+													if @depent
+														depent = yes
+													
+													if widget.themes?
+														depent = yes
+
+													fs.writeFileSync path.join(pth, widget.name, '_params.sass'), "$dependent: #{depent}\n"
+
+													@calll path.join(pth, widget.name), depent
+														
+													if widget.themes?
+														themes.install path.join( pth, widget.name, 'dependences/themes' ), widget.themes, depent
+
+													if widget.modifyers?
+														modifyers.install path.join( pth, widget.name, 'dependences/modifyers' ), widget.modifyers
+
 						
 
 					else
