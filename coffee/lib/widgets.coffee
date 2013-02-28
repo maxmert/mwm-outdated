@@ -28,10 +28,13 @@ exports.init = ( options ) ->
 
 	async.series
 
-		widget: ( callback ) =>
-
+		imports: ( callback ) =>
 			write '_imports.sass', "// Generated with mwm – maxmertkit widget manager\n", callback
+
+		index: ( callback ) =>
 			write fileName, mustache.render( templates.widget, mjson ), callback
+
+		params: ( callback ) =>
 			write paramsFileName, mustache.render( templates.params, mjson ), callback
 
 
@@ -98,6 +101,8 @@ exports.publish = ( options ) ->
 					else
 						log.requestError res.body.msg, 'ERRR', res.status
 						process.stdin.destroy()
+
+					fs.unlink packFile
 
 
 

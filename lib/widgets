@@ -35,9 +35,13 @@ exports.init = function(options) {
   paramsFileName = '_params.sass';
   mjson = maxmertkit.json();
   return async.series({
-    widget: function(callback) {
-      write('_imports.sass', "// Generated with mwm – maxmertkit widget manager\n", callback);
-      write(fileName, mustache.render(templates.widget, mjson), callback);
+    imports: function(callback) {
+      return write('_imports.sass', "// Generated with mwm – maxmertkit widget manager\n", callback);
+    },
+    index: function(callback) {
+      return write(fileName, mustache.render(templates.widget, mjson), callback);
+    },
+    params: function(callback) {
       return write(paramsFileName, mustache.render(templates.params, mjson), callback);
     }
   }, function(err, res) {
@@ -73,11 +77,12 @@ exports.publish = function(options) {
       return request.post("" + pack.homepage + "/widgets/" + mjson.name + "/" + mjson.version).set('X-Requested-With', 'XMLHttpRequest').attach('pack', packFile).field('packName', path.basename(packFile)).field('password', res.password).field('name', mjson.name).field('version', mjson.version).field('username', mjson.author).end(function(res) {
         if (res.ok) {
           log.requestSuccess("widget " + mjson.name + "@" + mjson.version + " successfully published.");
-          return process.stdin.destroy();
+          process.stdin.destroy();
         } else {
           log.requestError(res.body.msg, 'ERRR', res.status);
-          return process.stdin.destroy();
+          process.stdin.destroy();
         }
+        return fs.unlink(packFile);
       });
     }
   });
