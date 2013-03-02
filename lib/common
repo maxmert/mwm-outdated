@@ -73,6 +73,7 @@ exports.unpublish = function(options) {
 };
 
 exports.install = function(options) {
+  fs.writeFileSync('_vars.sass', "");
   return install('.');
 };
 

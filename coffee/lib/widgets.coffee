@@ -24,6 +24,8 @@ exports.init = ( options ) ->
 
 	fileName = '_index.sass'
 	paramsFileName = '_params.sass'
+	varsFileName = '_vars.sass'
+	myvarsFileName = '_myvars.sass'
 	mjson = maxmertkit.json()
 
 	async.series
@@ -31,12 +33,17 @@ exports.init = ( options ) ->
 		imports: ( callback ) =>
 			write '_imports.sass', "// Generated with mwm – maxmertkit widget manager\n", callback
 
-		index: ( callback ) =>
-			write fileName, mustache.render( templates.widget, mjson ), callback
-
 		params: ( callback ) =>
 			write paramsFileName, mustache.render( templates.params, mjson ), callback
 
+		vars: ( callback ) =>
+			write varsFileName, "", callback
+
+		myvars: ( callback ) =>
+			write myvarsFileName, "", callback
+
+		index: ( callback ) =>
+			write fileName, mustache.render( templates.widget, mjson ), callback
 
 	, ( err, res ) =>
 
@@ -198,6 +205,13 @@ exports.install = ( pth, list, calll, depent ) ->
 								
 								else
 									fs.unlink path.join(pth, fileName)
+
+									
+									if path.dirname(path.join(pth,'../../_myvars.sass')) isnt '.'
+										fs.readFile path.join(pth,'../../_myvars.sass'),( err, data ) ->
+											if not err?
+												fs.appendFile '_vars.sass', data, ( err ) ->
+
 
 									fs.readFile path.join(pth,'../../_imports.sass'), ( err, data ) ->
 										if err?

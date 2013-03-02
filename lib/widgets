@@ -29,20 +29,28 @@ themes = require('./themes');
 modifyers = require('./modifyers');
 
 exports.init = function(options) {
-  var fileName, mjson, paramsFileName,
+  var fileName, mjson, myvarsFileName, paramsFileName, varsFileName,
     _this = this;
   fileName = '_index.sass';
   paramsFileName = '_params.sass';
+  varsFileName = '_vars.sass';
+  myvarsFileName = '_myvars.sass';
   mjson = maxmertkit.json();
   return async.series({
     imports: function(callback) {
       return write('_imports.sass', "// Generated with mwm – maxmertkit widget manager\n", callback);
     },
-    index: function(callback) {
-      return write(fileName, mustache.render(templates.widget, mjson), callback);
-    },
     params: function(callback) {
       return write(paramsFileName, mustache.render(templates.params, mjson), callback);
+    },
+    vars: function(callback) {
+      return write(varsFileName, "", callback);
+    },
+    myvars: function(callback) {
+      return write(myvarsFileName, "", callback);
+    },
+    index: function(callback) {
+      return write(fileName, mustache.render(templates.widget, mjson), callback);
     }
   }, function(err, res) {
     if (err != null) {
@@ -160,6 +168,13 @@ exports.install = function(pth, list, calll, depent) {
                 return callback(true, null);
               } else {
                 fs.unlink(path.join(pth, fileName));
+                if (path.dirname(path.join(pth, '../../_myvars.sass')) !== '.') {
+                  fs.readFile(path.join(pth, '../../_myvars.sass'), function(err, data) {
+                    if (!(err != null)) {
+                      return fs.appendFile('_vars.sass', data, function(err) {});
+                    }
+                  });
+                }
                 return fs.readFile(path.join(pth, '../../_imports.sass'), function(err, data) {
                   if (err != null) {
                     log.error("Coluld not read " + (path.join(pth, '../../_imports.sass')) + ".");

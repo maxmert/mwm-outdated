@@ -103,6 +103,7 @@ exports.install = ( options ) ->
 	# fs.writeFile '_imports.sass', "// Generated with mwm – maxmertkit widget manager\n", ( err ) ->
 	# 	if err? then log.error "An error while creating _imports.sass"
 
+	fs.writeFileSync '_vars.sass', ""
 	install '.'
 
 

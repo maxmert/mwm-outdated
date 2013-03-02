@@ -102,7 +102,7 @@ exports.store = ( callback ) ->
 		filter: (name) ->
 			currentName =  path.relative('.',name).split( path.sep )[0]
 			pth = path.relative('.',name)
-			if currentName.charAt(0) is '.' or pth.indexOf('dependences') isnt -1 or pth.indexOf('.tar') isnt -1 or pth.indexOf('.sass-cache') isnt -1 or pth.indexOf('.sass-cache') isnt -1 or pth.indexOf('.css') isnt -1 or pth.indexOf('config.rb') isnt -1
+			if currentName.charAt(0) is '.' or pth.indexOf('dependences') isnt -1 or pth.indexOf('.tar') isnt -1 or pth.indexOf('.sass-cache') isnt -1 or pth.indexOf('.sass-cache') isnt -1 or pth.indexOf('.css') isnt -1 or pth.indexOf('config.rb') isnt -1 or pth.indexOf('_vars.sass') isnt -1 or pth.indexOf('_imports.sass') isnt -1
 				no
 			else
 				yes

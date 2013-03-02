@@ -104,7 +104,7 @@ exports.store = function(callback) {
       var currentName, pth;
       currentName = path.relative('.', name).split(path.sep)[0];
       pth = path.relative('.', name);
-      if (currentName.charAt(0) === '.' || pth.indexOf('dependences') !== -1 || pth.indexOf('.tar') !== -1 || pth.indexOf('.sass-cache') !== -1 || pth.indexOf('.sass-cache') !== -1 || pth.indexOf('.css') !== -1 || pth.indexOf('config.rb') !== -1) {
+      if (currentName.charAt(0) === '.' || pth.indexOf('dependences') !== -1 || pth.indexOf('.tar') !== -1 || pth.indexOf('.sass-cache') !== -1 || pth.indexOf('.sass-cache') !== -1 || pth.indexOf('.css') !== -1 || pth.indexOf('config.rb') !== -1 || pth.indexOf('_vars.sass') !== -1 || pth.indexOf('_imports.sass') !== -1) {
         return false;
       } else {
         return true;

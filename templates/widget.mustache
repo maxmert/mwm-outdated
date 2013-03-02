@@ -2,6 +2,7 @@ ${{name}}: -{{name}}
 \n
 \n@import 'imports'
 \n@import 'params'
+\n@import 'vars'
 \n
 \n@mixin {{name}}( $index )
 \n\t// All here
@@ -24,7 +25,6 @@ ${{name}}: -{{name}}
 \n\t\t\t\t%#{${{name}}}.#{$theme}
 \n\t\t\t\t\t@include {{name}}( $index )
 \n
-\n\t\t\t\t@include {{name}}( $index )
 \n\t@else
 \n\t\t@if type-of( $themes ) == string
 \n\t\t\t@if $dependent == null
