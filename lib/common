@@ -34,12 +34,16 @@ exports.init = function(options) {
     if (err != null) {
       return log.error("An error while initialize maxmertkit.json");
     } else {
-      if (!(options.theme != null) && !(options.modifyer != null)) {
-        widgets.init(options);
+      if (!(options.theme != null) && !(options.modifyer != null) && !(options.widget != null)) {
+        widget.init(options);
+      }
+      if (options.widget) {
+        widget.init(options);
       }
       if (options.theme) {
-        return themes.init(options);
-      } else if (options.modifyer) {
+        themes.init(options);
+      }
+      if (options.modifyer) {
         return modifyers.init(options);
       }
     }
@@ -122,7 +126,9 @@ initJSON = function(options, callback) {
   var _this = this;
   return async.series({
     type: function(callback) {
-      if (!options.theme && !options.modifyer) {
+      if (!options.theme && !options.modifyer && !options.widget) {
+        return callback(null, 'project');
+      } else if (options.widget) {
         return callback(null, 'widget');
       } else if (options.theme) {
         return callback(null, 'theme');

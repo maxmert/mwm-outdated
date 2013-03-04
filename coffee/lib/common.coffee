@@ -34,15 +34,19 @@ exports.init = ( options ) ->
 		
 		else
 
-			if not options.theme? and not options.modifyer?
+			if not options.theme? and not options.modifyer? and not options.widget?
 
-				widgets.init options
+				widget.init options
+
+			if options.widget
+
+				widget.init options
 
 			if options.theme
 
 				themes.init options
 
-			else if options.modifyer
+			if options.modifyer
 
 				modifyers.init options
 
@@ -58,6 +62,9 @@ exports.publish = ( options ) ->
 	mjson = maxmertkit.json()
 
 	switch mjson.type
+
+		# when 'project'
+		# 	widgets.publish options
 
 		when 'widget'
 			widgets.publish options
@@ -187,7 +194,11 @@ initJSON = ( options, callback ) ->
 
 		type: ( callback ) ->
 
-			if not options.theme and not options.modifyer
+			if not options.theme and not options.modifyer and not options.widget
+
+				callback null, 'project'
+
+			else if options.widget
 
 				callback null, 'widget'
 

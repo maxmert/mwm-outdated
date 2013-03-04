@@ -16,7 +16,11 @@ log = require('./lib/logger');
 
 fs = require('fs');
 
-program.command('init').option('theme', {
+program.command('init').option('widget', {
+  abbr: 'w',
+  help: 'Initialize a new widget in the current directory.',
+  flag: true
+}).option('theme', {
   abbr: 't',
   help: 'Initialize a new theme in the current directory.',
   flag: true
@@ -26,7 +30,7 @@ program.command('init').option('theme', {
   flag: true
 }).callback(function(options) {
   return common.init(options);
-}).help('Initializing new widget/modifyer/theme in the current directory.');
+}).help('Initializing new project/widget/modifyer/theme in the current directory.');
 
 program.command('publish').callback(function(options) {
   return common.publish(options);

@@ -15,6 +15,11 @@ fs = require 'fs'
 program
 	.command('init')
 
+	.option 'widget'
+		abbr: 'w'
+		help: 'Initialize a new widget in the current directory.'
+		flag: yes
+
 	.option 'theme'
 		abbr: 't'
 		help: 'Initialize a new theme in the current directory.'
@@ -30,7 +35,7 @@ program
 		common.init options
 
 
-	.help 'Initializing new widget/modifyer/theme in the current directory.'
+	.help 'Initializing new project/widget/modifyer/theme in the current directory.'
 
 
 

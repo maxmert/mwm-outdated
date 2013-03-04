@@ -76,13 +76,28 @@ exports.publish = function(options) {
       });
     }
   }, function(err, res) {
-    var packFile;
+    var deps, mods, packFile, thms;
     if (err != null) {
       log.error("Publishing canceled.");
       return process.stdin.destroy();
     } else {
       packFile = path.join('.', "" + mjson.name + "@" + mjson.version + ".tar");
-      return request.post("" + pack.homepage + "/widgets/" + mjson.name + "/" + mjson.version).set('X-Requested-With', 'XMLHttpRequest').attach('pack', packFile).field('packName', path.basename(packFile)).field('password', res.password).field('name', mjson.name).field('version', mjson.version).field('username', mjson.author).end(function(res) {
+      if (JSON.stringify(mjson.dependences) != null) {
+        deps = JSON.stringify(mjson.dependences);
+      } else {
+        deps = '';
+      }
+      if (JSON.stringify(mjson.modifyers) != null) {
+        mods = JSON.stringify(mjson.modifyers);
+      } else {
+        mods = '';
+      }
+      if (JSON.stringify(mjson.themes) != null) {
+        thms = JSON.stringify(mjson.themes);
+      } else {
+        thms = '';
+      }
+      return request.post("" + pack.homepage + "/widgets/" + mjson.name + "/" + mjson.version).set('X-Requested-With', 'XMLHttpRequest').attach('pack', packFile).field('packName', path.basename(packFile)).field('password', res.password).field('name', mjson.name).field('version', mjson.version).field('username', mjson.author).field('dependences', deps).field('modifyers', mods).field('themes', thms).end(function(res) {
         if (res.ok) {
           log.requestSuccess("widget " + mjson.name + "@" + mjson.version + " successfully published.");
           process.stdin.destroy();

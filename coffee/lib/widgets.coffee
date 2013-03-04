@@ -88,6 +88,10 @@ exports.publish = ( options ) ->
 			
 			packFile = path.join '.', "#{mjson.name}@#{mjson.version}.tar"
 
+			if JSON.stringify(mjson.dependences)? then deps = JSON.stringify(mjson.dependences) else deps = ''
+			if JSON.stringify(mjson.modifyers)? then mods = JSON.stringify(mjson.modifyers) else mods = ''
+			if JSON.stringify(mjson.themes)? then thms = JSON.stringify(mjson.themes) else thms = ''
+
 			request
 				.post( "#{pack.homepage}/widgets/#{mjson.name}/#{mjson.version}" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
@@ -98,6 +102,9 @@ exports.publish = ( options ) ->
 				.field( 'name', mjson.name )
 				.field( 'version', mjson.version )
 				.field( 'username', mjson.author )
+				.field( 'dependences', deps )
+				.field( 'modifyers', mods )
+				.field( 'themes', thms )
 				
 				.end ( res ) ->
 					
