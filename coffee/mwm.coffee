@@ -15,17 +15,17 @@ fs = require 'fs'
 program
 	.command('init')
 
-	.option 'widget'
+	.option 'widget',
 		abbr: 'w'
 		help: 'Initialize a new widget in the current directory.'
 		flag: yes
 
-	.option 'theme'
+	.option 'theme',
 		abbr: 't'
 		help: 'Initialize a new theme in the current directory.'
 		flag: yes
 
-	.option 'modifyer'
+	.option 'modifyer',
 		abbr: 'm'
 		help: 'Initialize a new modifyer in the current directory.'
 		flag: yes

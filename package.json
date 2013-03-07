@@ -1,7 +1,7 @@
 {
 	"name": "mwm",
 	"version": "0.0.1",
-	"homepage": "http://maxmertkit.com:3001",
+	"homepage": "http://localhost:3001",
 	"private": true,
 	"scripts": {
 		"start": "node app"

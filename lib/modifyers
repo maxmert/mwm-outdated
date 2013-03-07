@@ -52,7 +52,7 @@ exports.publish = function(options) {
     modifyer: function(callback) {
       var json, rawjson;
       rawjson = fs.readFileSync(path.join('.', fileName));
-      if (!(rawjson != null)) {
+      if (rawjson == null) {
         log.error("couldn\'t read " + fileName + " file.");
         return callback(true, null);
       } else {

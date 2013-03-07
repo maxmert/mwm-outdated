@@ -34,7 +34,7 @@ exports.init = function(options) {
     if (err != null) {
       return log.error("An error while initialize maxmertkit.json");
     } else {
-      if (!(options.theme != null) && !(options.modifyer != null) && !(options.widget != null)) {
+      if ((options.theme == null) && (options.modifyer == null) && (options.widget == null)) {
         widget.init(options);
       }
       if (options.widget) {

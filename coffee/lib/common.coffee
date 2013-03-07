@@ -118,7 +118,7 @@ exports.install = ( options ) ->
 install = ( pth, includes = no ) ->
 	
 	wrench.readdirRecursive pth, ( error, files ) ->
-
+		
 		for index, file of files
 
 			file = path.join(pth, file)

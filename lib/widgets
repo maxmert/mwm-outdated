@@ -125,7 +125,7 @@ exports.unpublish = function(options) {
   }, function(err, res) {
     if (err) {
       log.error("Could not unpublish widget.");
-      if (!(typeof callback !== "undefined" && callback !== null) || typeof callback === 'object') {
+      if ((typeof callback === "undefined" || callback === null) || typeof callback === 'object') {
         return process.stdin.destroy();
       } else {
         return callback(err, mjson.name);
@@ -134,14 +134,14 @@ exports.unpublish = function(options) {
       return request.del("" + pack.homepage + "/widgets/" + mjson.name + "/" + mjson.version).set('X-Requested-With', 'XMLHttpRequest').field('packName', fileName).field('name', mjson.name).field('version', mjson.version).field('password', res.password).field('username', mjson.author).end(function(res) {
         if (res.ok) {
           log.requestSuccess("widget " + mjson.name + "@" + mjson.version + " successfully unpublished.");
-          if (!(typeof callback !== "undefined" && callback !== null) || typeof callback === 'object') {
+          if ((typeof callback === "undefined" || callback === null) || typeof callback === 'object') {
             return process.stdin.destroy();
           } else {
             return callback(null, mjson.name);
           }
         } else {
           log.requestError(res.body.msg, 'ERRR', res.status);
-          if (!(typeof callback !== "undefined" && callback !== null) || typeof callback === 'object') {
+          if ((typeof callback === "undefined" || callback === null) || typeof callback === 'object') {
             return process.stdin.destroy();
           } else {
             return callback(true, mjson.name);
@@ -185,7 +185,7 @@ exports.install = function(pth, list, calll, depent) {
                 fs.unlink(path.join(pth, fileName));
                 if (path.dirname(path.join(pth, '../../_myvars.sass')) !== '.') {
                   fs.readFile(path.join(pth, '../../_myvars.sass'), function(err, data) {
-                    if (!(err != null)) {
+                    if (err == null) {
                       return fs.appendFile('_vars.sass', data, function(err) {});
                     }
                   });
@@ -223,7 +223,7 @@ exports.install = function(pth, list, calll, depent) {
           });
         } else {
           log.requestError(res.body.msg, 'ERRR', res.status);
-          if (!(callback != null) || typeof callback === 'object') {
+          if ((callback == null) || typeof callback === 'object') {
             return process.stdin.destroy();
           } else {
             return callback(true, widget.name);
@@ -232,7 +232,7 @@ exports.install = function(pth, list, calll, depent) {
       });
     });
   }, function(res) {
-    if (!(res != null)) {
+    if (res == null) {
       log.error("An error while installing widgets.");
       return process.stdin.destroy();
     } else {

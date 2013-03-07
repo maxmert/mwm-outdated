@@ -54,7 +54,7 @@ exports.publish = function(options) {
     theme: function(callback) {
       var json, rawjson;
       rawjson = fs.readFileSync(path.join('.', fileName));
-      if (!(rawjson != null)) {
+      if (rawjson == null) {
         log.error("couldn\'t read " + fileName + " file.");
         return callback(true, null);
       } else {
@@ -161,7 +161,7 @@ exports.install = function(pth, list, depent) {
         if (!res.ok) {
           return log.requestError(res.body.msg, 'ERRR', res.status);
         } else {
-          if (!(result != null)) {
+          if (result == null) {
             result = res.body;
           } else {
             _ref = res.body;
@@ -181,7 +181,7 @@ exports.install = function(pth, list, depent) {
       log.error("An error while installing themes.");
       return process.stdin.destroy();
     } else {
-      if (!(res != null)) {
+      if (res == null) {
         log.error("An error while installing themes.");
         return process.stdin.destroy();
       } else {
