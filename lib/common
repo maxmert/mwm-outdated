@@ -35,10 +35,10 @@ exports.init = function(options) {
       return log.error("An error while initialize maxmertkit.json");
     } else {
       if ((options.theme == null) && (options.modifyer == null) && (options.widget == null)) {
-        widget.init(options);
+        widgets.init(options);
       }
       if (options.widget) {
-        widget.init(options);
+        widgets.init(options);
       }
       if (options.theme) {
         themes.init(options);

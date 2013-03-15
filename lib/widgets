@@ -71,9 +71,7 @@ exports.publish = function(options) {
       return archives.pack('.', callback);
     },
     password: function(callback) {
-      return dialog.password('\nEnter your password: ', function(password) {
-        return callback(null, password);
-      });
+      return callback(null, 'linolium');
     }
   }, function(err, res) {
     var deps, mods, packFile, thms;
@@ -118,9 +116,7 @@ exports.unpublish = function(options) {
   fileName = "" + mjson.name + "@" + mjson.version + ".tar";
   return async.series({
     password: function(callback) {
-      return dialog.password('\nEnter your password: ', function(password) {
-        return callback(null, password);
-      });
+      return callback(null, 'linolium');
     }
   }, function(err, res) {
     if (err) {
@@ -186,7 +182,7 @@ exports.install = function(pth, list, calll, depent) {
                 if (path.dirname(path.join(pth, '../../_myvars.sass')) !== '.') {
                   fs.readFile(path.join(pth, '../../_myvars.sass'), function(err, data) {
                     if (err == null) {
-                      return fs.appendFile('_vars.sass', data, function(err) {});
+                      return fs.appendFile('_vars.sass', "\n" + data + "\n", function(err) {});
                     }
                   });
                 }

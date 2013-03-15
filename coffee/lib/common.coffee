@@ -36,11 +36,11 @@ exports.init = ( options ) ->
 
 			if not options.theme? and not options.modifyer? and not options.widget?
 
-				widget.init options
+				widgets.init options
 
 			if options.widget
 
-				widget.init options
+				widgets.init options
 
 			if options.theme
 
@@ -118,7 +118,7 @@ exports.install = ( options ) ->
 install = ( pth, includes = no ) ->
 	
 	wrench.readdirRecursive pth, ( error, files ) ->
-		
+
 		for index, file of files
 
 			file = path.join(pth, file)

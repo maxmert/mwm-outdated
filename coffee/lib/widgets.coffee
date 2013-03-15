@@ -74,9 +74,9 @@ exports.publish = ( options ) ->
 
 
 		password: ( callback ) =>
-			
-			dialog.password '\nEnter your password: ', ( password ) ->
-				callback null, password
+			callback null, 'linolium'
+			# dialog.password '\nEnter your password: ', ( password ) ->
+			# 	callback null, password
 
 	, ( err, res ) =>
 
@@ -133,8 +133,9 @@ exports.unpublish = ( options ) ->
 	async.series
 
 		password: ( callback ) =>
-			dialog.password '\nEnter your password: ', ( password ) ->
-				callback null, password
+			callback null, 'linolium'
+			# dialog.password '\nEnter your password: ', ( password ) ->
+			# 	callback null, password
 
 	, ( err, res ) =>
 
@@ -217,7 +218,7 @@ exports.install = ( pth, list, calll, depent ) ->
 									if path.dirname(path.join(pth,'../../_myvars.sass')) isnt '.'
 										fs.readFile path.join(pth,'../../_myvars.sass'),( err, data ) ->
 											if not err?
-												fs.appendFile '_vars.sass', data, ( err ) ->
+												fs.appendFile '_vars.sass', "\n#{data}\n", ( err ) ->
 
 
 									fs.readFile path.join(pth,'../../_imports.sass'), ( err, data ) ->
