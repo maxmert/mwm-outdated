@@ -170,12 +170,12 @@ exports.unpublish = ( options ) ->
 # widget dependences.
 
 exports.install = ( pth, list, calll, depent ) ->
-
+	# TODO: Two requests???
 	arr = []
 	_.each list, ( info, name ) ->
 		arr.push
 			name: name
-			version: info.version
+			version: if info.version? then info.version else info
 			themes: info.themes
 			modifyers: info.modifyers
 

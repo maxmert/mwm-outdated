@@ -154,7 +154,7 @@ exports.install = function(pth, list, calll, depent) {
   _.each(list, function(info, name) {
     return arr.push({
       name: name,
-      version: info.version,
+      version: info.version != null ? info.version : info,
       themes: info.themes,
       modifyers: info.modifyers
     });
