@@ -8,6 +8,8 @@ path = require 'path'
 dialog = require 'commander'
 _ = require 'underscore'
 mustache = require 'mustache'
+md = require('markdown').markdown
+jsdom = require 'jsdom'
 
 log = require './logger'
 archives = require './archives'
@@ -15,6 +17,9 @@ maxmertkit = require './maxmertkit'
 themes = require './themes'
 modifyers = require './modifyers'
 
+
+if global.setImmediate?
+	immediately = global.setImmediate
 
 
 # **Initializing**
@@ -63,7 +68,7 @@ exports.init = ( options ) ->
 # current version of the widget.
 
 exports.publish = ( options ) ->
-
+	
 	mjson = maxmertkit.json()
 
 	async.series
@@ -78,6 +83,32 @@ exports.publish = ( options ) ->
 			# dialog.password '\nEnter your password: ', ( password ) ->
 			# 	callback null, password
 
+		readme: ( callback ) =>
+			# Read README.md
+			readme = ''
+			readmeHTML = ''
+			titleImage = ''
+			fs.exists path.join('.', 'README.md'), ( exist ) =>
+				if exist
+					readme = fs.readFileSync path.join('.', 'README.md'), "utf8"
+					readmeHTML = md.toHTML readme
+					jsdom.env
+						html: readmeHTML
+						scripts: ["http://code.jquery.com/jquery-1.5.min.js"]
+					, (err, window) =>
+						$ = window.jQuery
+						titleImage = $(readmeHTML).find('img').attr 'src'
+						callback null,
+							readme: readme
+							readmeHTML: readmeHTML
+							titleImage: titleImage
+				else
+					callback null,
+						readme: readme
+						readmeHTML: readmeHTML
+						titleImage: titleImage
+				
+
 	, ( err, res ) =>
 
 		if err?
@@ -88,23 +119,30 @@ exports.publish = ( options ) ->
 			
 			packFile = path.join '.', "#{mjson.name}@#{mjson.version}.tar"
 
+
 			if JSON.stringify(mjson.dependences)? then deps = JSON.stringify(mjson.dependences) else deps = ''
 			if JSON.stringify(mjson.modifyers)? then mods = JSON.stringify(mjson.modifyers) else mods = ''
 			if JSON.stringify(mjson.themes)? then thms = JSON.stringify(mjson.themes) else thms = ''
-
+			
 			request
-				.post( "#{pack.homepage}/widgets/#{mjson.name}/#{mjson.version}" )
+				.post( "#{pack.homepage}/api/0.1/widgets/#{mjson.name}/#{mjson.version}" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				
 				.attach( 'pack', packFile )
 				.field( 'packName', path.basename( packFile ) )
+				.field( 'titleImage', res.readme.titleImage )
 				.field( 'password', res.password )
 				.field( 'name', mjson.name )
 				.field( 'version', mjson.version )
+				.field( 'description', mjson.description )
+				.field( 'repository', mjson.repository )
+				.field( 'license', mjson.license )
 				.field( 'username', mjson.author )
 				.field( 'dependences', deps )
 				.field( 'modifyers', mods )
 				.field( 'themes', thms )
+				.field( 'readme', res.readme.readme )
+				.field( 'readmeHTML', res.readme.readmeHTML )
 				
 				.end ( res ) ->
 					
@@ -145,7 +183,7 @@ exports.unpublish = ( options ) ->
 
 		else
 			request
-				.del( "#{pack.homepage}/widgets/#{mjson.name}/#{mjson.version}" )
+				.del( "#{pack.homepage}/api/0.1/widgets/#{mjson.name}/#{mjson.version}" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				.field( 'packName', fileName)
 				.field( 'name', mjson.name)
@@ -168,105 +206,9 @@ exports.unpublish = ( options ) ->
 
 # **Install**
 # widget dependences.
-
-exports.install = ( pth, list, calll, depent ) ->
-	# TODO: Two requests???
-	arr = []
-	_.each list, ( info, name ) ->
-		arr.push
-			name: name
-			version: if info.version? then info.version else info
-			themes: info.themes
-			modifyers: info.modifyers
-
-	async.every arr, ( widget, callback ) ->
-		
-		@calll = calll
-		@depent = depent
-
-		process.nextTick ( callback, calll, dependent ) =>
-			
-			fileName = "#{widget.name}@#{widget.version}.tar"
-			
-			req = request
-				.get( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}" )
-				.set( 'X-Requested-With', 'XMLHttpRequest' )
-				.end ( res ) =>
-
-					if res.ok
-
-						req = request
-							.get( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}" )
-							.set( 'X-Requested-With', 'XMLHttpRequest' )
-
-						stream = fs.createWriteStream( path.join(pth, fileName) )
-
-						req.pipe stream
-
-						stream.on 'close', ->
-							
-							archives.unpack path.join(pth, fileName), ( err ) ->
-								
-								if err?
-									log.error "Couldn\'t unpack #{widget.name}@#{widget.version}.tar"
-									callback yes, null
-								
-								else
-									fs.unlink path.join(pth, fileName)
-
-									
-									if path.dirname(path.join(pth,'../../_myvars.sass')) isnt '.'
-										fs.readFile path.join(pth,'../../_myvars.sass'),( err, data ) ->
-											if not err?
-												fs.appendFile '_vars.sass', "\n#{data}\n", ( err ) ->
+# exports.install = ( parentInstall, pth, dependences, themesGlobal, ifDepent ) ->
 
 
-									fs.readFile path.join(pth,'../../_imports.sass'), ( err, data ) ->
-										if err?
-											log.error "Coluld not read #{path.join(pth,'../../_imports.sass')}."
-											process.stdin.destroy()
-
-										else
-											data = "@import 'dependences/widgets/#{widget.name}/_index.sass'\n" + data
-											
-											fs.writeFile path.join(pth,'../../_imports.sass'), data, ( err ) ->
-
-												if err?
-													callback yes, null
-
-												else
-													
-													if @depent
-														depent = yes
-													
-													if widget.themes?
-														depent = yes
-
-													fs.writeFileSync path.join(pth, widget.name, '_params.sass'), "$dependent: #{depent}\n"
-
-													@calll path.join(pth, widget.name), depent
-														
-													if widget.themes?
-														themes.install path.join( pth, widget.name, 'dependences/themes' ), widget.themes, depent
-
-													if widget.modifyers?
-														modifyers.install path.join( pth, widget.name, 'dependences/modifyers' ), widget.modifyers
-
-						
-
-					else
-						log.requestError res.body.msg, 'ERRR', res.status						
-						if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback yes, widget.name
-
-
-	, ( res ) ->
-		# console.log err
-		if not res?
-			log.error "An error while installing widgets."
-			process.stdin.destroy()
-
-		else
-			log.success "Done."
 
 
 
@@ -313,622 +255,113 @@ write = ( file, data, callback ) ->
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-# pack = require '../package.json'
-# templates = require '../templates.json'
-# request = require 'superagent'
-# dialog = require 'commander'
-# path = require 'path'
-# log = require './logger'
-# async = require 'async'
-# tar = require 'tar'
-# mustache = require 'mustache'
-# _ = require 'underscore'
-# wrench = require 'wrench'
-
-# fs = require 'fs'
-# ncp = require('ncp').ncp
-# fstream = require 'fstream'
-
-
-
-# # Returns the сontent of maxmertkit.json file
-
-# exports.maxmertkit = ->
-	
-# 	rawjson = fs.readFileSync path.join( '.', pack.maxmertkit )
-	
-# 	if not rawjson?
-# 		log.error("couldn\'t read #{pack.maxmertkit} file.")
-# 		process.stdin.destroy()
-
-# 	else
-# 		json = JSON.parse rawjson
-
-
-
-
-# foldersExist = ( pth, callback ) ->
-
-# 	paths = pth.split path.sep
-# 	current = ''
-	
-# 	for index, pt of paths
+exports.install = ( pth, mjson, calll, depent, themesss ) ->
+	# TODO: Two requests???
+	# console.log mjson
+	arr = []
+	_.each mjson.dependences, ( ver, name ) ->
+		arr.push
+			name: name
+			version: if ver.version? then ver.version else ver
+			themes: if ver.themes? then ver.themes else mjson.themes
+	# console.log arr
+	async.eachSeries arr, ( widget, callback ) ->
 		
-# 		current = path.join current, pt
-# 		if not fs.existsSync(current) then callback true, current
-
-# 	callback null, pth
-
-
-
-
-
-
-
-
-# # **Initializing**
-# # maxmertkit.json file with main info about project
-
-# exports.initCommonSubapp = ( options, callback ) ->
-
-# 	async.series
-
-# 		type: ( callback ) ->
-
-# 			if not options.theme and not options.modifyer
-
-# 				callback null, 'widget'
-
-# 			else if options.theme
-
-# 				callback null, 'theme'
-
-# 			else if options.modifyer
-
-# 				callback null, 'modifyer'
-
-# 		name: ( callback ) ->
-# 			defaultPkgName = 'test'
-# 			dialog.prompt "name: (test) ", ( pkgName ) ->
-# 				if pkgName is '' then pkgName = defaultPkgName
-# 				callback null, pkgName
-
-# 		version: ( callback ) ->
-# 			defaultVersion = '0.0.0'
-# 			dialog.prompt "version: (0.0.0) ", ( version ) ->
-# 				if version is '' then version = defaultVersion
-# 				callback null, version
-
-# 		description: ( callback ) ->
-# 			dialog.prompt "description: ", ( description ) ->
-# 				callback null, description
-
-# 		repository: ( callback ) ->
-# 			dialog.prompt "repository: ", ( repository ) ->
-# 				callback null, repository
-
-# 		author: ( callback ) ->
-# 			dialog.prompt "author: ", ( author ) ->
-# 				callback null, author
-
-# 		license: ( callback ) ->
-# 			defaultLicense = 'BSD'
-# 			dialog.prompt "license: (BSD) ", ( license ) ->
-# 				if license is '' then license = defaultLicense
-# 				callback null, license
-
-# 	, ( err, maxmertkitjson ) =>
-
-# 		@.initWriteConfirm  pack.maxmertkit, maxmertkitjson, callback
-
-
-
-
-# # Function with json write confirmation.
-# # Uses with maxmertkit.json, theme.json and modifyer.json
-
-# exports.initWriteConfirm = ( file, json, callback ) ->
-
-# 	console.log "\n\nWriting file #{file}\n"
-# 	dialog.confirm "Is everything correct? \n\n #{JSON.stringify(json, null, 4)}\n-> ", ( ok ) =>
-
-# 			console.log ""
-
-# 			if not ok
-# 				log.error("Initializing canceled")
-# 				callback ok, null
-# 				process.stdin.destroy()
-
-# 			else
-# 				fs.exists file, ( exists ) =>
-
-# 					if not exists
-# 						@.initWrite file, json, callback
-# 						process.stdin.destroy()
-
-# 					else #if exists
-# 						log.error("File #{file} already exists.")
-
-# 						dialog.confirm "Do you want to overwrite it and all other files in that folder? -> ", ( ok ) =>
-
-# 							if not ok
-# 								log.error("initialization canceled.")
-# 								callback ok, null
-# 								process.stdin.destroy()
-
-# 							else
-# 								@.initWrite file, json, callback
-# 								process.stdin.destroy()
-
-
-
-
-# # Function with json write.
-# # Uses with maxmertkit.json, theme.json and modifyer.json
-
-# exports.initWrite = ( file, json, callback ) ->
-
-# 	fs.writeFile file, JSON.stringify(json, null, 4), ( err ) ->
-
-# 		if err
-# 			log.error "initializing – #{err}."
-# 			callback err, null
-
-# 		else
-# 			# TODO: Add some info about maxmertkit.json ??
-
-# 			log.success "file #{file} successfully created."
-# 			callback null, json
-
-
-
-
-
-
-# exports.initWidgetSubapp = ( options ) ->
-
-# 	async.series
-
-# 		common: ( callback ) =>
-
-# 			@initCommonSubapp options, callback
-
-
-# 	, ( err, res ) =>
-
-# 		console.log 'ok'
-
-
-
-# # **Initialization**
-# # of the theme
-
-# exports.initThemeSubapp = ( options ) ->
-
-# 	fileName = 'theme.json'
-
-# 	async.series
-
-# 		common: ( callback ) =>
-
-# 			@initCommonSubapp options, callback
-
-
-# 		theme: ( callback ) =>
-
-# 			request
-# 				.get( "#{pack.homepage}/defaults/theme" )
-# 				.set( 'X-Requested-With', 'XMLHttpRequest' )
-# 				.set('Accept', 'application/json')
-# 				.end ( res ) =>
-
-# 					if res.ok
-# 						@initWrite fileName, res.body, callback
-
-# 					else
-# 						log.requestError res.body.msg, 'ERRR', res.status
-# 						callback res.error, null
-
-
-# 	, ( err, res ) =>
-
-# 		if err?
-# 			log.error "An error while initialized theme."
-# 			process.stdin.destroy()
-
-# 		else
-# 			process.stdin.destroy()
-
-
-# # **Initialization**
-# # of the modifyer
-
-# exports.initModifyerSubapp = ( options ) ->
-
-# 	fileName = 'modifyer.json'
-
-# 	async.series
-
-# 		common: ( callback ) =>
-
-# 			@initCommonSubapp options, callback
-
-
-# 		theme: ( callback ) =>
-
-# 			request
-# 				.get( "#{pack.homepage}/defaults/modifyer" )
-# 				.set( 'X-Requested-With', 'XMLHttpRequest' )
-# 				.set('Accept', 'application/json')
-# 				.end ( res ) =>
-
-# 					if res.ok
-# 						@initWrite fileName, res.body, callback
-
-# 					else
-# 						log.requestError res.body.msg, 'ERRR', res.status
-# 						callback res.error, null
-
-
-# 	, ( err, res ) =>
-
-# 		if err?
-# 			log.error "An error while initialized modifyer."
-# 			process.stdin.destroy()
-
-# 		else
-# 			process.stdin.destroy()
-
-
-
-
-
-
-
-# #### Server side
-
-
-
-# # **Publish**
-# # current version of widget/theme/modifyer.
-# # First get type, then call publishing function.
-# exports.Publish = ( options ) ->
-
-# 	maxmertkit = @maxmertkit()
-
-# 	switch maxmertkit.type
-
-# 		when 'widget'
-# 			@PublishWidget options
-
-# 		when 'theme'
-# 			@PublishTheme options
-
-# 		when 'modifyer'
-# 			@PublishModifyer options
-
-
-# # **Publish**
-# # current version of modifyer.
-# exports.PublishModifyer = ( options ) ->
-
-# 	maxmertkit = @maxmertkit()
-
-# 	fileName = 'modifyer.json'
-
-# 	async.series
-
-# 		modifyer: ( callback ) =>
+		@calll = calll
+		@depent = depent
+
+		process.nextTick ( calll, depent, themesss ) =>
+			# console.log widget.name, 'begin'
+			fileName = "#{widget.name}@#{widget.version}.tar"
 			
-# 			rawjson = fs.readFileSync path.join( '.', fileName )
-	
-# 			if not rawjson?
-# 				log.error("couldn\'t read #{fileName} file.")
-# 				callback true, null
+			req = request
+				.get( "#{pack.homepage}/api/0.1/widgets/#{widget.name}/#{widget.version}" )
+				.set( 'X-Requested-With', 'XMLHttpRequest' )
+				.end ( res ) =>
 
-# 			else
-# 				json = JSON.parse rawjson
-# 				callback null, json
+					if res.ok
 
+						req = request
+							.get( "#{pack.homepage}/api/0.1/widgets/#{widget.name}/#{widget.version}" )
+							.set( 'X-Requested-With', 'XMLHttpRequest' )
 
-# 		password: ( callback ) =>
-			
-# 			dialog.password '\nEnter your password: ', ( password ) ->
-# 				callback null, password
+						stream = fs.createWriteStream( path.join(pth, fileName) )
 
-# 	, ( err, res ) =>
+						req.pipe stream
 
-# 		if err?
-# 			log.error "Publishing canceled."
-# 			process.stdin.destroy()
-
-# 		else
-			
-# 			request
-# 				.post( "#{pack.homepage}/modifyers/#{maxmertkit.name}/#{maxmertkit.version}" )
-# 				.set( 'X-Requested-With', 'XMLHttpRequest' )
-# 				.send
-# 					modifyer: res.modifyer
-# 					password: res.password
-# 					name: maxmertkit.name
-# 					version: maxmertkit.version
-# 					username: maxmertkit.author
-				
-# 				.end ( res ) ->
-					
-# 					if res.ok
-# 						log.requestSuccess "modifyer #{maxmertkit.name}@#{maxmertkit.version} successfully published."
-# 						process.stdin.destroy()
-
-# 					else
-# 						log.requestError res.body.msg, 'ERRR', res.status
-# 						process.stdin.destroy()
-
-
-
-
+						stream.on 'close', =>
 							
-
-
-
-
-
-
-# # **Install**
-# # all dependences
-# exports.Install = ( options ) ->
-
-	
-
-		
-
-
-
-
-# install = ( json, pth ) ->
-
-# 	async.series
-
-# 		modifyers: ( callback ) ->
-
-# 			if json.modifyers?
-
-# 				foldersExist path.join( pth, 'dependences/modifyers' ), ( err, pth ) ->
-# 					if err?
-# 						fs.mkdirSync pth
-
-# 				modifyers = []
-				
-# 				_.each json.modifyers, ( version, name ) ->
-# 					modifyers.push
-# 						name: name
-# 						version: version
-
-				
-
-# 				async.every modifyers, exports.installModifyer, ( err ) ->
-
-# 					if err? then process.stdin.destroy()
-
-
-# 	, ( err, res ) ->
-# 		process.stdin.destroy()
-
-
-
-# # **Install**
-# # modifyers dependences
-
-# exports.installModifyer = ( modifyer ) ->
-
-# 	request
-# 		.get( "#{pack.homepage}/modifyers/#{modifyer.name}/#{modifyer.version}" )
-# 		.set( 'X-Requested-With', 'XMLHttpRequest' )
-# 		.end ( res ) ->
-
-# 			if res.ok
-# 				log.requestSuccess "modifyer #{modifyer.name}@#{modifyer.version} successfully installed."
-
-
-
-# 			else
-# 				log.requestError res.body.msg, 'ERRR', res.status
-# 				res.error
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# ###
-# Initializing new widget or theme in current directory
-# ###
-# exports.init = ( options ) ->
-
-# 	types = ['widget', 'theme']
-
-# 	async.series
-		
-# 		type: ( callback ) ->
-# 			dialog.choose types, (i) ->
-# 				callback null, types[i]
-
-# 		name: ( callback ) ->
-# 			defaultPkgName = 'test'
-# 			dialog.prompt "name: (test) ", ( pkgName ) ->
-# 				if pkgName is '' then pkgName = defaultPkgName
-# 				callback null, pkgName
-
-# 		version: ( callback ) ->
-# 			defaultVersion = '0.0.0'
-# 			dialog.prompt "version: (0.0.0) ", ( version ) ->
-# 				if version is '' then version = defaultVersion
-# 				callback null, version
-
-# 		description: ( callback ) ->
-# 			dialog.prompt "description: ", ( description ) ->
-# 				callback null, description
-
-# 		repository: ( callback ) ->
-# 			dialog.prompt "repository: ", ( repository ) ->
-# 				callback null, repository
-
-# 		author: ( callback ) ->
-# 			dialog.prompt "author: ", ( author ) ->
-# 				callback null, author
-
-# 		license: ( callback ) ->
-# 			defaultLicense = 'BSD'
-# 			dialog.prompt "license: (BSD) ", ( license ) ->
-# 				if license is '' then license = defaultLicense
-# 				callback null, license
-
-# 	, ( err, maxmertkitjson ) =>
-		
-# 		@.writeConfirm maxmertkitjson, options
-
-
-
-
-
-# ###
-# Confirm writing json to the maxmertkit.json file
-# ###
-# exports.writeConfirm = ( json, options ) ->
-
-# 	dialog.confirm "Is everything correct? \n\n #{JSON.stringify(json, null, 4)}\n-> ", ( ok ) =>
-
-# 			console.log ""
-
-# 			if not ok
-# 				log.error("Initializing canceled")
-# 				process.stdin.destroy()
-
-# 			else
-# 				fs.exists pack.maxmertkit, ( exists ) =>
-
-# 					if not exists
-# 						@.write json, options
-# 						process.stdin.destroy()
-
-# 					else #if exists
-# 						log.error("File #{pack.maxmertkit} already exists.")
-
-# 						dialog.confirm "Do you want to overwrite it and all other files in that folder? -> ", ( ok ) =>
-
-# 							if not ok
-# 								log.error("initialization canceled.")
-# 								process.stdin.destroy()
-
-# 							else
-# 								@.write json, options
-# 								process.stdin.destroy()
-
-
-
-
-# ###
-# Writing json to the maxmertkit.json file
-# Init other files
-# ###
-# exports.write = ( json, options ) ->
-
-# 	fs.writeFile pack.maxmertkit, JSON.stringify(json, null, 4), ( err ) ->
-
-# 		if err then log.error "initializing – #{err}."
-# 		log.success "file #{pack.maxmertkit} successfully created."
-
-	
-# 	if json.type is 'widget'
-
-# 		# Initialize _index.sass
-# 		fs.writeFile '_index.sass', mustache.render( templates.widget, json ) , ( err ) ->
-			
-# 			if err?
-# 				log.error "Coluldn\'t initialize _index.sass file."
-# 				process.stdin.destroy()
-
-# 			else
-# 				log.success "file _index.sass successfully created."
-
-# 	else
-
-# 		# If theme
-# 		fs.writeFile 'theme.json', mustache.render( templates.theme, json ) , ( err ) ->
-
-# 			if err?
-# 				log.error "Coluldn\'t initialize theme.json file."
-# 				process.stdin.destroy()
-
-# 			else
-# 				log.success "file theme.json successfully created."
-
-
-
-
-# rmdirSyncForce = ( path ) ->
-# 	if path[path.length - 1] isnt '/'
-# 		path = path + '/'
-
-# 	files = fs.readdirSync path
-# 	filesLength = files.length
-
-# 	if filesLength
-# 		for file in files
-# 			fileStats = fs.statSync path+file
-# 			if fileStats.isFile()
-# 				fs.unlinkSync(path + file)
-# 			if fileStats.isDirectory()
-# 				rmdirSyncForce(path + file)
-
-# 	fs.rmdirSync path
-
-
-
-	
+							archives.unpack path.join(pth, fileName), ( err ) =>
+								
+								if err?
+									log.error "Couldn\'t unpack #{widget.name}@#{widget.version}.tar"
+									callback yes, null
+								
+								else
+									fs.unlink path.join(pth, fileName)
+
+									
+									if path.dirname(path.join(pth,'../../_myvars.sass')) isnt '.'
+										fs.readFile path.join(pth,'../../_myvars.sass'),( err, data ) ->
+											if not err?
+												fs.appendFile '_vars.sass', "\n#{data}\n", ( err ) ->
+
+
+									fs.readFile path.join(pth,'../../_imports.sass'), ( err, data ) =>
+										if err?
+											log.error "Coluld not read #{path.join(pth,'../../_imports.sass')}."
+											process.stdin.destroy()
+
+										else
+											data = data + "@import 'dependences/widgets/#{widget.name}/_index.sass'\n"
+											
+											fs.writeFile path.join(pth,'../../_imports.sass'), data, ( err ) =>
+												# console.log widget.name, 'inside'
+												if err?
+													callback yes, null
+
+												else
+													
+													# if @depent
+													# 	depent = yes
+													
+													# if widget.themes?
+													# 	depent = yes
+
+													fs.writeFileSync path.join(pth, widget.name, '_params.sass'), "$dependent: #{depent}\n"
+													# console.log depent, widget.themes?, themesss?
+													
+													if widget.themes?
+														if themesss?
+															themesss = _.extend(widget.themes, themesss)
+														else
+															themesss = widget.themes
+														# depent = yes
+
+													@calll path.join(pth, widget.name), @depent, themesss
+													callback()
+													
+													# if themesss?
+														# themes.install path.join( pth, widget.name, 'dependences/themes' ), themesss, depent
+
+	# 												if widget.themes?
+	# 													themes.install path.join( pth, widget.name, 'dependences/themes' ), widget.themes, depent
+	# # 												# else
+													# if themesss?
+													# 	themes.install path.join( pth, widget.name, 'dependences/themes' ), themesss, depent
+
+
+	# 												if widget.modifyers?
+	# 													modifyers.install path.join( pth, widget.name, 'dependences/modifyers' ), widget.modifyers
+
+						
+
+					else
+						log.requestError res.body.msg, 'ERRR', res.status						
+						if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback yes, widget.name
+
+
+	, ( err ) ->
+		if err?
+			log.error "An error while installing widgets: #{err}"
+			process.stdin.destroy()

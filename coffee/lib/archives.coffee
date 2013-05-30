@@ -515,7 +515,7 @@ rmdirSyncForce = ( path ) ->
 # 	writer = fs.createWriteStream("/tmp/#{widget.name}@#{widget.version}.tar")
 
 # 	req = request
-# 		.get( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}/tar" )
+# 		.get( "#{pack.homepage}/api/0.1/widgets/#{widget.name}/#{widget.version}/tar" )
 # 		.set( 'X-Requested-With', 'XMLHttpRequest' )
 # 		.set('Accept', 'application/tar')
 	
@@ -549,7 +549,7 @@ rmdirSyncForce = ( path ) ->
 # exports.onServerIsExists = ( widget, callback ) ->
 
 # 	request
-# 		.get( "#{pack.homepage}/widgets/#{widget.name}" )
+# 		.get( "#{pack.homepage}/api/0.1/widgets/#{widget.name}" )
 # 		.set( 'X-Requested-With', 'XMLHttpRequest' )
 # 		.end ( res ) ->
 # 			if res.ok
@@ -589,7 +589,7 @@ rmdirSyncForce = ( path ) ->
 # 		else
 			
 # 			request
-# 				.get( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}" )
+# 				.get( "#{pack.homepage}/api/0.1/widgets/#{widget.name}/#{widget.version}" )
 # 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 # 				.end ( res ) ->
 					
@@ -635,7 +635,7 @@ rmdirSyncForce = ( path ) ->
 
 # 		else
 # 			request
-# 				.post( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}/publish" )
+# 				.post( "#{pack.homepage}/api/0.1/widgets/#{widget.name}/#{widget.version}/publish" )
 # 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 # 				.attach( 'pack', fileName )
 # 				.field( 'packName', res.pack)
@@ -683,7 +683,7 @@ rmdirSyncForce = ( path ) ->
 
 # 		else
 # 			request
-# 				.del( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}" )
+# 				.del( "#{pack.homepage}/api/0.1/widgets/#{widget.name}/#{widget.version}" )
 # 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 # 				.field( 'packName', fileName)
 # 				.field( 'name', widget.name)
@@ -728,16 +728,16 @@ rmdirSyncForce = ( path ) ->
 # # exports.isExist = ( widget, callback ) ->
 
 # # 	request
-# # 		.get( "#{pack.homepage}/widgets/#{widget.name}" )
+# # 		.get( "#{pack.homepage}/api/0.1/widgets/#{widget.name}" )
 # # 		.set('Accept', 'application/json')
 # # 		.end (res) ->
 			
 # # 			if res.statusCode is 502 or res.statusCode is 404 or not res.body.done
-# # 				log.requestError("#{pack.homepage}/widgets/#{widget.name}", widget.name) if widget.options.silent isnt on
+# # 				log.requestError("#{pack.homepage}/api/0.1/widgets/#{widget.name}", widget.name) if widget.options.silent isnt on
 # # 				callback( false )
 				
 # # 			else
-# # 				log.requestSuccess("#{pack.homepage}/widgets/#{widget.name}", widget.name) if widget.options.silent isnt on
+# # 				log.requestSuccess("#{pack.homepage}/api/0.1/widgets/#{widget.name}", widget.name) if widget.options.silent isnt on
 # # 				callback( true )
 
 
@@ -824,7 +824,7 @@ rmdirSyncForce = ( path ) ->
 
 # # 	fileName = "#{widget.name}@#{widget.version}.tar"
 # # 	stream = fs.createWriteStream( fileName )
-# # 	req = request.get( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}/tar" )
+# # 	req = request.get( "#{pack.homepage}/api/0.1/widgets/#{widget.name}/#{widget.version}/tar" )
 # # 	req.pipe(stream)
 	
 # # 	stream.on 'close', ->
@@ -852,7 +852,7 @@ rmdirSyncForce = ( path ) ->
 # # 			maxmertkitjson = JSON.parse data
 
 # # 			request
-# # 				.post( "#{pack.homepage}/#{maxmertkitjson.author}/publish" )
+# # 				.post( "#{pack.homepage}/api/0.1/#{maxmertkitjson.author}/publish" )
 # # 				.attach( path.basename( file ), file )
 # # 				.end ( res ) ->
 # # 					console.log res
@@ -870,7 +870,7 @@ rmdirSyncForce = ( path ) ->
 # # 			maxmertkitjson = JSON.parse data
 
 # # 			request
-# # 				.get( "#{pack.homepage}/widgets/#{maxmertkitjson.name}/#{maxmertkitjson.version}" )
+# # 				.get( "#{pack.homepage}/api/0.1/widgets/#{maxmertkitjson.name}/#{maxmertkitjson.version}" )
 # # 				.set('Accept', 'application/json')
 # # 				.end (res) => 
 # # 					if not res.ok
@@ -884,7 +884,7 @@ rmdirSyncForce = ( path ) ->
 
 # # 	dialog.password 'Password: ', ( pass ) =>
 # # 		request
-# # 			.post( "#{pack.homepage}/loginAJAX" )
+# # 			.post( "#{pack.homepage}/api/0.1/loginAJAX" )
 # # 			.send
 # # 				username: author
 # # 				password: pass
@@ -892,7 +892,7 @@ rmdirSyncForce = ( path ) ->
 # # 			.end (res) =>
 				
 # # 				if not res.ok
-# # 					log.error("Authorization Failed. Check the author name in maxmert.json or your password. Or maybe you need to register at #{pack.homepage}?")
+# # 					log.error("Authorization Failed. Check the author name in maxmert.json or your password. Or maybe you need to register at #{pack.homepage}/api/0.1/?")
 # # 					process.stdin.destroy()
 # # 				else
 # # 					log.success("Authorization succeed.")

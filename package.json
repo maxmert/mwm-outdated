@@ -17,13 +17,20 @@
 		"cli-color": "*",
 		"tar": "*",
 		"fstream": "*",
-		"ncp": "0.3.0",
-		"mustache": "0.7.2",
-		"underscore": "1.4.4",
+		"ncp": "*",
+		"mustache": "*",
+		"underscore": "*",
 		"wrench": "*",
+		"markdown": "0.4.0",
+		"jsdom": "*",
 
-		"grunt": "0.3.17",
-		"grunt-jstemplater": "0.1.6"
+		"grunt": "*",
+		"grunt-jstemplater": "*",
+		"grunt-contrib-watch": "*",
+	    "grunt-coffeelint": "*",
+	    "grunt-contrib-coffee": "*",
+
+	    "grunt-docco": "~0.2.0"
 	},
 
 
