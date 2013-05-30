@@ -558,7 +558,7 @@ fileName = path.join( directoryName, '_index.sass' )
 
 <p>exports.onServerGetDependencyWidget = ( widget, callback ) -></p>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-110">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-110">&#182;</a>               </div>               <pre><code>writer = fs.createWriteStream("/tmp/#{widget.name}@#{widget.version}.tar")
 </code></pre>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-111">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-111">&#182;</a>               </div>               <pre><code>req = request
-    .get( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}/tar" )
+    .get( "#{pack.homepage}/api/0.1/widgets/#{widget.name}/#{widget.version}/tar" )
     .set( 'X-Requested-With', 'XMLHttpRequest' )
     .set('Accept', 'application/tar')
 </code></pre>             </td>             <td class="code">               <div class="highlight"><pre>  </pre></div>             </td>           </tr>                               <tr id="section-112">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-112">&#182;</a>               </div>               <pre><code>req.pipe writer
@@ -582,7 +582,7 @@ if options.version? and options.version is yes
 else
     @onServerIsExists widget, callback
 </code></pre>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-116">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-116">&#182;</a>               </div>               <p>exports.onServerIsExists = ( widget, callback ) -></p>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-117">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-117">&#182;</a>               </div>               <pre><code>request
-    .get( "#{pack.homepage}/widgets/#{widget.name}" )
+    .get( "#{pack.homepage}/api/0.1/widgets/#{widget.name}" )
     .set( 'X-Requested-With', 'XMLHttpRequest' )
     .end ( res ) -&gt;
         if res.ok
@@ -607,7 +607,7 @@ else
         if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback err, widget.name
     else
 </code></pre>             </td>             <td class="code">               <div class="highlight"><pre>      </pre></div>             </td>           </tr>                               <tr id="section-127">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-127">&#182;</a>               </div>               <pre><code>        request
-            .get( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}" )
+            .get( "#{pack.homepage}/api/0.1/widgets/#{widget.name}/#{widget.version}" )
             .set( 'X-Requested-With', 'XMLHttpRequest' )
             .end ( res ) -&gt;
 </code></pre>             </td>             <td class="code">               <div class="highlight"><pre>          </pre></div>             </td>           </tr>                               <tr id="section-128">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-128">&#182;</a>               </div>               <pre><code>                if res.ok
@@ -639,7 +639,7 @@ widget.dependencies = [] if not widget.dependencies?
         if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback err, widget.name
 </code></pre>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-138">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-138">&#182;</a>               </div>               <pre><code>    else
         request
-            .post( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}/publish" )
+            .post( "#{pack.homepage}/api/0.1/widgets/#{widget.name}/#{widget.version}/publish" )
             .set( 'X-Requested-With', 'XMLHttpRequest' )
             .attach( 'pack', fileName )
             .field( 'packName', res.pack)
@@ -675,7 +675,7 @@ widget.dependencies = [] if not widget.dependencies?
         if not callback? or typeof callback is 'object' then process.stdin.destroy() else callback err, widget.name
 </code></pre>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-147">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-147">&#182;</a>               </div>               <pre><code>    else
         request
-            .del( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}" )
+            .del( "#{pack.homepage}/api/0.1/widgets/#{widget.name}/#{widget.version}" )
             .set( 'X-Requested-With', 'XMLHttpRequest' )
             .field( 'packName', fileName)
             .field( 'name', widget.name)
@@ -711,17 +711,17 @@ widget.dependencies = [] if not widget.dependencies?
 
 <h1>exports.isExist = ( widget, callback ) -></h1>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-155">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-155">&#182;</a>               </div>               <h1>request</h1>
 
-<h1>.get( "#{pack.homepage}/widgets/#{widget.name}" )</h1>
+<h1>.get( "#{pack.homepage}/api/0.1/widgets/#{widget.name}" )</h1>
 
 <h1>.set('Accept', 'application/json')</h1>
 
 <h1>.end (res) -></h1>             </td>             <td class="code">               <div class="highlight"><pre>      </pre></div>             </td>           </tr>                               <tr id="section-156">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-156">&#182;</a>               </div>               <h1>if res.statusCode is 502 or res.statusCode is 404 or not res.body.done</h1>
 
-<h1>log.requestError("#{pack.homepage}/widgets/#{widget.name}", widget.name) if widget.options.silent isnt on</h1>
+<h1>log.requestError("#{pack.homepage}/api/0.1/widgets/#{widget.name}", widget.name) if widget.options.silent isnt on</h1>
 
 <h1>callback( false )</h1>             </td>             <td class="code">               <div class="highlight"><pre>        </pre></div>             </td>           </tr>                               <tr id="section-157">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-157">&#182;</a>               </div>               <h1>else</h1>
 
-<h1>log.requestSuccess("#{pack.homepage}/widgets/#{widget.name}", widget.name) if widget.options.silent isnt on</h1>
+<h1>log.requestSuccess("#{pack.homepage}/api/0.1/widgets/#{widget.name}", widget.name) if widget.options.silent isnt on</h1>
 
 <h1>callback( true )</h1>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-158">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-158">&#182;</a>               </div>               <h1>#</h1>
 
@@ -781,7 +781,7 @@ widget.dependencies = [] if not widget.dependencies?
 
 <h1>stream = fs.createWriteStream( fileName )</h1>
 
-<h1>req = request.get( "#{pack.homepage}/widgets/#{widget.name}/#{widget.version}/tar" )</h1>
+<h1>req = request.get( "#{pack.homepage}/api/0.1/widgets/#{widget.name}/#{widget.version}/tar" )</h1>
 
 <h1>req.pipe(stream)</h1>             </td>             <td class="code">               <div class="highlight"><pre>  </pre></div>             </td>           </tr>                               <tr id="section-183">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-183">&#182;</a>               </div>               <h1>stream.on 'close', -></h1>
 
@@ -807,7 +807,7 @@ widget.dependencies = [] if not widget.dependencies?
 
 <h1>maxmertkitjson = JSON.parse data</h1>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-189">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-189">&#182;</a>               </div>               <h1>request</h1>
 
-<h1>.post( "#{pack.homepage}/#{maxmertkitjson.author}/publish" )</h1>
+<h1>.post( "#{pack.homepage}/api/0.1/#{maxmertkitjson.author}/publish" )</h1>
 
 <h1>.attach( path.basename( file ), file )</h1>
 
@@ -821,7 +821,7 @@ widget.dependencies = [] if not widget.dependencies?
 
 <h1>maxmertkitjson = JSON.parse data</h1>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-194">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-194">&#182;</a>               </div>               <h1>request</h1>
 
-<h1>.get( "#{pack.homepage}/widgets/#{maxmertkitjson.name}/#{maxmertkitjson.version}" )</h1>
+<h1>.get( "#{pack.homepage}/api/0.1/widgets/#{maxmertkitjson.name}/#{maxmertkitjson.version}" )</h1>
 
 <h1>.set('Accept', 'application/json')</h1>
 
@@ -839,7 +839,7 @@ widget.dependencies = [] if not widget.dependencies?
 
 <h1>request</h1>
 
-<h1>.post( "#{pack.homepage}/loginAJAX" )</h1>
+<h1>.post( "#{pack.homepage}/api/0.1/loginAJAX" )</h1>
 
 <h1>.send</h1>
 
@@ -851,7 +851,7 @@ widget.dependencies = [] if not widget.dependencies?
 
 <h1>.end (res) =></h1>             </td>             <td class="code">               <div class="highlight"><pre>        </pre></div>             </td>           </tr>                               <tr id="section-197">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-197">&#182;</a>               </div>               <h1>if not res.ok</h1>
 
-<h1>log.error("Authorization Failed. Check the author name in maxmert.json or your password. Or maybe you need to register at #{pack.homepage}?")</h1>
+<h1>log.error("Authorization Failed. Check the author name in maxmert.json or your password. Or maybe you need to register at #{pack.homepage}/api/0.1/?")</h1>
 
 <h1>process.stdin.destroy()</h1>
 

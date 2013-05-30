@@ -12,6 +12,9 @@ log = require './logger'
 maxmertkit = require './maxmertkit'
 
 
+if global.setImmediate?
+	immediately = global.setImmediate
+
 
 # **Initializing**
 # theme.json file with main info about project
@@ -25,7 +28,7 @@ exports.init = ( options ) ->
 		modifyer: ( callback ) =>
 
 			request
-				.get( "#{pack.homepage}/defaults/theme" )
+				.get( "#{pack.homepage}/api/0.1/defaults/theme" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				.set('Accept', 'application/json')
 				.end ( res ) =>
@@ -89,7 +92,7 @@ exports.publish = ( options ) ->
 		else
 			
 			request
-				.post( "#{pack.homepage}/themes/#{mjson.name}/#{mjson.version}" )
+				.post( "#{pack.homepage}/api/0.1/themes/#{mjson.name}/#{mjson.version}" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				.send
 					theme: res.theme
@@ -136,7 +139,7 @@ exports.unpublish = ( options ) ->
 		else
 			
 			request
-				.del( "#{pack.homepage}/themes/#{mjson.name}/#{mjson.version}" )
+				.del( "#{pack.homepage}/api/0.1/themes/#{mjson.name}/#{mjson.version}" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				.send
 					password: res.password
@@ -196,15 +199,15 @@ exports.install = ( pth, list, depent = null ) ->
 			name: name
 			version: version
 
-
+	# console.log arr
 	result = ''
 
 	async.reduce arr, null, ( result, theme, callback ) ->
 		
-		process.nextTick ->
+		immediately ->
 			
 			request
-				.get( "#{pack.homepage}/themes/#{theme.name}/#{theme.version}" )
+				.get( "#{pack.homepage}/api/0.1/themes/#{theme.name}/#{theme.version}" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				
 				.end ( res ) =>

@@ -1,7 +1,7 @@
 `#!/usr/bin/env node`
 
-
 # Dependences
+# ------------------------------------------
 pack = require './package.json'
 path = require 'path'
 common = require './lib/common'
@@ -12,6 +12,9 @@ fs = require 'fs'
 
 
 
+
+# Program
+# ------------------------------------------
 program
 	.command('init')
 

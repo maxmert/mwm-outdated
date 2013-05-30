@@ -24,7 +24,7 @@ exports.init = ( options ) ->
 		modifyer: ( callback ) =>
 
 			request
-				.get( "#{pack.homepage}/defaults/modifyer" )
+				.get( "#{pack.homepage}/api/0.1/defaults/modifyer" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				.set('Accept', 'application/json')
 				.end ( res ) =>
@@ -88,7 +88,7 @@ exports.publish = ( options ) ->
 		else
 			
 			request
-				.post( "#{pack.homepage}/modifyers/#{mjson.name}/#{mjson.version}" )
+				.post( "#{pack.homepage}/api/0.1/modifyers/#{mjson.name}/#{mjson.version}" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				.send
 					modifyer: res.modifyer
@@ -135,7 +135,7 @@ exports.unpublish = ( options ) ->
 		else
 			
 			request
-				.del( "#{pack.homepage}/modifyers/#{mjson.name}/#{mjson.version}" )
+				.del( "#{pack.homepage}/api/0.1/modifyers/#{mjson.name}/#{mjson.version}" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				.send
 					password: res.password
@@ -172,7 +172,7 @@ exports.install = ( pth, list ) ->
 		do (name, version, pth) ->
 			
 			request
-				.get( "#{pack.homepage}/modifyers/#{name}/#{version}" )
+				.get( "#{pack.homepage}/api/0.1/modifyers/#{name}/#{version}" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				
 				.end ( res ) =>

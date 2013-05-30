@@ -3,6 +3,7 @@ ${{name}}: -{{name}}
 \n@import 'imports'
 \n@import 'params'
 \n@import 'vars'
+\n@import 'myvars'
 \n
 \n@mixin {{name}}( $index )
 \n\t// All here
@@ -19,8 +20,12 @@ ${{name}}: -{{name}}
 \n\t
 \n\t\t\t// With each theme do
 \n\t\t\t@if $dependent == null
-\n\t\t\t\t.#{${{name}}}.#{$theme}
-\n\t\t\t\t\t@include {{name}}( $index )
+\n\t\t\t\t@if $theme != 'default'
+\n\t\t\t\t\t.#{${{name}}}.#{$theme}
+\n\t\t\t\t\t\t@include {{name}}( $index )
+\n\t\t\t\t@else
+\n\t\t\t\t\t.#{${{name}}}
+\n\t\t\t\t\t\t@include {{name}}( $index )
 \n\t\t\t@else
 \n\t\t\t\t%#{${{name}}}.#{$theme}
 \n\t\t\t\t\t@include {{name}}( $index )
@@ -28,8 +33,12 @@ ${{name}}: -{{name}}
 \n\t@else
 \n\t\t@if type-of( $themes ) == string
 \n\t\t\t@if $dependent == null
-\n\t\t\t\t.#{${{name}}}.#{$themes}
-\n\t\t\t\t\t@include {{name}}( 1 )
+\n\t\t\t\t@if $theme != 'default'
+\n\t\t\t\t\t.#{${{name}}}.#{$theme}
+\n\t\t\t\t\t\t@include {{name}}( $index )
+\n\t\t\t\t@else
+\n\t\t\t\t\t.#{${{name}}}
+\n\t\t\t\t\t\t@include {{name}}( $index )
 \n\t\t\t@else
-\n\t\t\t\t%#{${{name}}}.#{$themes}
-\n\t\t\t\t\t@include {{name}}( 1 )
+\n\t\t\t\t%#{${{name}}}.#{$theme}
+\n\t\t\t\t\t@include {{name}}( $index )
