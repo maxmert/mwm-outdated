@@ -23,6 +23,7 @@
 		"wrench": "*",
 		"markdown": "0.4.0",
 		"jsdom": "*",
+		"events": "*",
 
 		"grunt": "*",
 		"grunt-jstemplater": "*",
