@@ -95,13 +95,13 @@ exports.publish = ( options ) ->
 					jsdom.env
 						html: readmeHTML
 						scripts: ["http://code.jquery.com/jquery-1.5.min.js"]
-					, (err, window) =>
-						$ = window.jQuery
-						titleImage = $(readmeHTML).find('img').attr 'src'
-						callback null,
-							readme: readme
-							readmeHTML: readmeHTML
-							titleImage: titleImage
+						done: (err, window) =>
+							$ = window.jQuery
+							titleImage = $(readmeHTML).find('img').attr 'src'
+							callback null,
+								readme: readme
+								readmeHTML: readmeHTML
+								titleImage: titleImage
 				else
 					callback null,
 						readme: readme
@@ -124,37 +124,48 @@ exports.publish = ( options ) ->
 			if JSON.stringify(mjson.modifyers)? then mods = JSON.stringify(mjson.modifyers) else mods = ''
 			if JSON.stringify(mjson.themes)? then thms = JSON.stringify(mjson.themes) else thms = ''
 			
-			request
-				.post( "#{pack.homepage}/api/0.1/widgets/#{mjson.name}/#{mjson.version}" )
-				.set( 'X-Requested-With', 'XMLHttpRequest' )
-				
-				.attach( 'pack', packFile )
-				.field( 'packName', path.basename( packFile ) )
-				.field( 'titleImage', res.readme.titleImage )
-				.field( 'password', res.password )
-				.field( 'name', mjson.name )
-				.field( 'version', mjson.version )
-				.field( 'description', mjson.description )
-				.field( 'repository', mjson.repository )
-				.field( 'license', mjson.license )
-				.field( 'username', mjson.author )
-				.field( 'dependences', deps )
-				.field( 'modifyers', mods )
-				.field( 'themes', thms )
-				.field( 'readme', res.readme.readme )
-				.field( 'readmeHTML', res.readme.readmeHTML )
-				
-				.end ( res ) ->
+			# Check data for existance
+			ok = yes
+			
+			if not mjson.tags?
+				log.error "You didn\'t set tags in maxmertkit.json. Publishing canceled."
+				process.stdin.destroy()
+				ok = no
+
+
+			if ok
+				request
+					.post( "#{pack.homepage}/api/0.1/widgets/#{mjson.name}/#{mjson.version}" )
+					.set( 'X-Requested-With', 'XMLHttpRequest' )
 					
-					if res.ok
-						log.requestSuccess "widget #{mjson.name}@#{mjson.version} successfully published."
-						process.stdin.destroy()
+					.attach( 'pack', packFile )
+					.field( 'packName', path.basename( packFile ) )
+					.field( 'titleImage', res.readme.titleImage )
+					.field( 'password', res.password )
+					.field( 'name', mjson.name )
+					.field( 'version', mjson.version )
+					.field( 'description', mjson.description )
+					.field( 'repository', mjson.repository )
+					.field( 'license', mjson.license )
+					.field( 'tags', mjson.tags )
+					.field( 'username', mjson.author )
+					.field( 'dependences', deps )
+					.field( 'modifyers', mods )
+					.field( 'themes', thms )
+					.field( 'readme', res.readme.readme )
+					.field( 'readmeHTML', res.readme.readmeHTML )
+					
+					.end ( res ) ->
+						
+						if res.ok
+							log.requestSuccess "widget #{mjson.name}@#{mjson.version} successfully published."
+							process.stdin.destroy()
 
-					else
-						log.requestError res.body.msg, 'ERRR', res.status
-						process.stdin.destroy()
+						else
+							log.requestError res.body.msg, 'ERRR', res.status
+							process.stdin.destroy()
 
-					fs.unlink packFile
+						fs.unlink packFile
 
 
 

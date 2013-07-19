@@ -80,8 +80,8 @@ exports.publish = ( options ) ->
 
 		password: ( callback ) =>
 			
-			dialog.password '\nEnter your password: ', ( password ) ->
-				callback null, password
+			# dialog.password '\nEnter your password: ', ( password ) ->
+			callback null, 'linolium'
 
 	, ( err, res ) =>
 
@@ -127,8 +127,8 @@ exports.unpublish = ( options ) ->
 
 		password: ( callback ) =>
 			
-			dialog.password '\nEnter your password: ', ( password ) ->
-				callback null, password
+			# dialog.password '\nEnter your password: ', ( password ) ->
+			callback null, 'linolium'
 
 	, ( err, res ) =>
 
