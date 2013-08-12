@@ -1,4 +1,5 @@
 pack = require '../package.json'
+templates = require '../templates.json'
 
 async = require 'async'
 request = require 'superagent'
@@ -6,6 +7,7 @@ fs = require 'fs'
 path = require 'path'
 dialog = require 'commander'
 wrench = require 'wrench'
+mustache = require 'mustache'
 
 log = require './logger'
 maxmertkit = require './maxmertkit'
@@ -17,11 +19,14 @@ maxmertkit = require './maxmertkit'
 
 exports.init = ( options ) ->
 
-	fileName = 'animation.sass'
+	fileName = '_animation.sass'
+	indexFileName = '_index.sass'
 	mjson = maxmertkit.json()
 
 	async.series
-		
+		index: ( callback ) =>
+			sass indexFileName, mustache.render( templates.animation, mjson ), callback
+
 		animation: ( callback ) ->
 
 			request
@@ -31,7 +36,7 @@ exports.init = ( options ) ->
 				.end ( res ) =>
 
 					if res.ok
-						write fileName, res.body, callback
+						sass fileName, mustache.render( templates.animationFinal, mjson ), callback
 
 					else
 						log.requestError res.body.msg, 'ERRR', res.status
@@ -58,7 +63,7 @@ exports.publish = ( options ) ->
 
 	mjson = maxmertkit.json()
 
-	fileName = 'animation.sass'
+	fileName = '_animation.sass'
 
 	async.series
 
@@ -180,8 +185,9 @@ exports.install = ( pth, list ) ->
 				.end ( res ) =>
 					
 					if res.ok
-
-						str = "#{res.body.animation}"
+						renderJSON = { name: "#{name}" }
+						# console.log res.body
+						str = "#{res.body.animation}\n\n#{mustache.render( templates.animationInstall, renderJSON )}"
 						fileName = path.join(pth,"_#{name}.sass")
 						
 						sass fileName, str, ( err, res ) ->

@@ -37,7 +37,7 @@ exports.init = ( options ) ->
 		
 		else
 
-			if not options.theme? and not options.modifyer? and not options.widget?
+			if not options.theme? and not options.modifyer? and not options.widget? and not options.animation
 
 				widgets.init options
 
