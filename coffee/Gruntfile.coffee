@@ -38,11 +38,11 @@ module.exports = (grunt) ->
 
 		template:
 			prod:
-				src: 'public/js/templates/**/*.mustache'
-				dest: 'public/js/templates.js'
+				src: 'templates/**/*.mustache'
+				dest: 'templates.json'
 				variables:
 					name: 'TEMPLATES'
-					staticPath: 'public/js/templates'
+					staticPath: 'templates'
 
 		docco:
 			docs:
