@@ -92,12 +92,17 @@ exports.publish = ( options ) ->
 				if exist
 					readme = fs.readFileSync path.join('.', 'README.md'), "utf8"
 					readmeHTML = md.toHTML readme
+					# console.log readmeHTML
 					jsdom.env
 						html: readmeHTML
 						scripts: ["http://code.jquery.com/jquery-1.5.min.js"]
 						done: (err, window) =>
 							$ = window.jQuery
-							titleImage = $(readmeHTML).find('img').attr 'src'
+							if $(readmeHTML).find('img').attr 'src'
+								titleImage = $(readmeHTML).find('img').attr 'src'
+							else
+								titleImage = ''
+							
 							callback null,
 								readme: readme
 								readmeHTML: readmeHTML
@@ -107,6 +112,35 @@ exports.publish = ( options ) ->
 						readme: readme
 						readmeHTML: readmeHTML
 						titleImage: titleImage
+
+		test: ( callback ) =>
+			testHTML = ''
+			fs.exists path.join('.', 'test.html'), ( exist ) =>
+				if exist
+					testHTML = fs.readFileSync path.join('.', 'test.html'), "utf8"
+					jsdom.env
+						html: testHTML
+						scripts: ["http://code.jquery.com/jquery-1.5.min.js"]
+						done: (err, window) =>
+							$ = window.jQuery
+							if $(testHTML).find('body')
+								testHTML = $(testHTML).find('body').html()
+							else
+								testHTML = ''
+							
+							callback null, testHTML
+				else
+					callback null, testHTML
+
+
+		testCSS: ( callback ) =>
+			testCSS = ''
+			fs.exists path.join('.', 'index.css'), ( exist ) =>
+				if exist
+					testCSS = fs.readFileSync path.join('.', 'index.css'), "utf8"
+					callback null, testCSS
+				else
+					callback null, testCSS
 				
 
 	, ( err, res ) =>
@@ -149,6 +183,8 @@ exports.publish = ( options ) ->
 					.field( 'license', mjson.license )
 					.field( 'tags', mjson.tags )
 					.field( 'username', mjson.author )
+					.field( 'test', res.test )
+					.field( 'testCSS', res.testCSS )
 					.field( 'dependences', deps )
 					.field( 'modifyers', mods )
 					.field( 'themes', thms )
@@ -286,7 +322,7 @@ exports.install = ( pth, mjson, calll, depent, themesss ) ->
 			fileName = "#{widget.name}@#{widget.version}.tar"
 			
 			req = request
-				.get( "#{pack.homepage}/api/0.1/widgets/#{widget.name}/#{widget.version}" )
+				.get( "#{pack.homepage}/api/0.1/widgets/#{widget.name}/#{widget.version}/exist" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				.end ( res ) =>
 
