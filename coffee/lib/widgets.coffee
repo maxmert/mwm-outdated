@@ -286,7 +286,7 @@ exports.install = ( pth, mjson, calll, depent, themesss ) ->
 			fileName = "#{widget.name}@#{widget.version}.tar"
 			
 			req = request
-				.get( "#{pack.homepage}/api/0.1/widgets/#{widget.name}/#{widget.version}" )
+				.get( "#{pack.homepage}/api/0.1/widgets/#{widget.name}/#{widget.version}/exist" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				.end ( res ) =>
 

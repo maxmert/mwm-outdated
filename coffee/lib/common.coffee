@@ -141,7 +141,6 @@ install = ( pth, includes = no, themesGlobal ) ->
 
 				mjson = maxmertkit.json( file )
 				fs.writeFileSync path.join(path.dirname( file ),'_imports.sass'), ""
-
 				if mjson.dependences?
 					
 					pth = path.join( path.dirname( file ), 'dependences/widgets')
