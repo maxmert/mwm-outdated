@@ -9,6 +9,7 @@ path = require 'path'
 _ = require 'underscore'
 
 modifyers = require './modifyers'
+animation = require './animation'
 themes = require './themes'
 widgets = require './widgets'
 project = require './project'
@@ -20,7 +21,7 @@ log = require './logger'
 
 
 # **Initializing**
-# a new widget/theme/modifyer in the current directory
+# a new widget/theme/modifyer/animation in the current directory
 
 exports.init = ( options ) ->
 
@@ -36,7 +37,7 @@ exports.init = ( options ) ->
 		
 		else
 
-			if not options.theme? and not options.modifyer? and not options.widget?
+			if not options.theme? and not options.modifyer? and not options.widget? and not options.animation
 
 				widgets.init options
 
@@ -51,6 +52,10 @@ exports.init = ( options ) ->
 			if options.modifyer
 
 				modifyers.init options
+
+			if options.animation
+
+				animation.init options
 
 
 
@@ -77,6 +82,9 @@ exports.publish = ( options ) ->
 		when 'theme'
 			themes.publish options
 
+		when 'animation'
+			animation.publish options
+
 
 
 
@@ -99,6 +107,9 @@ exports.unpublish = ( options ) ->
 
 		when 'theme'
 			themes.unpublish options
+
+		when 'animation'
+			animation.unpublish options
 
 
 
@@ -156,6 +167,14 @@ install = ( pth, includes = no, themesGlobal ) ->
 					wrench.mkdirSyncRecursive pth, 0o0777
 					modifyers.install pth, mjson.modifyers
 
+
+				if mjson.animation?
+
+					pth = path.join( path.dirname( file ), 'dependences/animation')
+					wrench.rmdirSyncRecursive pth, ->
+					wrench.mkdirSyncRecursive pth, 0o0777
+					animation.install pth, mjson.animation
+
 				if mjson.themes?
 					thms = mjson.themes
 					if themesGlobal?
@@ -209,7 +228,7 @@ initJSON = ( options, callback ) ->
 
 		type: ( callback ) ->
 
-			if not options.theme and not options.modifyer and not options.widget
+			if not options.theme and not options.modifyer and not options.widget and not options.animation
 
 				callback null, 'project'
 
@@ -224,6 +243,10 @@ initJSON = ( options, callback ) ->
 			else if options.modifyer
 
 				callback null, 'modifyer'
+
+			else if options.animation
+
+				callback null, 'animation'
 
 		name: ( callback ) ->
 			defaultPkgName = 'test'
@@ -241,9 +264,19 @@ initJSON = ( options, callback ) ->
 			dialog.prompt "description: ", ( description ) ->
 				callback null, description
 
+		image: ( callback ) ->
+			if options.animation? and options.animation
+				dialog.prompt "title image ulr: (none) ", ( imgName ) ->
+					if imgName is '' then imgName = null
+					callback null, imgName
+
 		repository: ( callback ) ->
 			dialog.prompt "repository: ", ( repository ) ->
 				callback null, repository
+
+		site: ( callback ) ->
+			dialog.prompt "projet\'s site: ", ( site ) ->
+				callback null, site
 
 		author: ( callback ) ->
 			dialog.prompt "author: ", ( author ) ->
@@ -281,7 +314,7 @@ initWriteConfirm = ( file, json, callback ) ->
 
 					if not exists
 						initWrite file, json, callback
-						process.stdin.destroy()
+						# process.stdin.destroy()
 
 					else #if exists
 						log.error("File #{file} already exists.")
@@ -291,11 +324,11 @@ initWriteConfirm = ( file, json, callback ) ->
 							if not ok
 								log.error("initialization canceled.")
 								callback ok, null
-								process.stdin.destroy()
+								# process.stdin.destroy()
 
 							else
 								initWrite file, json, callback
-								process.stdin.destroy()
+								# process.stdin.destroy()
 
 
 

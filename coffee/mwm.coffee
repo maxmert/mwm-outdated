@@ -33,12 +33,17 @@ program
 		help: 'Initialize a new modifyer in the current directory.'
 		flag: yes
 
+	.option 'animation',
+		abbr: 'a'
+		help: 'Initialize a new animation in the current directory.'
+		flag: yes
+
 	.callback (options) ->
 
 		common.init options
 
 
-	.help 'Initializing new project/widget/modifyer/theme in the current directory.'
+	.help 'Initializing new project/widget/modifyer/theme/animation in the current directory.'
 
 
 
@@ -50,7 +55,7 @@ program
 
 		common.publish options
 
-	.help 'Publishing current version of widget/modifyer/theme.'
+	.help 'Publishing current version of widget/modifyer/theme/animation.'
 
 
 
@@ -62,7 +67,7 @@ program
 
 		common.unpublish options
 
-	.help 'Unpublishing current version of widget/modifyer/theme.'
+	.help 'Unpublishing current version of widget/modifyer/theme/animation.'
 
 
 
@@ -74,7 +79,7 @@ program
 
 		common.install options
 
-	.help 'Installing all dependences, themes and modifyers.'
+	.help 'Installing all dependences, themes, modifyers and animations.'
 
 
 
@@ -86,7 +91,7 @@ program
 
 		archives.pack '.', null
 
-	.help 'Pack current version of widget/modifyer/theme to a tar file.'
+	.help 'Pack current version of widget/modifyer/theme/animation to a tar file.'
 
 
 
