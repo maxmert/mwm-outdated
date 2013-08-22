@@ -87,26 +87,25 @@ exports.publish = ( options ) ->
 			# Read README.md
 			readme = ''
 			readmeHTML = ''
-			titleImage = ''
+			# titleImage = ''
 			fs.exists path.join('.', 'README.md'), ( exist ) =>
 				if exist
 					readme = fs.readFileSync path.join('.', 'README.md'), "utf8"
 					readmeHTML = md.toHTML readme
-					jsdom.env
-						html: readmeHTML
-						scripts: ["http://code.jquery.com/jquery-1.5.min.js"]
-						done: (err, window) =>
-							$ = window.jQuery
-							titleImage = $(readmeHTML).find('img').attr 'src'
-							callback null,
-								readme: readme
-								readmeHTML: readmeHTML
-								titleImage: titleImage
-				else
-					callback null,
-						readme: readme
-						readmeHTML: readmeHTML
-						titleImage: titleImage
+					# jsdom.env
+					# 	html: readmeHTML
+					# 	scripts: ["http://code.jquery.com/jquery-1.5.min.js"]
+					# 	done: (err, window) =>
+					# 		$ = window.jQuery
+					# 		titleImage = $(readmeHTML).find('img').attr 'src'
+					# callback null,
+					# 	readme: readme
+					# 	readmeHTML: readmeHTML
+						# titleImage: titleImage
+				callback null,
+					readme: readme
+					readmeHTML: readmeHTML
+					# titleImage: titleImage
 				
 
 	, ( err, res ) =>
@@ -140,7 +139,7 @@ exports.publish = ( options ) ->
 					
 					.attach( 'pack', packFile )
 					.field( 'packName', path.basename( packFile ) )
-					.field( 'titleImage', res.readme.titleImage )
+					.field( 'titleImage', mjson.titleImage )
 					.field( 'password', res.password )
 					.field( 'name', mjson.name )
 					.field( 'version', mjson.version )
