@@ -273,6 +273,10 @@ initJSON = ( options, callback ) ->
 			dialog.prompt "repository: ", ( repository ) ->
 				callback null, repository
 
+		site: ( callback ) ->
+			dialog.prompt "projet\'s site: ", ( site ) ->
+				callback null, site
+
 		author: ( callback ) ->
 			dialog.prompt "author: ", ( author ) ->
 				callback null, author

@@ -1,5 +1,4 @@
 #!/usr/bin/env node;
-
 var archives, common, fs, log, pack, path, program;
 
 pack = require('./package.json');

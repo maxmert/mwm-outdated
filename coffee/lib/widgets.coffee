@@ -87,26 +87,55 @@ exports.publish = ( options ) ->
 			# Read README.md
 			readme = ''
 			readmeHTML = ''
-			titleImage = ''
+			# titleImage = ''
 			fs.exists path.join('.', 'README.md'), ( exist ) =>
 				if exist
 					readme = fs.readFileSync path.join('.', 'README.md'), "utf8"
 					readmeHTML = md.toHTML readme
+					# jsdom.env
+					# 	html: readmeHTML
+					# 	scripts: ["http://code.jquery.com/jquery-1.5.min.js"]
+					# 	done: (err, window) =>
+					# 		$ = window.jQuery
+					# 		titleImage = $(readmeHTML).find('img').attr 'src'
+					# callback null,
+					# 	readme: readme
+					# 	readmeHTML: readmeHTML
+						# titleImage: titleImage
+				callback null,
+					readme: readme
+					readmeHTML: readmeHTML
+					# titleImage: titleImage
+
+		test: ( callback ) =>
+			testHTML = ''
+			fs.exists path.join('.', 'test.html'), ( exist ) =>
+				if exist
+					testHTML = fs.readFileSync path.join('.', 'test.html'), "utf8"
 					jsdom.env
-						html: readmeHTML
+						html: testHTML
 						scripts: ["http://code.jquery.com/jquery-1.5.min.js"]
 						done: (err, window) =>
 							$ = window.jQuery
-							titleImage = $(readmeHTML).find('img').attr 'src'
-							callback null,
-								readme: readme
-								readmeHTML: readmeHTML
-								titleImage: titleImage
+							if $(testHTML).find('body')
+								testHTML = $(testHTML).find('body').html()
+							else
+								testHTML = ''
+							
+							callback null, testHTML
 				else
-					callback null,
-						readme: readme
-						readmeHTML: readmeHTML
-						titleImage: titleImage
+					callback null, testHTML
+
+
+		testCSS: ( callback ) =>
+			testCSS = ''
+			fs.exists path.join('.', 'index.css'), ( exist ) =>
+				if exist
+					testCSS = fs.readFileSync path.join('.', 'index.css'), "utf8"
+					callback null, testCSS
+				else
+					callback null, testCSS
+
 				
 
 	, ( err, res ) =>
@@ -131,6 +160,10 @@ exports.publish = ( options ) ->
 				log.error "You didn\'t set tags in maxmertkit.json. Publishing canceled."
 				process.stdin.destroy()
 				ok = no
+			if not mjson.titleImage?
+				mjson.titleImage = ''
+			if not mjson.site?
+				mjson.site = ''
 
 
 			if ok
@@ -140,15 +173,18 @@ exports.publish = ( options ) ->
 					
 					.attach( 'pack', packFile )
 					.field( 'packName', path.basename( packFile ) )
-					.field( 'titleImage', res.readme.titleImage )
+					# .field( 'titleImage', mjson.titleImage )
 					.field( 'password', res.password )
 					.field( 'name', mjson.name )
 					.field( 'version', mjson.version )
 					.field( 'description', mjson.description )
 					.field( 'repository', mjson.repository )
+					.field( 'site', mjson.site )
 					.field( 'license', mjson.license )
 					.field( 'tags', mjson.tags )
 					.field( 'username', mjson.author )
+					.field( 'test', res.test )
+					.field( 'testCSS', res.testCSS )
 					.field( 'dependences', deps )
 					.field( 'modifyers', mods )
 					.field( 'themes', thms )
