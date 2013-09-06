@@ -79,9 +79,8 @@ exports.publish = ( options ) ->
 
 
 		password: ( callback ) =>
-			callback null, 'linolium'
-			# dialog.password '\nEnter your password: ', ( password ) ->
-			# 	callback null, password
+			dialog.password '\nEnter your password: ', ( password ) ->
+				callback null, password
 
 		readme: ( callback ) =>
 			# Read README.md
@@ -152,6 +151,7 @@ exports.publish = ( options ) ->
 			if JSON.stringify(mjson.dependences)? then deps = JSON.stringify(mjson.dependences) else deps = ''
 			if JSON.stringify(mjson.modifyers)? then mods = JSON.stringify(mjson.modifyers) else mods = ''
 			if JSON.stringify(mjson.themes)? then thms = JSON.stringify(mjson.themes) else thms = ''
+			if JSON.stringify(mjson.animations)? then anims = JSON.stringify(mjson.animations) else anims = ''
 			
 			# Check data for existance
 			ok = yes
@@ -164,7 +164,8 @@ exports.publish = ( options ) ->
 				mjson.titleImage = ''
 			if not mjson.site?
 				mjson.site = ''
-
+			if not mjson.themeUse? or not mjson.themeUse
+				mjson.themeUse = 'false'
 
 			if ok
 				request
@@ -182,12 +183,14 @@ exports.publish = ( options ) ->
 					.field( 'site', mjson.site )
 					.field( 'license', mjson.license )
 					.field( 'tags', mjson.tags )
+					.field( 'themeUse', mjson.themeUse )
 					.field( 'username', mjson.author )
 					.field( 'test', res.test )
 					.field( 'testCSS', res.testCSS )
 					.field( 'dependences', deps )
 					.field( 'modifyers', mods )
 					.field( 'themes', thms )
+					.field( 'animations', anims )
 					.field( 'readme', res.readme.readme )
 					.field( 'readmeHTML', res.readme.readmeHTML )
 					
@@ -218,9 +221,8 @@ exports.unpublish = ( options ) ->
 	async.series
 
 		password: ( callback ) =>
-			callback null, 'linolium'
-			# dialog.password '\nEnter your password: ', ( password ) ->
-			# 	callback null, password
+			dialog.password '\nEnter your password: ', ( password ) ->
+				callback null, password
 
 	, ( err, res ) =>
 
@@ -326,8 +328,7 @@ exports.install = ( pth, mjson, calll, depent, themesss ) ->
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				.end ( res ) =>
 
-					if res.ok
-
+					if res.ok and res.body.exist
 						req = request
 							.get( "#{pack.homepage}/api/0.1/widgets/#{widget.name}/#{widget.version}" )
 							.set( 'X-Requested-With', 'XMLHttpRequest' )

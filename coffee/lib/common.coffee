@@ -141,7 +141,6 @@ install = ( pth, includes = no, themesGlobal ) ->
 
 				mjson = maxmertkit.json( file )
 				fs.writeFileSync path.join(path.dirname( file ),'_imports.sass'), ""
-
 				if mjson.dependences?
 					
 					pth = path.join( path.dirname( file ), 'dependences/widgets')
@@ -269,6 +268,22 @@ initJSON = ( options, callback ) ->
 				dialog.prompt "title image ulr: (none) ", ( imgName ) ->
 					if imgName is '' then imgName = null
 					callback null, imgName
+			else
+				callback null, null
+
+
+		tags: ( callback ) ->
+			dialog.prompt "tags (through comma): ", ( tags ) ->
+				callback null, tags
+
+		themeUse: ( callback ) ->
+			if options.widget? and options.widget
+				dialog.confirm "Will it use themes?\n(y/n) -> ", ( ok ) ->
+					callback null, ok
+
+			else
+				callback null, null
+
 
 		repository: ( callback ) ->
 			dialog.prompt "repository: ", ( repository ) ->

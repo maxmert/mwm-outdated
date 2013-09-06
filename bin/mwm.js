@@ -1,17 +1,17 @@
-#!/usr/bin/env node;
+#!/usr/bin/env node
 var archives, common, fs, log, pack, path, program;
 
-pack = require('./package.json');
+pack = require('../package.json');
 
 path = require('path');
 
-common = require('./lib/common');
+common = require('../lib/common');
 
-archives = require('./lib/archives');
+archives = require('../lib/archives');
 
 program = require('nomnom').colors();
 
-log = require('./lib/logger');
+log = require('../lib/logger');
 
 fs = require('fs');
 

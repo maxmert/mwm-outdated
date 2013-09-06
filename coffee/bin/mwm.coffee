@@ -2,12 +2,12 @@
 
 # Dependences
 # ------------------------------------------
-pack = require './package.json'
+pack = require '../package.json'
 path = require 'path'
-common = require './lib/common'
-archives = require './lib/archives'
+common = require '../lib/common'
+archives = require '../lib/archives'
 program = require('nomnom').colors()
-log = require './lib/logger'
+log = require '../lib/logger'
 fs = require 'fs'
 
 
