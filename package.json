@@ -2,7 +2,7 @@
   "name": "mwm",
   "version": "0.0.8",
   "description": "Maxmertkit widget manager. It is like npm for css. Check out www.maxmertkit.com for more info.",
-  "homepage": "http://localhost:3001",
+  "homepage": "http://maxmertkit.com:3001",
   "author": {
     "name": "Vetrenko Maxim",
     "email": "me@maxmert.com"
@@ -54,6 +54,4 @@
   "_id": "mwm@0.0.8",
   "readme": "ERROR: No README.md file found!",
   "_from": "mwm@"
-}
-@"
 }

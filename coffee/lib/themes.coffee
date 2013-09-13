@@ -25,7 +25,7 @@ exports.init = ( options ) ->
 
 	async.series
 
-		modifyer: ( callback ) =>
+		modifier: ( callback ) =>
 
 			request
 				.get( "#{pack.homepage}/api/0.1/defaults/theme" )
@@ -44,7 +44,7 @@ exports.init = ( options ) ->
 	, ( err, res ) =>
 
 		if err?
-			log.error "An error while initialized modifyer."
+			log.error "An error while initialized modifier."
 			process.stdin.destroy()
 
 		else

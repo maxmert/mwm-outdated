@@ -8,7 +8,7 @@ wrench = require 'wrench'
 path = require 'path'
 _ = require 'underscore'
 
-modifyers = require './modifyers'
+modifiers = require './modifiers'
 animation = require './animation'
 themes = require './themes'
 widgets = require './widgets'
@@ -21,7 +21,7 @@ log = require './logger'
 
 
 # **Initializing**
-# a new widget/theme/modifyer/animation in the current directory
+# a new widget/theme/modifier/animation in the current directory
 
 exports.init = ( options ) ->
 
@@ -37,7 +37,7 @@ exports.init = ( options ) ->
 		
 		else
 
-			if not options.theme? and not options.modifyer? and not options.widget? and not options.animation
+			if not options.theme? and not options.modifier? and not options.widget? and not options.animation
 
 				widgets.init options
 
@@ -49,9 +49,9 @@ exports.init = ( options ) ->
 
 				themes.init options
 
-			if options.modifyer
+			if options.modifier
 
-				modifyers.init options
+				modifiers.init options
 
 			if options.animation
 
@@ -61,7 +61,7 @@ exports.init = ( options ) ->
 
 
 # **Publish**
-# current version of widget/theme/modifyer.
+# current version of widget/theme/modifier.
 # First get type, then call publishing function.
 
 exports.publish = ( options ) ->
@@ -76,8 +76,8 @@ exports.publish = ( options ) ->
 		when 'widget'
 			widgets.publish options
 
-		when 'modifyer'
-			modifyers.publish options
+		when 'modifier'
+			modifiers.publish options
 
 		when 'theme'
 			themes.publish options
@@ -90,7 +90,7 @@ exports.publish = ( options ) ->
 
 
 # **Unpublish**
-# current version of widget/theme/modifyer.
+# current version of widget/theme/modifier.
 # First get type, then call unpublishing functions.
 
 exports.unpublish = ( options ) ->
@@ -102,8 +102,8 @@ exports.unpublish = ( options ) ->
 		when 'widget'
 			widgets.unpublish options
 
-		when 'modifyer'
-			modifyers.unpublish options
+		when 'modifier'
+			modifiers.unpublish options
 
 		when 'theme'
 			themes.unpublish options
@@ -159,12 +159,12 @@ install = ( pth, includes = no, themesGlobal ) ->
 					else
 						project.install pth, mjson, install, includes, themesGlobal
 
-				if mjson.modifyers?
+				if mjson.modifiers?
 
-					pth = path.join( path.dirname( file ), 'dependences/modifyers')
+					pth = path.join( path.dirname( file ), 'dependences/modifiers')
 					wrench.rmdirSyncRecursive pth, ->
 					wrench.mkdirSyncRecursive pth, 0o0777
-					modifyers.install pth, mjson.modifyers
+					modifiers.install pth, mjson.modifiers
 
 
 				if mjson.animation?
@@ -227,7 +227,7 @@ initJSON = ( options, callback ) ->
 
 		type: ( callback ) ->
 
-			if not options.theme and not options.modifyer and not options.widget and not options.animation
+			if not options.theme and not options.modifier and not options.widget and not options.animation
 
 				callback null, 'project'
 
@@ -239,9 +239,9 @@ initJSON = ( options, callback ) ->
 
 				callback null, 'theme'
 
-			else if options.modifyer
+			else if options.modifier
 
-				callback null, 'modifyer'
+				callback null, 'modifier'
 
 			else if options.animation
 
@@ -310,7 +310,7 @@ initJSON = ( options, callback ) ->
 
 
 # Function with json write confirmation.
-# Uses with maxmertkit.json, theme.json and modifyer.json
+# Uses with maxmertkit.json, theme.json and modifier.json
 
 initWriteConfirm = ( file, json, callback ) ->
 
@@ -349,7 +349,7 @@ initWriteConfirm = ( file, json, callback ) ->
 
 
 # Function with json write.
-# Uses with maxmertkit.json, theme.json and modifyer.json
+# Uses with maxmertkit.json, theme.json and modifier.json
 
 initWrite = ( file, json, callback ) ->
 

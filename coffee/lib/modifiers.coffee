@@ -1,5 +1,4 @@
 pack = require '../package.json'
-templates = require '../templates.json'
 
 async = require 'async'
 request = require 'superagent'
@@ -7,7 +6,6 @@ fs = require 'fs'
 path = require 'path'
 dialog = require 'commander'
 wrench = require 'wrench'
-mustache = require 'mustache'
 
 log = require './logger'
 maxmertkit = require './maxmertkit'
@@ -19,24 +17,20 @@ maxmertkit = require './maxmertkit'
 
 exports.init = ( options ) ->
 
-	fileName = '_animation.sass'
-	indexFileName = '_index.sass'
-	mjson = maxmertkit.json()
+	fileName = 'modifier.json'
 
 	async.series
-		index: ( callback ) =>
-			sass indexFileName, mustache.render( templates.animation, mjson ), callback
 
-		animation: ( callback ) ->
+		modifier: ( callback ) =>
 
 			request
-				.get( "#{pack.homepage}/api/0.1/defaults/animation" )
+				.get( "#{pack.homepage}/api/0.1/defaults/modifier" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
-				# .set('Accept', 'text')
+				.set('Accept', 'application/json')
 				.end ( res ) =>
 
 					if res.ok
-						sass fileName, mustache.render( templates.animationFinal, mjson ), callback
+						write fileName, res.body, callback
 
 					else
 						log.requestError res.body.msg, 'ERRR', res.status
@@ -46,7 +40,7 @@ exports.init = ( options ) ->
 	, ( err, res ) =>
 
 		if err?
-			log.error "An error while initialized animation."
+			log.error "An error while initialized modifier."
 			process.stdin.destroy()
 
 		else
@@ -63,21 +57,27 @@ exports.publish = ( options ) ->
 
 	mjson = maxmertkit.json()
 
-	fileName = '_animation.sass'
+	fileName = 'modifier.json'
 
 	async.series
 
-		css: ( callback ) =>
+		modifier: ( callback ) =>
 			
-			raw = fs.readFileSync path.join( '.', fileName ), 'utf8'
-	
-			if not raw?
-				log.error("couldn\'t read #{fileName} file.")
-				callback true, null
+			fs.exists path.join( '.', fileName ), ( exist ) =>
+				if not exist
+					log.error("couldn\'t read #{fileName} file.")
+					callback true, null
 
-			else
-				# json = JSON.parse rawjson
-				callback null, raw
+				else
+					rawjson = fs.readFileSync path.join( '.', fileName )
+			
+					if not rawjson?
+						log.error("couldn\'t read #{fileName} file.")
+						callback true, null
+
+					else
+						json = JSON.parse rawjson
+						callback null, json
 
 
 		password: ( callback ) =>
@@ -94,20 +94,19 @@ exports.publish = ( options ) ->
 		else
 			
 			request
-				.post( "#{pack.homepage}/api/0.1/animation/#{mjson.name}/#{mjson.version}" )
+				.post( "#{pack.homepage}/api/0.1/modifiers/#{mjson.name}/#{mjson.version}" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				.send
-					animation: res.css
+					modifier: res.modifier
 					password: res.password
 					name: mjson.name
 					version: mjson.version
 					username: mjson.author
-					image: mjson.image
 				
 				.end ( res ) ->
 					
 					if res.ok
-						log.requestSuccess "animation #{mjson.name}@#{mjson.version} successfully published."
+						log.requestSuccess "modifier #{mjson.name}@#{mjson.version} successfully published."
 						process.stdin.destroy()
 
 					else
@@ -142,7 +141,7 @@ exports.unpublish = ( options ) ->
 		else
 			
 			request
-				.del( "#{pack.homepage}/api/0.1/animation/#{mjson.name}/#{mjson.version}" )
+				.del( "#{pack.homepage}/api/0.1/modifiers/#{mjson.name}/#{mjson.version}" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				.send
 					password: res.password
@@ -153,7 +152,7 @@ exports.unpublish = ( options ) ->
 				.end ( res ) ->
 					
 					if res.ok
-						log.requestSuccess "animation #{mjson.name}@#{mjson.version} successfully unpublished."
+						log.requestSuccess "modifier #{mjson.name}@#{mjson.version} successfully unpublished."
 						process.stdin.destroy()
 
 					else
@@ -179,15 +178,14 @@ exports.install = ( pth, list ) ->
 		do (name, version, pth) ->
 			
 			request
-				.get( "#{pack.homepage}/api/0.1/animation/#{name}/#{version}" )
+				.get( "#{pack.homepage}/api/0.1/modifiers/#{name}/#{version}" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				
 				.end ( res ) =>
 					
 					if res.ok
-						renderJSON = { name: "#{name}" }
-						# console.log res.body
-						str = "#{res.body.animation}\n\n#{mustache.render( templates.animationInstall, renderJSON )}"
+
+						str = "$mod-#{name}: #{res.body.modifier.class}"
 						fileName = path.join(pth,"_#{name}.sass")
 						
 						sass fileName, str, ( err, res ) ->
@@ -197,12 +195,12 @@ exports.install = ( pth, list ) ->
 
 							else
 
-								fs.appendFile path.join(pth,'../../_imports.sass'), "@import 'dependences/animation/_#{name}.sass'\n", ( err ) ->
+								fs.appendFile path.join(pth,'../../_imports.sass'), "@import 'dependences/modifiers/_#{name}.sass'\n", ( err ) ->
 									if err?
 										log.error "Couldn\'t append import of #{fileName} to the file _imports.sass"
 
 									else
-										log.requestSuccess "animation #{name}@#{version} successfully installed."
+										log.requestSuccess "modifier #{name}@#{version} successfully installed."
 
 					else
 						log.requestError res.body.msg, 'ERRR', res.status
