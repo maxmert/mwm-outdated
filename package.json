@@ -44,7 +44,11 @@
   },
   "devDependencies": {
     "grunt": "*",
+<<<<<<< HEAD
     "grunt-jstemplater": "0.1.8",
+=======
+    "grunt-jstemplater": "*",
+>>>>>>> 966ada66749f2747c1ebe8a0ef6eaa7f99164f27
     "grunt-contrib-watch": "*",
     "grunt-coffeelint": "*",
     "grunt-contrib-coffee": "*",
