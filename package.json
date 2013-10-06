@@ -1,6 +1,6 @@
 {
   "name": "mwm",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Maxmertkit widget manager. It is like npm for css. Check out www.maxmertkit.com for more info.",
   "homepage": "http://maxmertkit.com:3001",
   "author": {
@@ -44,18 +44,14 @@
   },
   "devDependencies": {
     "grunt": "*",
-<<<<<<< HEAD
     "grunt-jstemplater": "0.1.8",
-=======
-    "grunt-jstemplater": "*",
->>>>>>> 966ada66749f2747c1ebe8a0ef6eaa7f99164f27
     "grunt-contrib-watch": "*",
     "grunt-coffeelint": "*",
     "grunt-contrib-coffee": "*",
     "grunt-docco": "~0.2.0"
   },
   "maxmertkit": "maxmertkit.json",
-  "_id": "mwm@0.0.8",
-  "readme": "ERROR: No README.md file found!",
+  "_id": "mwm@0.0.9",
+  "readme": "Check out www.maxmertkit.com for more info.",
   "_from": "mwm@"
 }
