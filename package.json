@@ -1,6 +1,6 @@
 {
   "name": "mwm",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Maxmertkit widget manager. It is like npm for css. Check out www.maxmertkit.com for more info.",
   "homepage": "http://maxmertkit.com:3001",
   "author": {
