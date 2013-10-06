@@ -1,44 +1,64 @@
-${{name}}: -{{name}}
-\n
-\n@import 'imports'
-\n@import 'params'
-\n@import 'vars'
-\n@import 'myvars'
-\n
-\n@mixin {{name}}( $index )
-\n\t// All here
+\n@import "imports" 
+\n@import "params" 
+\n@import "myvars"
+\n@import "vars" 
 \n
 \n
-\n$themes: null !default
-\n
-\n@if $themes
-\n\t@if type-of( $themes ) == list
+\n%#{${{name}}}
+\n\t@extend %object
 \n\t	
-\n\t\t@each $theme in $themes
+\n\t// Set _minor to default size
+\n\t$sizes: null!default
+\n\t@if $sizes
+\n\t\t@each $size in $sizes
+\n\t\t\t		$sz: #{nth($size, 1)}
+\n\t\t\t		@if $sz != _minor
+\n\t\t\t\t		&.#{nth($size, 1)}
+\n\t\t\t\t\t			font-size: nth($size,2)
+\n\t\t\t\t\t			padding: nth($size,2)/3 nth($size,2)/2
+\n\t\t\t	@else
+\n\t\t\t\t		font-size: nth($size,2)
+\n\t\t\t\t		padding: nth($size,2)/3 nth($size,2)/2
 \n\t
-\n\t\t\t$index: index( $themes, $theme )
 \n\t
-\n\t\t\t// With each theme do
-\n\t\t\t@if $dependent == null
-\n\t\t\t\t@if $theme != 'default'
-\n\t\t\t\t\t.#{${{name}}}.#{$theme}
-\n\t\t\t\t\t\t@include {{name}}( $index )
-\n\t\t\t\t@else
-\n\t\t\t\t\t.#{${{name}}}
-\n\t\t\t\t\t\t@include {{name}}( $index )
-\n\t\t\t@else
-\n\t\t\t\t%#{${{name}}}.#{$theme}
-\n\t\t\t\t\t@include {{name}}( $index )
-\n
-\n\t@else
-\n\t\t@if type-of( $themes ) == string
-\n\t\t\t@if $dependent == null
-\n\t\t\t\t@if $theme != 'default'
-\n\t\t\t\t\t.#{${{name}}}.#{$theme}
-\n\t\t\t\t\t\t@include {{name}}( $index )
-\n\t\t\t\t@else
-\n\t\t\t\t\t.#{${{name}}}
-\n\t\t\t\t\t\t@include {{name}}( $index )
-\n\t\t\t@else
-\n\t\t\t\t%#{${{name}}}.#{$theme}
-\n\t\t\t\t\t@include {{name}}( $index )
+\n\t
+\n\t	
+\n\t	// Modifiers
+\n\t
+\n\t
+\n\t
+\n\t	// Themes
+\n\t$themes: null!default
+\n\t@if $themes
+\n\t\t	@each $theme in $themes 
+\n\t			
+\n\t\t\t			$index: 1
+\n\t\t\t			@if length( $themes ) != 1
+\n\t\t\t\t				$index: index( $themes, $theme )
+\n\t
+\n\t\t\t			$imp: ''
+\n\t\t\t			@if $theme == '-disabled-'
+\n\t\t\t\t				$imp: !important
+\n\t
+\n\t
+\n\t\t\t			@if $theme != 'default'
+\n\t\t\t\t				&.#{$theme}
+\n\t\t\t\t\t					color: nth( $color-invert, $index )
+\n\t\t\t\t\t					border-color: nth( $border-color-lighten, $index )
+\n\t					
+\n\t\t\t\t					&:hover
+\n\t\t\t\t\t						border-color: nth( $border-color-darken, $index )#{$imp}
+\n\t
+\n\t\t\t			@else
+\n\t\t\t\t				color: nth( $color-invert, $index )
+\n\t\t\t\t				border-color: nth( $border-color-lighten, $index )
+\n\t
+\n\t\t\t\t				&:hover
+\n\t\t\t\t\t					border-color: nth( $border-color-darken, $index )#{$imp}
+\n\t
+\n\t
+\n\t
+\n\t
+\n@if $dependent == null
+\n\t	.#{${{name}}}
+\n\t\t		@extend %#{${{name}}}

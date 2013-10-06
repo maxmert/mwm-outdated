@@ -15,7 +15,7 @@ log = require './logger'
 archives = require './archives'
 maxmertkit = require './maxmertkit'
 themes = require './themes'
-modifyers = require './modifyers'
+modifiers = require './modifiers'
 
 
 if global.setImmediate?
@@ -45,7 +45,7 @@ exports.init = ( options ) ->
 			write varsFileName, "", callback
 
 		myvars: ( callback ) =>
-			write myvarsFileName, "", callback
+			write myvarsFileName, "$#{mjson.name}: -#{mjson.name}", callback
 
 		index: ( callback ) =>
 			write fileName, mustache.render( templates.widget, mjson ), callback
@@ -72,6 +72,19 @@ exports.publish = ( options ) ->
 	mjson = maxmertkit.json()
 
 	async.series
+		
+		checkFields: ( callback ) =>
+			if not mjson.themeUse?
+				callback "Set themeUse option and then publish"
+
+			else if not mjson.name?
+				callback "Set name option and then publish"
+			else if not mjson.version?
+				callback "Set version option and then publish"
+			else if not mjson.tags?
+				callback "Set tags option and then publish"
+			else
+				callback null, yes
 
 		widget: ( callback ) =>
 			
@@ -79,9 +92,8 @@ exports.publish = ( options ) ->
 
 
 		password: ( callback ) =>
-			callback null, 'linolium'
-			# dialog.password '\nEnter your password: ', ( password ) ->
-			# 	callback null, password
+			dialog.password '\nEnter your password: ', ( password ) ->
+				callback null, password
 
 		readme: ( callback ) =>
 			# Read README.md
@@ -117,12 +129,13 @@ exports.publish = ( options ) ->
 						scripts: ["http://code.jquery.com/jquery-1.5.min.js"]
 						done: (err, window) =>
 							$ = window.jQuery
-							if $(testHTML).find('body')
-								testHTML = $(testHTML).find('body').html()
+
+							if $(testHTML)? and $(testHTML).find('body')
+								testHTMLresult = $(testHTML).find('body').html()
 							else
-								testHTML = ''
+								testHTMLresult = ''
 							
-							callback null, testHTML
+							callback null, testHTMLresult
 				else
 					callback null, testHTML
 
@@ -136,72 +149,85 @@ exports.publish = ( options ) ->
 				else
 					callback null, testCSS
 
+
 				
 
 	, ( err, res ) =>
-
 		if err?
-			log.error "Publishing canceled."
+			log.error "Publishing canceled. #{err}"
 			process.stdin.destroy()
 
 		else
 			
-			packFile = path.join '.', "#{mjson.name}@#{mjson.version}.tar"
-
-
-			if JSON.stringify(mjson.dependences)? then deps = JSON.stringify(mjson.dependences) else deps = ''
-			if JSON.stringify(mjson.modifyers)? then mods = JSON.stringify(mjson.modifyers) else mods = ''
-			if JSON.stringify(mjson.themes)? then thms = JSON.stringify(mjson.themes) else thms = ''
-			
-			# Check data for existance
-			ok = yes
-			
-			if not mjson.tags?
-				log.error "You didn\'t set tags in maxmertkit.json. Publishing canceled."
+			if not mjson.repository? and not mjson.site? and not res.test? and not res.readme? and not res.readme.readme?
+				log.error "Yout dont have any repository, widget site, test file or readme file. Other users will not understand how to use it."
 				process.stdin.destroy()
-				ok = no
-			if not mjson.titleImage?
-				mjson.titleImage = ''
-			if not mjson.site?
-				mjson.site = ''
+
+			else
+
+				packFile = path.join '.', "#{mjson.name}@#{mjson.version}.tar"
 
 
-			if ok
-				request
-					.post( "#{pack.homepage}/api/0.1/widgets/#{mjson.name}/#{mjson.version}" )
-					.set( 'X-Requested-With', 'XMLHttpRequest' )
-					
-					.attach( 'pack', packFile )
-					.field( 'packName', path.basename( packFile ) )
-					# .field( 'titleImage', mjson.titleImage )
-					.field( 'password', res.password )
-					.field( 'name', mjson.name )
-					.field( 'version', mjson.version )
-					.field( 'description', mjson.description )
-					.field( 'repository', mjson.repository )
-					.field( 'site', mjson.site )
-					.field( 'license', mjson.license )
-					.field( 'tags', mjson.tags )
-					.field( 'username', mjson.author )
-					.field( 'test', res.test )
-					.field( 'testCSS', res.testCSS )
-					.field( 'dependences', deps )
-					.field( 'modifyers', mods )
-					.field( 'themes', thms )
-					.field( 'readme', res.readme.readme )
-					.field( 'readmeHTML', res.readme.readmeHTML )
-					
-					.end ( res ) ->
+				if JSON.stringify(mjson.dependences)? then deps = JSON.stringify(mjson.dependences) else deps = ''
+				if JSON.stringify(mjson.modifiers)? then mods = JSON.stringify(mjson.modifiers) else mods = ''
+				if JSON.stringify(mjson.themes)? then thms = JSON.stringify(mjson.themes) else thms = ''
+				if JSON.stringify(mjson.animations)? then anims = JSON.stringify(mjson.animations) else anims = ''
+				
+				# Check data for existance
+				ok = yes
+				
+				if not mjson.tags?
+					log.error "You didn\'t set tags in maxmertkit.json. Publishing canceled."
+					process.stdin.destroy()
+					ok = no
+				if not mjson.titleImage?
+					mjson.titleImage = ''
+				if not mjson.repository?
+					mjson.repository = ''
+				if not mjson.site?
+					mjson.site = ''
+				if not mjson.themeUse? or not mjson.themeUse
+					mjson.themeUse = 'false'
+				else
+					mjson.themeUse = 'true'
+				if ok
+					request
+						.post( "#{pack.homepage}/api/0.1/widgets/#{mjson.name}/#{mjson.version}" )
+						.set( 'X-Requested-With', 'XMLHttpRequest' )
 						
-						if res.ok
-							log.requestSuccess "widget #{mjson.name}@#{mjson.version} successfully published."
-							process.stdin.destroy()
+						.attach( 'pack', packFile )
+						.field( 'packName', path.basename( packFile ) )
+						# .field( 'titleImage', mjson.titleImage )
+						.field( 'password', res.password )
+						.field( 'name', mjson.name )
+						.field( 'version', mjson.version )
+						.field( 'description', mjson.description )
+						.field( 'repository', mjson.repository )
+						.field( 'site', mjson.site )
+						.field( 'license', mjson.license )
+						.field( 'tags', mjson.tags )
+						.field( 'themeUse', mjson.themeUse )
+						.field( 'username', mjson.author )
+						.field( 'test', res.test )
+						.field( 'testCSS', res.testCSS )
+						.field( 'dependences', deps )
+						.field( 'modifiers', mods )
+						.field( 'themes', thms )
+						.field( 'animations', anims )
+						.field( 'readme', res.readme.readme )
+						.field( 'readmeHTML', res.readme.readmeHTML )
+						
+						.end ( res ) ->
+							
+							if res.ok
+								log.requestSuccess "widget #{mjson.name}@#{mjson.version} successfully published."
+								process.stdin.destroy()
 
-						else
-							log.requestError res.body.msg, 'ERRR', res.status
-							process.stdin.destroy()
+							else
+								log.requestError res.body.msg, 'ERRR', res.status
+								process.stdin.destroy()
 
-						fs.unlink packFile
+							fs.unlink packFile
 
 
 
@@ -218,9 +244,8 @@ exports.unpublish = ( options ) ->
 	async.series
 
 		password: ( callback ) =>
-			callback null, 'linolium'
-			# dialog.password '\nEnter your password: ', ( password ) ->
-			# 	callback null, password
+			dialog.password '\nEnter your password: ', ( password ) ->
+				callback null, password
 
 	, ( err, res ) =>
 
@@ -326,8 +351,7 @@ exports.install = ( pth, mjson, calll, depent, themesss ) ->
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				.end ( res ) =>
 
-					if res.ok
-
+					if res.ok and res.body.exist
 						req = request
 							.get( "#{pack.homepage}/api/0.1/widgets/#{widget.name}/#{widget.version}" )
 							.set( 'X-Requested-With', 'XMLHttpRequest' )
@@ -398,8 +422,8 @@ exports.install = ( pth, mjson, calll, depent, themesss ) ->
 													# 	themes.install path.join( pth, widget.name, 'dependences/themes' ), themesss, depent
 
 
-	# 												if widget.modifyers?
-	# 													modifyers.install path.join( pth, widget.name, 'dependences/modifyers' ), widget.modifyers
+	# 												if widget.modifiers?
+	# 													modifiers.install path.join( pth, widget.name, 'dependences/modifiers' ), widget.modifiers
 
 						
 

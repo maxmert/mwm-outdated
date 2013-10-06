@@ -2,12 +2,12 @@
 
 # Dependences
 # ------------------------------------------
-pack = require './package.json'
+pack = require '../package.json'
 path = require 'path'
-common = require './lib/common'
-archives = require './lib/archives'
+common = require '../lib/common'
+archives = require '../lib/archives'
 program = require('nomnom').colors()
-log = require './lib/logger'
+log = require '../lib/logger'
 fs = require 'fs'
 
 
@@ -28,9 +28,9 @@ program
 		help: 'Initialize a new theme in the current directory.'
 		flag: yes
 
-	.option 'modifyer',
+	.option 'modifier',
 		abbr: 'm'
-		help: 'Initialize a new modifyer in the current directory.'
+		help: 'Initialize a new modifier in the current directory.'
 		flag: yes
 
 	.option 'animation',
@@ -43,7 +43,7 @@ program
 		common.init options
 
 
-	.help 'Initializing new project/widget/modifyer/theme/animation in the current directory.'
+	.help 'Initializing new project/widget/modifier/theme/animation in the current directory.'
 
 
 
@@ -55,7 +55,7 @@ program
 
 		common.publish options
 
-	.help 'Publishing current version of widget/modifyer/theme/animation.'
+	.help 'Publishing current version of widget/modifier/theme/animation.'
 
 
 
@@ -67,7 +67,7 @@ program
 
 		common.unpublish options
 
-	.help 'Unpublishing current version of widget/modifyer/theme/animation.'
+	.help 'Unpublishing current version of widget/modifier/theme/animation.'
 
 
 
@@ -79,7 +79,7 @@ program
 
 		common.install options
 
-	.help 'Installing all dependences, themes, modifyers and animations.'
+	.help 'Installing all dependences, themes, modifiers and animations.'
 
 
 
@@ -91,7 +91,7 @@ program
 
 		archives.pack '.', null
 
-	.help 'Pack current version of widget/modifyer/theme/animation to a tar file.'
+	.help 'Pack current version of widget/modifier/theme/animation to a tar file.'
 
 
 

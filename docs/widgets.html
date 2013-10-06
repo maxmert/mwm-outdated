@@ -20,9 +20,9 @@
 
   <span class="k">else</span>
     <span class="nv">json = </span><span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span> <span class="nx">rawjson</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p><strong>Initializing</strong>
-a new widget/theme/modifyer in the current directory</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">exports.initApp = </span><span class="nf">( options ) -&gt;</span>
+a new widget/theme/modifier in the current directory</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">exports.initApp = </span><span class="nf">( options ) -&gt;</span>
 
-  <span class="k">if</span> <span class="o">not</span> <span class="nx">options</span><span class="p">.</span><span class="nx">theme</span> <span class="o">and</span> <span class="o">not</span> <span class="nx">options</span><span class="p">.</span><span class="nx">modifyer</span>
+  <span class="k">if</span> <span class="o">not</span> <span class="nx">options</span><span class="p">.</span><span class="nx">theme</span> <span class="o">and</span> <span class="o">not</span> <span class="nx">options</span><span class="p">.</span><span class="nx">modifier</span>
 
     <span class="nx">@initWidgetSubapp</span> <span class="nx">options</span>
 
@@ -30,16 +30,16 @@ a new widget/theme/modifyer in the current directory</p>             </td>      
 
     <span class="nx">@initThemeSubapp</span> <span class="nx">options</span>
 
-  <span class="k">else</span> <span class="k">if</span> <span class="nx">options</span><span class="p">.</span><span class="nx">modifyer</span>
+  <span class="k">else</span> <span class="k">if</span> <span class="nx">options</span><span class="p">.</span><span class="nx">modifier</span>
 
-    <span class="nx">@initModifyerSubapp</span> <span class="nx">options</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p><strong>Initializing</strong>
+    <span class="nx">@initModifierSubapp</span> <span class="nx">options</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p><strong>Initializing</strong>
 maxmertkit.json file with main info about project</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">exports.initCommonSubapp = </span><span class="nf">( options, callback ) -&gt;</span>
 
   <span class="nx">async</span><span class="p">.</span><span class="nx">series</span>
 
     <span class="nv">type: </span><span class="nf">( callback ) -&gt;</span>
 
-      <span class="k">if</span> <span class="o">not</span> <span class="nx">options</span><span class="p">.</span><span class="nx">theme</span> <span class="o">and</span> <span class="o">not</span> <span class="nx">options</span><span class="p">.</span><span class="nx">modifyer</span>
+      <span class="k">if</span> <span class="o">not</span> <span class="nx">options</span><span class="p">.</span><span class="nx">theme</span> <span class="o">and</span> <span class="o">not</span> <span class="nx">options</span><span class="p">.</span><span class="nx">modifier</span>
 
         <span class="nx">callback</span> <span class="kc">null</span><span class="p">,</span> <span class="s">&#39;widget&#39;</span>
 
@@ -47,9 +47,9 @@ maxmertkit.json file with main info about project</p>             </td>         
 
         <span class="nx">callback</span> <span class="kc">null</span><span class="p">,</span> <span class="s">&#39;theme&#39;</span>
 
-      <span class="k">else</span> <span class="k">if</span> <span class="nx">options</span><span class="p">.</span><span class="nx">modifyer</span>
+      <span class="k">else</span> <span class="k">if</span> <span class="nx">options</span><span class="p">.</span><span class="nx">modifier</span>
 
-        <span class="nx">callback</span> <span class="kc">null</span><span class="p">,</span> <span class="s">&#39;modifyer&#39;</span>
+        <span class="nx">callback</span> <span class="kc">null</span><span class="p">,</span> <span class="s">&#39;modifier&#39;</span>
 
     <span class="nv">name: </span><span class="nf">( callback ) -&gt;</span>
       <span class="nv">defaultPkgName = </span><span class="s">&#39;test&#39;</span>
@@ -84,7 +84,7 @@ maxmertkit.json file with main info about project</p>             </td>         
   <span class="p">,</span> <span class="nf">( err, maxmertkitjson ) =&gt;</span>
 
     <span class="nx">@</span><span class="p">.</span><span class="nx">initWriteConfirm</span>  <span class="nx">pack</span><span class="p">.</span><span class="nx">maxmertkit</span><span class="p">,</span> <span class="nx">maxmertkitjson</span><span class="p">,</span> <span class="nx">callback</span></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>Function with json write confirmation.
-Uses with maxmertkit.json, theme.json and modifyer.json</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">exports.initWriteConfirm = </span><span class="nf">( file, json, callback ) -&gt;</span>
+Uses with maxmertkit.json, theme.json and modifier.json</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">exports.initWriteConfirm = </span><span class="nf">( file, json, callback ) -&gt;</span>
 
   <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&quot;\n\nWriting file </span><span class="si">#{</span><span class="nx">file</span><span class="si">}</span><span class="s">\n&quot;</span>
   <span class="nx">dialog</span><span class="p">.</span><span class="nx">confirm</span> <span class="s">&quot;Is everything correct? \n\n </span><span class="si">#{</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">json</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span><span class="si">}</span><span class="s">\n-&gt; &quot;</span><span class="p">,</span> <span class="nf">( ok ) =&gt;</span>
@@ -116,7 +116,7 @@ Uses with maxmertkit.json, theme.json and modifyer.json</p>             </td>   
               <span class="k">else</span>
                 <span class="nx">@</span><span class="p">.</span><span class="nx">initWrite</span> <span class="nx">file</span><span class="p">,</span> <span class="nx">json</span><span class="p">,</span> <span class="nx">callback</span>
                 <span class="nx">process</span><span class="p">.</span><span class="nx">stdin</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span></pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p>Function with json write.
-Uses with maxmertkit.json, theme.json and modifyer.json</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">exports.initWrite = </span><span class="nf">( file, json, callback ) -&gt;</span>
+Uses with maxmertkit.json, theme.json and modifier.json</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">exports.initWrite = </span><span class="nf">( file, json, callback ) -&gt;</span>
 
   <span class="nx">fs</span><span class="p">.</span><span class="nx">writeFile</span> <span class="nx">file</span><span class="p">,</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">json</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="nf">( err ) -&gt;</span>
 
@@ -179,9 +179,9 @@ of the theme</p>             </td>             <td class="code">               <
 
     <span class="k">else</span>
       <span class="nx">process</span><span class="p">.</span><span class="nx">stdin</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span></pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <p><strong>Initialization</strong>
-of the modifyer</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">exports.initModifyerSubapp = </span><span class="nf">( options ) -&gt;</span>
+of the modifier</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">exports.initModifierSubapp = </span><span class="nf">( options ) -&gt;</span>
 
-  <span class="nv">fileName = </span><span class="s">&#39;modifyer.json&#39;</span>
+  <span class="nv">fileName = </span><span class="s">&#39;modifier.json&#39;</span>
 
   <span class="nx">async</span><span class="p">.</span><span class="nx">series</span>
 
@@ -193,7 +193,7 @@ of the modifyer</p>             </td>             <td class="code">             
     <span class="nv">theme: </span><span class="nf">( callback ) =&gt;</span>
 
       <span class="nx">request</span>
-        <span class="p">.</span><span class="nx">get</span><span class="p">(</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">pack</span><span class="p">.</span><span class="nx">homepage</span><span class="si">}</span><span class="s">/defaults/modifyer&quot;</span> <span class="p">)</span>
+        <span class="p">.</span><span class="nx">get</span><span class="p">(</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">pack</span><span class="p">.</span><span class="nx">homepage</span><span class="si">}</span><span class="s">/defaults/modifier&quot;</span> <span class="p">)</span>
         <span class="p">.</span><span class="nx">set</span><span class="p">(</span> <span class="s">&#39;X-Requested-With&#39;</span><span class="p">,</span> <span class="s">&#39;XMLHttpRequest&#39;</span> <span class="p">)</span>
         <span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s">&#39;Accept&#39;</span><span class="p">,</span> <span class="s">&#39;application/json&#39;</span><span class="p">)</span>
         <span class="p">.</span><span class="nx">end</span> <span class="nf">( res ) =&gt;</span>
@@ -209,12 +209,12 @@ of the modifyer</p>             </td>             <td class="code">             
   <span class="p">,</span> <span class="nf">( err, res ) =&gt;</span>
 
     <span class="k">if</span> <span class="nx">err</span><span class="o">?</span>
-      <span class="nx">log</span><span class="p">.</span><span class="nx">error</span> <span class="s">&quot;An error while initialized modifyer.&quot;</span>
+      <span class="nx">log</span><span class="p">.</span><span class="nx">error</span> <span class="s">&quot;An error while initialized modifier.&quot;</span>
       <span class="nx">process</span><span class="p">.</span><span class="nx">stdin</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span>
 
     <span class="k">else</span>
       <span class="nx">process</span><span class="p">.</span><span class="nx">stdin</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span></pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-10">&#182;</a>               </div>               <h3>Server side</h3>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p><strong>Publish</strong>
-current version of widget/theme/modifyer.
+current version of widget/theme/modifier.
 First get type, then call publishing function.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">exports.Publish = </span><span class="nf">( options ) -&gt;</span>
 
   <span class="nv">maxmertkit = </span><span class="nx">@maxmertkit</span><span class="p">()</span>
@@ -227,17 +227,17 @@ First get type, then call publishing function.</p>             </td>            
     <span class="k">when</span> <span class="s">&#39;theme&#39;</span>
       <span class="nx">@PublishTheme</span> <span class="nx">options</span>
 
-    <span class="k">when</span> <span class="s">&#39;modifyer&#39;</span>
-      <span class="nx">@PublishModifyer</span> <span class="nx">options</span></pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p><strong>Publish</strong>
-current version of widget.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">exports.PublishModifyer = </span><span class="nf">( options ) -&gt;</span>
+    <span class="k">when</span> <span class="s">&#39;modifier&#39;</span>
+      <span class="nx">@PublishModifier</span> <span class="nx">options</span></pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p><strong>Publish</strong>
+current version of widget.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">exports.PublishModifier = </span><span class="nf">( options ) -&gt;</span>
 
   <span class="nv">maxmertkit = </span><span class="nx">@maxmertkit</span><span class="p">()</span>
 
-  <span class="nv">fileName = </span><span class="s">&#39;modifyer.json&#39;</span>
+  <span class="nv">fileName = </span><span class="s">&#39;modifier.json&#39;</span>
 
   <span class="nx">async</span><span class="p">.</span><span class="nx">series</span>
 
-    <span class="nv">modifyer: </span><span class="nf">( callback ) =&gt;</span>
+    <span class="nv">modifier: </span><span class="nf">( callback ) =&gt;</span>
       
       <span class="nv">rawjson = </span><span class="nx">fs</span><span class="p">.</span><span class="nx">readFileSync</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span> <span class="s">&#39;.&#39;</span><span class="p">,</span> <span class="nx">fileName</span> <span class="p">)</span>
   
@@ -264,10 +264,10 @@ current version of widget.</p>             </td>             <td class="code">  
     <span class="k">else</span>
       
       <span class="nx">request</span>
-        <span class="p">.</span><span class="nx">post</span><span class="p">(</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">pack</span><span class="p">.</span><span class="nx">homepage</span><span class="si">}</span><span class="s">/modifyers/</span><span class="si">#{</span><span class="nx">maxmertkit</span><span class="p">.</span><span class="nx">name</span><span class="si">}</span><span class="s">/</span><span class="si">#{</span><span class="nx">maxmertkit</span><span class="p">.</span><span class="nx">version</span><span class="si">}</span><span class="s">&quot;</span> <span class="p">)</span>
+        <span class="p">.</span><span class="nx">post</span><span class="p">(</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">pack</span><span class="p">.</span><span class="nx">homepage</span><span class="si">}</span><span class="s">/modifiers/</span><span class="si">#{</span><span class="nx">maxmertkit</span><span class="p">.</span><span class="nx">name</span><span class="si">}</span><span class="s">/</span><span class="si">#{</span><span class="nx">maxmertkit</span><span class="p">.</span><span class="nx">version</span><span class="si">}</span><span class="s">&quot;</span> <span class="p">)</span>
         <span class="p">.</span><span class="nx">set</span><span class="p">(</span> <span class="s">&#39;X-Requested-With&#39;</span><span class="p">,</span> <span class="s">&#39;XMLHttpRequest&#39;</span> <span class="p">)</span>
         <span class="p">.</span><span class="nx">send</span>
-          <span class="nv">modifyer: </span><span class="nx">res</span><span class="p">.</span><span class="nx">modifyer</span>
+          <span class="nv">modifier: </span><span class="nx">res</span><span class="p">.</span><span class="nx">modifier</span>
           <span class="nv">password: </span><span class="nx">res</span><span class="p">.</span><span class="nx">password</span>
           <span class="nv">name: </span><span class="nx">maxmertkit</span><span class="p">.</span><span class="nx">name</span>
           <span class="nv">version: </span><span class="nx">maxmertkit</span><span class="p">.</span><span class="nx">version</span>
@@ -276,7 +276,7 @@ current version of widget.</p>             </td>             <td class="code">  
         <span class="p">.</span><span class="nx">end</span> <span class="nf">( res ) -&gt;</span>
           
           <span class="k">if</span> <span class="nx">res</span><span class="p">.</span><span class="nx">ok</span>
-            <span class="nx">log</span><span class="p">.</span><span class="nx">requestSuccess</span> <span class="s">&quot;modifyer </span><span class="si">#{</span><span class="nx">maxmertkit</span><span class="p">.</span><span class="nx">name</span><span class="si">}</span><span class="s">@</span><span class="si">#{</span><span class="nx">maxmertkit</span><span class="p">.</span><span class="nx">version</span><span class="si">}</span><span class="s"> successfully published.&quot;</span>
+            <span class="nx">log</span><span class="p">.</span><span class="nx">requestSuccess</span> <span class="s">&quot;modifier </span><span class="si">#{</span><span class="nx">maxmertkit</span><span class="p">.</span><span class="nx">name</span><span class="si">}</span><span class="s">@</span><span class="si">#{</span><span class="nx">maxmertkit</span><span class="p">.</span><span class="nx">version</span><span class="si">}</span><span class="s"> successfully published.&quot;</span>
             <span class="nx">process</span><span class="p">.</span><span class="nx">stdin</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span>
 
           <span class="k">else</span>

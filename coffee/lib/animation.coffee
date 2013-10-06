@@ -15,7 +15,7 @@ maxmertkit = require './maxmertkit'
 
 
 # **Initializing**
-# modifyer.json file with main info about project
+# modifier.json file with main info about project
 
 exports.init = ( options ) ->
 
@@ -57,7 +57,7 @@ exports.init = ( options ) ->
 
 
 # **Publish**
-# current version of modifyer.
+# current version of modifier.
 
 exports.publish = ( options ) ->
 
@@ -82,8 +82,8 @@ exports.publish = ( options ) ->
 
 		password: ( callback ) =>
 			
-			# dialog.password '\nEnter your password: ', ( password ) ->
-			callback null, 'linolium'
+			dialog.password '\nEnter your password: ', ( password ) ->
+				callback null, password
 
 	, ( err, res ) =>
 
@@ -120,7 +120,7 @@ exports.publish = ( options ) ->
 
 
 # **Unpublish**
-# current version of modifyer.
+# current version of modifier.
 
 exports.unpublish = ( options ) ->
 
@@ -130,8 +130,8 @@ exports.unpublish = ( options ) ->
 
 		password: ( callback ) =>
 			
-			# dialog.password '\nEnter your password: ', ( password ) ->
-			callback null, 'linolium'
+			dialog.password '\nEnter your password: ', ( password ) ->
+				callback null, password
 
 	, ( err, res ) =>
 
@@ -167,7 +167,7 @@ exports.unpublish = ( options ) ->
 
 
 # **Install**
-# modifyer dependences.
+# modifier dependences.
 
 exports.install = ( pth, list ) ->
 

@@ -13,7 +13,7 @@ log = require './logger'
 archives = require './archives'
 maxmertkit = require './maxmertkit'
 themes = require './themes'
-modifyers = require './modifyers'
+modifiers = require './modifiers'
 
 EventEmitter = require("events").EventEmitter
 sys = require("sys")
@@ -43,7 +43,7 @@ exports.install = ( pth, mjson, calll, depent, themesss ) ->
 		@calll = calll
 		@depent = depent
 
-		immediately ( calll, depent, themesss ) =>
+		process.nextTick ( calll, depent, themesss ) =>
 			# console.log widget.name, 'begin'
 			fileName = "#{widget.name}@#{widget.version}.tar"
 			
@@ -118,8 +118,8 @@ exports.install = ( pth, mjson, calll, depent, themesss ) ->
 													# if widget.themes?
 													# 	themes.install path.join( pth, widget.name, 'dependences/themes' ), widget.themes, depent
 
-													# if widget.modifyers?
-													# 	modifyers.install path.join( pth, widget.name, 'dependences/modifyers' ), widget.modifyers
+													# if widget.modifiers?
+													# 	modifiers.install path.join( pth, widget.name, 'dependences/modifiers' ), widget.modifiers
 
 						
 

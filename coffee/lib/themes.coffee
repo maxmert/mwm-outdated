@@ -25,7 +25,7 @@ exports.init = ( options ) ->
 
 	async.series
 
-		modifyer: ( callback ) =>
+		modifier: ( callback ) =>
 
 			request
 				.get( "#{pack.homepage}/api/0.1/defaults/theme" )
@@ -44,7 +44,7 @@ exports.init = ( options ) ->
 	, ( err, res ) =>
 
 		if err?
-			log.error "An error while initialized modifyer."
+			log.error "An error while initialized modifier."
 			process.stdin.destroy()
 
 		else
@@ -80,8 +80,8 @@ exports.publish = ( options ) ->
 
 		password: ( callback ) =>
 			
-			# dialog.password '\nEnter your password: ', ( password ) ->
-			callback null, 'linolium'
+			dialog.password '\nEnter your password: ', ( password ) ->
+				callback null, password
 
 	, ( err, res ) =>
 
@@ -127,8 +127,8 @@ exports.unpublish = ( options ) ->
 
 		password: ( callback ) =>
 			
-			# dialog.password '\nEnter your password: ', ( password ) ->
-			callback null, 'linolium'
+			dialog.password '\nEnter your password: ', ( password ) ->
+				callback null, password
 
 	, ( err, res ) =>
 
@@ -204,7 +204,7 @@ exports.install = ( pth, list, depent = null ) ->
 
 	async.reduce arr, null, ( result, theme, callback ) ->
 		
-		immediately ->
+		((result, theme, callback) ->
 			
 			request
 				.get( "#{pack.homepage}/api/0.1/themes/#{theme.name}/#{theme.version}" )
@@ -227,6 +227,7 @@ exports.install = ( pth, list, depent = null ) ->
 						log.requestSuccess "theme #{theme.name}@#{theme.version} successfully downloaded."
 
 						callback null, result
+		)( result, theme, callback )
 
 	, ( err, res ) ->
 		

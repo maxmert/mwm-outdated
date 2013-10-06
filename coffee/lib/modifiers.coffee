@@ -13,18 +13,18 @@ maxmertkit = require './maxmertkit'
 
 
 # **Initializing**
-# modifyer.json file with main info about project
+# modifier.json file with main info about project
 
 exports.init = ( options ) ->
 
-	fileName = 'modifyer.json'
+	fileName = 'modifier.json'
 
 	async.series
 
-		modifyer: ( callback ) =>
+		modifier: ( callback ) =>
 
 			request
-				.get( "#{pack.homepage}/api/0.1/defaults/modifyer" )
+				.get( "#{pack.homepage}/api/0.1/defaults/modifier" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				.set('Accept', 'application/json')
 				.end ( res ) =>
@@ -40,7 +40,7 @@ exports.init = ( options ) ->
 	, ( err, res ) =>
 
 		if err?
-			log.error "An error while initialized modifyer."
+			log.error "An error while initialized modifier."
 			process.stdin.destroy()
 
 		else
@@ -51,33 +51,39 @@ exports.init = ( options ) ->
 
 
 # **Publish**
-# current version of modifyer.
+# current version of modifier.
 
 exports.publish = ( options ) ->
 
 	mjson = maxmertkit.json()
 
-	fileName = 'modifyer.json'
+	fileName = 'modifier.json'
 
 	async.series
 
-		modifyer: ( callback ) =>
+		modifier: ( callback ) =>
 			
-			rawjson = fs.readFileSync path.join( '.', fileName )
-	
-			if not rawjson?
-				log.error("couldn\'t read #{fileName} file.")
-				callback true, null
+			fs.exists path.join( '.', fileName ), ( exist ) =>
+				if not exist
+					log.error("couldn\'t read #{fileName} file.")
+					callback true, null
 
-			else
-				json = JSON.parse rawjson
-				callback null, json
+				else
+					rawjson = fs.readFileSync path.join( '.', fileName )
+			
+					if not rawjson?
+						log.error("couldn\'t read #{fileName} file.")
+						callback true, null
+
+					else
+						json = JSON.parse rawjson
+						callback null, json
 
 
 		password: ( callback ) =>
 			
-			# dialog.password '\nEnter your password: ', ( password ) ->
-			callback null, 'linolium'
+			dialog.password '\nEnter your password: ', ( password ) ->
+				callback null, password
 
 	, ( err, res ) =>
 
@@ -88,10 +94,10 @@ exports.publish = ( options ) ->
 		else
 			
 			request
-				.post( "#{pack.homepage}/api/0.1/modifyers/#{mjson.name}/#{mjson.version}" )
+				.post( "#{pack.homepage}/api/0.1/modifiers/#{mjson.name}/#{mjson.version}" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				.send
-					modifyer: res.modifyer
+					modifier: res.modifier
 					password: res.password
 					name: mjson.name
 					version: mjson.version
@@ -100,7 +106,7 @@ exports.publish = ( options ) ->
 				.end ( res ) ->
 					
 					if res.ok
-						log.requestSuccess "modifyer #{mjson.name}@#{mjson.version} successfully published."
+						log.requestSuccess "modifier #{mjson.name}@#{mjson.version} successfully published."
 						process.stdin.destroy()
 
 					else
@@ -113,7 +119,7 @@ exports.publish = ( options ) ->
 
 
 # **Unpublish**
-# current version of modifyer.
+# current version of modifier.
 
 exports.unpublish = ( options ) ->
 
@@ -123,8 +129,8 @@ exports.unpublish = ( options ) ->
 
 		password: ( callback ) =>
 			
-			# dialog.password '\nEnter your password: ', ( password ) ->
-			callback null, 'linolium'
+			dialog.password '\nEnter your password: ', ( password ) ->
+				callback null, password
 
 	, ( err, res ) =>
 
@@ -135,7 +141,7 @@ exports.unpublish = ( options ) ->
 		else
 			
 			request
-				.del( "#{pack.homepage}/api/0.1/modifyers/#{mjson.name}/#{mjson.version}" )
+				.del( "#{pack.homepage}/api/0.1/modifiers/#{mjson.name}/#{mjson.version}" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				.send
 					password: res.password
@@ -146,7 +152,7 @@ exports.unpublish = ( options ) ->
 				.end ( res ) ->
 					
 					if res.ok
-						log.requestSuccess "modifyer #{mjson.name}@#{mjson.version} successfully unpublished."
+						log.requestSuccess "modifier #{mjson.name}@#{mjson.version} successfully unpublished."
 						process.stdin.destroy()
 
 					else
@@ -160,7 +166,7 @@ exports.unpublish = ( options ) ->
 
 
 # **Install**
-# modifyer dependences.
+# modifier dependences.
 
 exports.install = ( pth, list ) ->
 
@@ -172,14 +178,14 @@ exports.install = ( pth, list ) ->
 		do (name, version, pth) ->
 			
 			request
-				.get( "#{pack.homepage}/api/0.1/modifyers/#{name}/#{version}" )
+				.get( "#{pack.homepage}/api/0.1/modifiers/#{name}/#{version}" )
 				.set( 'X-Requested-With', 'XMLHttpRequest' )
 				
 				.end ( res ) =>
 					
 					if res.ok
 
-						str = "$mod-#{name}: #{res.body.class}"
+						str = "$mod-#{name}: #{res.body.modifier.class}"
 						fileName = path.join(pth,"_#{name}.sass")
 						
 						sass fileName, str, ( err, res ) ->
@@ -189,12 +195,12 @@ exports.install = ( pth, list ) ->
 
 							else
 
-								fs.appendFile path.join(pth,'../../_imports.sass'), "@import 'dependences/modifyers/_#{name}.sass'\n", ( err ) ->
+								fs.appendFile path.join(pth,'../../_imports.sass'), "@import 'dependences/modifiers/_#{name}.sass'\n", ( err ) ->
 									if err?
 										log.error "Couldn\'t append import of #{fileName} to the file _imports.sass"
 
 									else
-										log.requestSuccess "modifyer #{name}@#{version} successfully installed."
+										log.requestSuccess "modifier #{name}@#{version} successfully installed."
 
 					else
 						log.requestError res.body.msg, 'ERRR', res.status
