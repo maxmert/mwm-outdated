@@ -188,12 +188,9 @@ exports.publish = ( options ) ->
 					mjson.site = ''
 				if not mjson.themeUse? or not mjson.themeUse
 					mjson.themeUse = 'false'
-<<<<<<< HEAD
 				else
 					mjson.themeUse = 'true'
-=======
 
->>>>>>> 966ada66749f2747c1ebe8a0ef6eaa7f99164f27
 				if ok
 					request
 						.post( "#{pack.homepage}/api/0.1/widgets/#{mjson.name}/#{mjson.version}" )
