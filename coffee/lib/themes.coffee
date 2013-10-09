@@ -1,5 +1,6 @@
 pack = require '../package.json'
 
+config = require './config'
 async = require 'async'
 request = require 'superagent'
 fs = require 'fs'
@@ -21,7 +22,7 @@ if global.setImmediate?
 
 exports.init = ( options ) ->
 
-	fileName = 'theme.json'
+	fileName = path.join config.directory(), 'theme.json'
 
 	async.series
 
@@ -67,7 +68,7 @@ exports.publish = ( options ) ->
 
 		theme: ( callback ) =>
 			
-			rawjson = fs.readFileSync path.join( '.', fileName )
+			rawjson = fs.readFileSync path.join( config.directory(), fileName )
 	
 			if not rawjson?
 				log.error("couldn\'t read #{fileName} file.")

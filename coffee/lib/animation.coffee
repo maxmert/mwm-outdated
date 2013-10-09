@@ -1,6 +1,7 @@
 pack = require '../package.json'
 templates = require '../templates.json'
 
+config = require './config'
 async = require 'async'
 request = require 'superagent'
 fs = require 'fs'
@@ -19,8 +20,8 @@ maxmertkit = require './maxmertkit'
 
 exports.init = ( options ) ->
 
-	fileName = '_animation.sass'
-	indexFileName = '_index.sass'
+	fileName = path.join config.directory(), '_animation.sass'
+	indexFileName = path.join config.directory(), '_index.sass'
 	mjson = maxmertkit.json()
 
 	async.series
@@ -69,7 +70,7 @@ exports.publish = ( options ) ->
 
 		css: ( callback ) =>
 			
-			raw = fs.readFileSync path.join( '.', fileName ), 'utf8'
+			raw = fs.readFileSync path.join( config.directory(), fileName ), 'utf8'
 	
 			if not raw?
 				log.error("couldn\'t read #{fileName} file.")

@@ -1,5 +1,6 @@
 pack = require '../package.json'
 
+config = require './config'
 async = require 'async'
 request = require 'superagent'
 fs = require 'fs'
@@ -17,7 +18,7 @@ maxmertkit = require './maxmertkit'
 
 exports.init = ( options ) ->
 
-	fileName = 'modifier.json'
+	fileName = path.join config.directory(), 'modifier.json'
 
 	async.series
 
@@ -63,13 +64,13 @@ exports.publish = ( options ) ->
 
 		modifier: ( callback ) =>
 			
-			fs.exists path.join( '.', fileName ), ( exist ) =>
+			fs.exists path.join( config.directory(), fileName ), ( exist ) =>
 				if not exist
 					log.error("couldn\'t read #{fileName} file.")
 					callback true, null
 
 				else
-					rawjson = fs.readFileSync path.join( '.', fileName )
+					rawjson = fs.readFileSync path.join( config.directory(), fileName )
 			
 					if not rawjson?
 						log.error("couldn\'t read #{fileName} file.")

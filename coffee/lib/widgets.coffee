@@ -1,6 +1,7 @@
 pack = require '../package.json'
 templates = require '../templates.json'
 
+config = require './config'
 async = require 'async'
 request = require 'superagent'
 fs = require 'fs'
@@ -27,16 +28,16 @@ if global.setImmediate?
 
 exports.init = ( options ) ->
 
-	fileName = '_index.sass'
-	paramsFileName = '_params.sass'
-	varsFileName = '_vars.sass'
-	myvarsFileName = '_myvars.sass'
+	fileName = path.join config.directory(), '_index.sass'
+	paramsFileName = path.join config.directory(), '_params.sass'
+	varsFileName = path.join config.directory(), '_vars.sass'
+	myvarsFileName = path.join config.directory(), '_myvars.sass'
 	mjson = maxmertkit.json()
 
 	async.series
 
 		imports: ( callback ) =>
-			write '_imports.sass', "// Generated with mwm – maxmertkit widget manager\n", callback
+			write path.join(config.directory(), '_imports.sass'), "// Generated with mwm – maxmertkit widget manager\n", callback
 
 		params: ( callback ) =>
 			write paramsFileName, mustache.render( templates.params, mjson ), callback
@@ -88,7 +89,7 @@ exports.publish = ( options ) ->
 
 		widget: ( callback ) =>
 			
-			archives.pack '.', callback
+			archives.pack config.directory(), callback
 
 
 		password: ( callback ) =>
@@ -100,9 +101,9 @@ exports.publish = ( options ) ->
 			readme = ''
 			readmeHTML = ''
 			# titleImage = ''
-			fs.exists path.join('.', 'README.md'), ( exist ) =>
+			fs.exists path.join(config.directory(), 'README.md'), ( exist ) =>
 				if exist
-					readme = fs.readFileSync path.join('.', 'README.md'), "utf8"
+					readme = fs.readFileSync path.join(config.directory(), 'README.md'), "utf8"
 					readmeHTML = md.toHTML readme
 					# jsdom.env
 					# 	html: readmeHTML
@@ -121,7 +122,7 @@ exports.publish = ( options ) ->
 
 		test: ( callback ) =>
 			testHTML = ''
-			fs.exists path.join('.', 'test.html'), ( exist ) =>
+			fs.exists path.join(config.directory(), 'test.html'), ( exist ) =>
 				if exist
 					testHTML = fs.readFileSync path.join('.', 'test.html'), "utf8"
 					jsdom.env
@@ -142,9 +143,9 @@ exports.publish = ( options ) ->
 
 		testCSS: ( callback ) =>
 			testCSS = ''
-			fs.exists path.join('.', 'index.css'), ( exist ) =>
+			fs.exists path.join(config.directory(), 'index.css'), ( exist ) =>
 				if exist
-					testCSS = fs.readFileSync path.join('.', 'index.css'), "utf8"
+					testCSS = fs.readFileSync path.join(config.directory(), 'index.css'), "utf8"
 					callback null, testCSS
 				else
 					callback null, testCSS
@@ -166,7 +167,7 @@ exports.publish = ( options ) ->
 
 			else
 
-				packFile = path.join '.', "#{mjson.name}@#{mjson.version}.tar"
+				packFile = path.join config.directory(), "#{mjson.name}@#{mjson.version}.tar"
 
 
 				if JSON.stringify(mjson.dependences)? then deps = JSON.stringify(mjson.dependences) else deps = ''
@@ -375,7 +376,7 @@ exports.install = ( pth, mjson, calll, depent, themesss ) ->
 									if path.dirname(path.join(pth,'../../_myvars.sass')) isnt '.'
 										fs.readFile path.join(pth,'../../_myvars.sass'),( err, data ) ->
 											if not err?
-												fs.appendFile '_vars.sass', "\n#{data}\n", ( err ) ->
+												fs.appendFile path.join(config.directory(),'_vars.sass'), "\n#{data}\n", ( err ) ->
 
 
 									fs.readFile path.join(pth,'../../_imports.sass'), ( err, data ) =>
