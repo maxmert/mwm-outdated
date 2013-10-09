@@ -1,6 +1,7 @@
 pack = require '../package.json'
 templates = require '../templates.json'
 
+config = require './config'
 async = require 'async'
 request = require 'superagent'
 fs = require 'fs'
@@ -77,7 +78,7 @@ exports.install = ( pth, mjson, calll, depent, themesss ) ->
 									if path.dirname(path.join(pth,'../../_myvars.sass')) isnt '.'
 										fs.readFile path.join(pth,'../../_myvars.sass'),( err, data ) ->
 											if not err?
-												fs.appendFile '_vars.sass', "\n#{data}\n", ( err ) ->
+												fs.appendFile path.join(config.directory(),'_vars.sass'), "\n#{data}\n", ( err ) ->
 
 
 									fs.readFile path.join(pth,'../../_imports.sass'), ( err, data ) =>

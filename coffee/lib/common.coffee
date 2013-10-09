@@ -8,6 +8,7 @@ wrench = require 'wrench'
 path = require 'path'
 _ = require 'underscore'
 
+config = require './config'
 modifiers = require './modifiers'
 animation = require './animation'
 themes = require './themes'
@@ -124,7 +125,7 @@ exports.install = ( options ) ->
 	# 	if err? then log.error "An error while creating _imports.sass"
 	mjson = maxmertkit.json()
 	# console.log mjson
-	fs.writeFileSync '_vars.sass', ""
+	fs.writeFileSync path.join(config.directory(),'_vars.sass'), ""
 	install '.', mjson.dependences, mjson.themes
 
 
@@ -304,8 +305,8 @@ initJSON = ( options, callback ) ->
 				callback null, license
 
 	, ( err, maxmertkitjson ) =>
-
-		initWriteConfirm  pack.maxmertkit, maxmertkitjson, callback
+		
+		initWriteConfirm  path.join(config.directory(), pack.maxmertkit), maxmertkitjson, callback
 
 
 
