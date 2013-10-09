@@ -1,0 +1,31 @@
+{
+    "type": "project",
+    "name": "test",
+    "version": "0.0.0",
+    "description": "",
+    "image": null,
+    "tags": "",
+    "themeUse": null,
+    "repository": "",
+    "site": "",
+    "author": "",
+    "license": "BSD",
+
+    "dependences": {
+        "bourbon": "*",
+        "btn": {
+            "version": "*",
+            "themes": {
+                "orange": "*"
+            }
+        }
+    },
+
+    "modifiers": {
+        "left": "*"
+    },
+
+    "animation": {
+        "dropin": "*"
+    }
+}

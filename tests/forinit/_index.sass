@@ -1,0 +1,44 @@
+$test: -test 
+ 
+@import "imports" 
+@import "params" 
+@import "vars" 
+@import "myvars" 
+ 
+@mixin test( $index ) 
+	// All here 
+ 
+ 
+$themes: null !default 
+ 
+@if $themes 
+	@if type-of( $themes ) == list 
+	 
+		@each $theme in $themes 
+	 
+			$index: index( $themes, $theme ) 
+	 
+			// With each theme do 
+			@if $dependent == null 
+				@if $theme != "default" 
+					.#{$test}.#{$theme} 
+						@include test( $index ) 
+				@else 
+					.#{$test} 
+						@include test( $index ) 
+			@else 
+				%#{$test}.#{$theme} 
+					@include test( $index ) 
+ 
+	@else 
+		@if type-of( $themes ) == string 
+			@if $dependent == null 
+				@if $theme != "default" 
+					.#{$test}.#{$theme} 
+						@include test( $index ) 
+				@else 
+					.#{$test} 
+						@include test( $index ) 
+			@else 
+				%#{$test}.#{$theme} 
+					@include test( $index ) 
