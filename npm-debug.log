@@ -1,0 +1,236 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'node', '/usr/local/bin/npm', 'publish' ]
+2 info using npm@1.2.18
+3 info using node@v0.10.5
+4 verbose publish [ '.' ]
+5 verbose read json /Users/maxmert/Projects/mwm/package.json
+6 verbose cache add [ '.', null ]
+7 verbose cache add name=undefined spec="." args=[".",null]
+8 verbose parsed url { protocol: null,
+8 verbose parsed url   slashes: null,
+8 verbose parsed url   auth: null,
+8 verbose parsed url   host: null,
+8 verbose parsed url   port: null,
+8 verbose parsed url   hostname: null,
+8 verbose parsed url   hash: null,
+8 verbose parsed url   search: null,
+8 verbose parsed url   query: null,
+8 verbose parsed url   pathname: '.',
+8 verbose parsed url   path: '.',
+8 verbose parsed url   href: '.' }
+9 silly lockFile 3a52ce78- .
+10 verbose lock . /Users/maxmert/.npm/3a52ce78-.lock
+11 verbose read json package.json
+12 verbose tar pack [ '/var/folders/wt/rwrrv8d952qc_2tf2yq7_whm0000gn/T/npm-4422/1381310204934-0.06877219420857728/tmp.tgz',
+12 verbose tar pack   '.' ]
+13 verbose tarball /var/folders/wt/rwrrv8d952qc_2tf2yq7_whm0000gn/T/npm-4422/1381310204934-0.06877219420857728/tmp.tgz
+14 verbose folder .
+15 info prepublish mwm@0.0.11
+16 silly lockFile 3a52ce78- .
+17 verbose lock . /Users/maxmert/.npm/3a52ce78-.lock
+18 silly lockFile 8716a955-4934-0-06877219420857728-tmp-tgz /var/folders/wt/rwrrv8d952qc_2tf2yq7_whm0000gn/T/npm-4422/1381310204934-0.06877219420857728/tmp.tgz
+19 verbose lock /var/folders/wt/rwrrv8d952qc_2tf2yq7_whm0000gn/T/npm-4422/1381310204934-0.06877219420857728/tmp.tgz /Users/maxmert/.npm/8716a955-4934-0-06877219420857728-tmp-tgz.lock
+20 silly lockFile 3a52ce78- .
+21 silly lockFile 3a52ce78- .
+22 silly lockFile 8716a955-4934-0-06877219420857728-tmp-tgz /var/folders/wt/rwrrv8d952qc_2tf2yq7_whm0000gn/T/npm-4422/1381310204934-0.06877219420857728/tmp.tgz
+23 silly lockFile 8716a955-4934-0-06877219420857728-tmp-tgz /var/folders/wt/rwrrv8d952qc_2tf2yq7_whm0000gn/T/npm-4422/1381310204934-0.06877219420857728/tmp.tgz
+24 verbose tar unpack /var/folders/wt/rwrrv8d952qc_2tf2yq7_whm0000gn/T/npm-4422/1381310204934-0.06877219420857728/tmp.tgz
+25 silly lockFile 22ac7ce9-4934-0-06877219420857728-package /var/folders/wt/rwrrv8d952qc_2tf2yq7_whm0000gn/T/npm-4422/1381310204934-0.06877219420857728/package
+26 verbose lock /var/folders/wt/rwrrv8d952qc_2tf2yq7_whm0000gn/T/npm-4422/1381310204934-0.06877219420857728/package /Users/maxmert/.npm/22ac7ce9-4934-0-06877219420857728-package.lock
+27 silly lockFile 8716a955-4934-0-06877219420857728-tmp-tgz /var/folders/wt/rwrrv8d952qc_2tf2yq7_whm0000gn/T/npm-4422/1381310204934-0.06877219420857728/tmp.tgz
+28 verbose lock /var/folders/wt/rwrrv8d952qc_2tf2yq7_whm0000gn/T/npm-4422/1381310204934-0.06877219420857728/tmp.tgz /Users/maxmert/.npm/8716a955-4934-0-06877219420857728-tmp-tgz.lock
+29 silly gunzTarPerm modes [ '755', '644' ]
+30 silly gunzTarPerm extractEntry package.json
+31 silly gunzTarPerm extractEntry .npmignore
+32 silly gunzTarPerm extractEntry README.md
+33 silly gunzTarPerm extractEntry Gruntfile.js
+34 silly gunzTarPerm extractEntry coffee/Gruntfile.coffee
+35 silly gunzTarPerm extractEntry coffee/bin/mwm.coffee
+36 silly gunzTarPerm extractEntry coffee/lib/maxmertkit.coffee
+37 silly gunzTarPerm extractEntry coffee/lib/animation.coffee
+38 silly gunzTarPerm extractEntry coffee/lib/common.coffee
+39 silly gunzTarPerm extractEntry coffee/lib/config.coffee
+40 silly gunzTarPerm extractEntry coffee/lib/logger.coffee
+41 silly gunzTarPerm extractEntry coffee/lib/archives.coffee
+42 silly gunzTarPerm extractEntry coffee/lib/modifiers.coffee
+43 silly gunzTarPerm extractEntry coffee/lib/project.coffee
+44 silly gunzTarPerm extractEntry coffee/lib/themes.coffee
+45 silly gunzTarPerm extractEntry coffee/lib/version.coffee
+46 silly gunzTarPerm extractEntry coffee/lib/widgets.coffee
+47 silly gunzTarPerm extractEntry docs/docco.css
+48 silly gunzTarPerm extractEntry docs/grunt.html
+49 silly gunzTarPerm extractEntry docs/logger.html
+50 silly gunzTarPerm extractEntry docs/mwm.html
+51 silly gunzTarPerm extractEntry docs/version.html
+52 silly gunzTarPerm extractEntry docs/widgets.html
+53 silly gunzTarPerm extractEntry tests/.mwmc
+54 silly gunzTarPerm extractEntry templates.json
+55 silly gunzTarPerm extractEntry bin/mwm.js
+56 silly gunzTarPerm extractEntry templates/animation.mustache
+57 silly gunzTarPerm extractEntry templates/animationFinal.mustache
+58 silly gunzTarPerm extractEntry templates/animationInstall.mustache
+59 silly gunzTarPerm extractEntry templates/params.mustache
+60 silly gunzTarPerm extractEntry templates/theme.mustache
+61 silly gunzTarPerm extractEntry templates/widget.mustache
+62 silly gunzTarPerm extractEntry templates/widgetFinal.mustache
+63 silly gunzTarPerm extractEntry lib/animation.js
+64 silly gunzTarPerm extractEntry lib/common.js
+65 silly gunzTarPerm extractEntry lib/config.js
+66 silly gunzTarPerm extractEntry lib/logger.js
+67 silly gunzTarPerm extractEntry lib/archives.js
+68 silly gunzTarPerm extractEntry lib/modifiers.js
+69 silly gunzTarPerm extractEntry lib/project.js
+70 silly gunzTarPerm extractEntry lib/themes.js
+71 silly gunzTarPerm extractEntry lib/version.js
+72 silly gunzTarPerm extractEntry lib/widgets.js
+73 silly gunzTarPerm extractEntry lib/maxmertkit.js
+74 verbose read json /var/folders/wt/rwrrv8d952qc_2tf2yq7_whm0000gn/T/npm-4422/1381310204934-0.06877219420857728/package/package.json
+75 silly lockFile 22ac7ce9-4934-0-06877219420857728-package /var/folders/wt/rwrrv8d952qc_2tf2yq7_whm0000gn/T/npm-4422/1381310204934-0.06877219420857728/package
+76 silly lockFile 22ac7ce9-4934-0-06877219420857728-package /var/folders/wt/rwrrv8d952qc_2tf2yq7_whm0000gn/T/npm-4422/1381310204934-0.06877219420857728/package
+77 silly lockFile 8716a955-4934-0-06877219420857728-tmp-tgz /var/folders/wt/rwrrv8d952qc_2tf2yq7_whm0000gn/T/npm-4422/1381310204934-0.06877219420857728/tmp.tgz
+78 silly lockFile 8716a955-4934-0-06877219420857728-tmp-tgz /var/folders/wt/rwrrv8d952qc_2tf2yq7_whm0000gn/T/npm-4422/1381310204934-0.06877219420857728/tmp.tgz
+79 verbose from cache /var/folders/wt/rwrrv8d952qc_2tf2yq7_whm0000gn/T/npm-4422/1381310204934-0.06877219420857728/package/package.json
+80 verbose tar pack [ '/Users/maxmert/.npm/mwm/0.0.11/package.tgz',
+80 verbose tar pack   '/var/folders/wt/rwrrv8d952qc_2tf2yq7_whm0000gn/T/npm-4422/1381310204934-0.06877219420857728/package' ]
+81 verbose tarball /Users/maxmert/.npm/mwm/0.0.11/package.tgz
+82 verbose folder /var/folders/wt/rwrrv8d952qc_2tf2yq7_whm0000gn/T/npm-4422/1381310204934-0.06877219420857728/package
+83 silly lockFile 22ac7ce9-4934-0-06877219420857728-package /var/folders/wt/rwrrv8d952qc_2tf2yq7_whm0000gn/T/npm-4422/1381310204934-0.06877219420857728/package
+84 verbose lock /var/folders/wt/rwrrv8d952qc_2tf2yq7_whm0000gn/T/npm-4422/1381310204934-0.06877219420857728/package /Users/maxmert/.npm/22ac7ce9-4934-0-06877219420857728-package.lock
+85 silly lockFile d945ec7c-xmert-npm-mwm-0-0-11-package-tgz /Users/maxmert/.npm/mwm/0.0.11/package.tgz
+86 verbose lock /Users/maxmert/.npm/mwm/0.0.11/package.tgz /Users/maxmert/.npm/d945ec7c-xmert-npm-mwm-0-0-11-package-tgz.lock
+87 silly lockFile 22ac7ce9-4934-0-06877219420857728-package /var/folders/wt/rwrrv8d952qc_2tf2yq7_whm0000gn/T/npm-4422/1381310204934-0.06877219420857728/package
+88 silly lockFile 22ac7ce9-4934-0-06877219420857728-package /var/folders/wt/rwrrv8d952qc_2tf2yq7_whm0000gn/T/npm-4422/1381310204934-0.06877219420857728/package
+89 silly lockFile d945ec7c-xmert-npm-mwm-0-0-11-package-tgz /Users/maxmert/.npm/mwm/0.0.11/package.tgz
+90 silly lockFile d945ec7c-xmert-npm-mwm-0-0-11-package-tgz /Users/maxmert/.npm/mwm/0.0.11/package.tgz
+91 silly lockFile 5246c6e9-s-maxmert-npm-mwm-0-0-11-package /Users/maxmert/.npm/mwm/0.0.11/package
+92 verbose lock /Users/maxmert/.npm/mwm/0.0.11/package /Users/maxmert/.npm/5246c6e9-s-maxmert-npm-mwm-0-0-11-package.lock
+93 silly lockFile 5246c6e9-s-maxmert-npm-mwm-0-0-11-package /Users/maxmert/.npm/mwm/0.0.11/package
+94 silly lockFile 5246c6e9-s-maxmert-npm-mwm-0-0-11-package /Users/maxmert/.npm/mwm/0.0.11/package
+95 verbose tar unpack /Users/maxmert/.npm/mwm/0.0.11/package.tgz
+96 silly lockFile 5246c6e9-s-maxmert-npm-mwm-0-0-11-package /Users/maxmert/.npm/mwm/0.0.11/package
+97 verbose lock /Users/maxmert/.npm/mwm/0.0.11/package /Users/maxmert/.npm/5246c6e9-s-maxmert-npm-mwm-0-0-11-package.lock
+98 silly lockFile d945ec7c-xmert-npm-mwm-0-0-11-package-tgz /Users/maxmert/.npm/mwm/0.0.11/package.tgz
+99 verbose lock /Users/maxmert/.npm/mwm/0.0.11/package.tgz /Users/maxmert/.npm/d945ec7c-xmert-npm-mwm-0-0-11-package-tgz.lock
+100 silly gunzTarPerm modes [ '755', '644' ]
+101 silly gunzTarPerm extractEntry package.json
+102 silly gunzTarPerm extractEntry .npmignore
+103 silly gunzTarPerm extractEntry README.md
+104 silly gunzTarPerm extractEntry Gruntfile.js
+105 silly gunzTarPerm extractEntry coffee/Gruntfile.coffee
+106 silly gunzTarPerm extractEntry coffee/bin/mwm.coffee
+107 silly gunzTarPerm extractEntry coffee/lib/maxmertkit.coffee
+108 silly gunzTarPerm extractEntry coffee/lib/animation.coffee
+109 silly gunzTarPerm extractEntry coffee/lib/common.coffee
+110 silly gunzTarPerm extractEntry coffee/lib/config.coffee
+111 silly gunzTarPerm extractEntry coffee/lib/logger.coffee
+112 silly gunzTarPerm extractEntry coffee/lib/archives.coffee
+113 silly gunzTarPerm extractEntry coffee/lib/modifiers.coffee
+114 silly gunzTarPerm extractEntry coffee/lib/project.coffee
+115 silly gunzTarPerm extractEntry coffee/lib/themes.coffee
+116 silly gunzTarPerm extractEntry coffee/lib/version.coffee
+117 silly gunzTarPerm extractEntry coffee/lib/widgets.coffee
+118 silly gunzTarPerm extractEntry tests/.mwmc
+119 silly gunzTarPerm extractEntry lib/animation.js
+120 silly gunzTarPerm extractEntry lib/common.js
+121 silly gunzTarPerm extractEntry lib/config.js
+122 silly gunzTarPerm extractEntry lib/logger.js
+123 silly gunzTarPerm extractEntry lib/archives.js
+124 silly gunzTarPerm extractEntry lib/modifiers.js
+125 silly gunzTarPerm extractEntry lib/project.js
+126 silly gunzTarPerm extractEntry lib/themes.js
+127 silly gunzTarPerm extractEntry lib/version.js
+128 silly gunzTarPerm extractEntry lib/widgets.js
+129 silly gunzTarPerm extractEntry lib/maxmertkit.js
+130 silly gunzTarPerm extractEntry bin/mwm.js
+131 silly gunzTarPerm extractEntry templates/animation.mustache
+132 silly gunzTarPerm extractEntry templates/animationFinal.mustache
+133 silly gunzTarPerm extractEntry templates/animationInstall.mustache
+134 silly gunzTarPerm extractEntry templates/params.mustache
+135 silly gunzTarPerm extractEntry templates/theme.mustache
+136 silly gunzTarPerm extractEntry templates/widget.mustache
+137 silly gunzTarPerm extractEntry templates/widgetFinal.mustache
+138 silly gunzTarPerm extractEntry templates.json
+139 silly gunzTarPerm extractEntry docs/docco.css
+140 silly gunzTarPerm extractEntry docs/grunt.html
+141 silly gunzTarPerm extractEntry docs/logger.html
+142 silly gunzTarPerm extractEntry docs/mwm.html
+143 silly gunzTarPerm extractEntry docs/version.html
+144 silly gunzTarPerm extractEntry docs/widgets.html
+145 verbose read json /Users/maxmert/.npm/mwm/0.0.11/package/package.json
+146 silly lockFile 5246c6e9-s-maxmert-npm-mwm-0-0-11-package /Users/maxmert/.npm/mwm/0.0.11/package
+147 silly lockFile 5246c6e9-s-maxmert-npm-mwm-0-0-11-package /Users/maxmert/.npm/mwm/0.0.11/package
+148 silly lockFile d945ec7c-xmert-npm-mwm-0-0-11-package-tgz /Users/maxmert/.npm/mwm/0.0.11/package.tgz
+149 silly lockFile d945ec7c-xmert-npm-mwm-0-0-11-package-tgz /Users/maxmert/.npm/mwm/0.0.11/package.tgz
+150 silly shasum updated bytes 36473
+151 info shasum 39fd1cb24d0b064a471ac4940e182a59e062faa9
+151 info shasum /Users/maxmert/.npm/mwm/0.0.11/package.tgz
+152 verbose from cache /Users/maxmert/.npm/mwm/0.0.11/package/package.json
+153 verbose chmod /Users/maxmert/.npm/mwm/0.0.11/package.tgz 644
+154 verbose chown /Users/maxmert/.npm/mwm/0.0.11/package.tgz [ 501, 20 ]
+155 silly lockFile 3a52ce78- .
+156 silly publish { name: 'mwm',
+156 silly publish   version: '0.0.11',
+156 silly publish   description: 'Maxmertkit widget manager. It is like npm for css. Check out www.maxmertkit.com for more info.',
+156 silly publish   homepage: 'http://maxmertkit.com:3001',
+156 silly publish   author: { name: 'Vetrenko Maxim', email: 'me@maxmert.com' },
+156 silly publish   keywords: [ 'mwm' ],
+156 silly publish   repositories: [ { type: 'git', url: 'git@github.com:maxmert/mwm.git' } ],
+156 silly publish   bugs: { url: 'https://github.com/maxmert/mwm/issues' },
+156 silly publish   main: 'mwm',
+156 silly publish   bin: { mwm: './bin/mwm.js' },
+156 silly publish   engines: { node: '>=0.4.11' },
+156 silly publish   dependencies:
+156 silly publish    { nomnom: '1.6.1',
+156 silly publish      commander: '1.3.2',
+156 silly publish      superagent: '0.15.4',
+156 silly publish      async: '0.2.9',
+156 silly publish      'cli-color': '0.2.2',
+156 silly publish      tar: '0.1.18',
+156 silly publish      fstream: '0.1.24',
+156 silly publish      ncp: '0.4.2',
+156 silly publish      mustache: '0.7.2',
+156 silly publish      underscore: '1.5.1',
+156 silly publish      wrench: '1.5.1',
+156 silly publish      markdown: '0.4.0',
+156 silly publish      jsdom: '0.8.4',
+156 silly publish      events: '0.5.0' },
+156 silly publish   devDependencies:
+156 silly publish    { grunt: '*',
+156 silly publish      'grunt-jstemplater': '0.1.8',
+156 silly publish      'grunt-contrib-watch': '*',
+156 silly publish      'grunt-coffeelint': '*',
+156 silly publish      'grunt-contrib-coffee': '*',
+156 silly publish      'grunt-docco': '~0.2.0' },
+156 silly publish   maxmertkit: 'maxmertkit.json',
+156 silly publish   _id: 'mwm@0.0.11',
+156 silly publish   _from: '.',
+156 silly publish   readme: '## Documentation\n\nFor more documentation go to http://www.maxmertkit.com\n\n## Changelog\n\nChanges in a new version here.\n\n#### 0.0.9\n\n  * Added configuration file **.mwmc**, for now it supports one config:\n\n\t{\n\t\t"directory": "name-of-the-direcory-with-css"\n\t}',
+156 silly publish   readmeFilename: 'README.md',
+156 silly publish   dist: { shasum: '39fd1cb24d0b064a471ac4940e182a59e062faa9' } }
+157 verbose url raw mwm
+158 verbose url resolving [ 'https://registry.npmjs.org/', './mwm' ]
+159 verbose url resolved https://registry.npmjs.org/mwm
+160 info trying registry request attempt 1 at 13:16:59
+161 http PUT https://registry.npmjs.org/mwm
+162 http 409 https://registry.npmjs.org/mwm
+163 verbose url raw mwm
+164 verbose url resolving [ 'https://registry.npmjs.org/', './mwm' ]
+165 verbose url resolved https://registry.npmjs.org/mwm
+166 info trying registry request attempt 1 at 13:17:00
+167 http GET https://registry.npmjs.org/mwm
+168 http 200 https://registry.npmjs.org/mwm
+169 error publish fail Cannot publish over existing version.
+169 error publish fail Update the 'version' field in package.json and try again.
+169 error publish fail
+169 error publish fail If the previous version was published in error, see:
+169 error publish fail     npm help unpublish
+169 error publish fail
+169 error publish fail To automatically increment version numbers, see:
+169 error publish fail     npm help version
+170 error System Darwin 12.5.0
+171 error command "node" "/usr/local/bin/npm" "publish"
+172 error cwd /Users/maxmert/Projects/mwm
+173 error node -v v0.10.5
+174 error npm -v 1.2.18
+175 error code EPUBLISHCONFLICT
+176 verbose exit [ 1, true ]
