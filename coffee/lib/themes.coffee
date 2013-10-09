@@ -205,7 +205,7 @@ exports.install = ( pth, list, depent = null ) ->
 
 	async.reduce arr, null, ( result, theme, callback ) ->
 		
-		immediately ->
+		((result, theme, callback) ->
 			
 			request
 				.get( "#{pack.homepage}/api/0.1/themes/#{theme.name}/#{theme.version}" )
@@ -228,6 +228,7 @@ exports.install = ( pth, list, depent = null ) ->
 						log.requestSuccess "theme #{theme.name}@#{theme.version} successfully downloaded."
 
 						callback null, result
+		)( result, theme, callback )
 
 	, ( err, res ) ->
 		

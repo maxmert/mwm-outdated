@@ -46,7 +46,7 @@ exports.init = ( options ) ->
 			write varsFileName, "", callback
 
 		myvars: ( callback ) =>
-			write myvarsFileName, "", callback
+			write myvarsFileName, "$#{mjson.name}: -#{mjson.name}", callback
 
 		index: ( callback ) =>
 			write fileName, mustache.render( templates.widget, mjson ), callback
@@ -154,7 +154,6 @@ exports.publish = ( options ) ->
 				
 
 	, ( err, res ) =>
-
 		if err?
 			log.error "Publishing canceled. #{err}"
 			process.stdin.destroy()
@@ -190,6 +189,8 @@ exports.publish = ( options ) ->
 					mjson.site = ''
 				if not mjson.themeUse? or not mjson.themeUse
 					mjson.themeUse = 'false'
+				else
+					mjson.themeUse = 'true'
 
 				if ok
 					request

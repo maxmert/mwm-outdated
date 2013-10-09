@@ -44,7 +44,7 @@ exports.install = ( pth, mjson, calll, depent, themesss ) ->
 		@calll = calll
 		@depent = depent
 
-		immediately ( calll, depent, themesss ) =>
+		process.nextTick ( calll, depent, themesss ) =>
 			# console.log widget.name, 'begin'
 			fileName = "#{widget.name}@#{widget.version}.tar"
 			
