@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "grunt": "*",
-    "grunt-jstemplater": "0.1.8",
+    "grunt-jstemplater": "~0.1.8",
     "grunt-contrib-watch": "*",
     "grunt-coffeelint": "*",
     "grunt-contrib-coffee": "*",
@@ -52,5 +52,15 @@
   },
   "maxmertkit": "maxmertkit.json",
   "_id": "mwm@0.0.12",
-  "_from": "mwm@"
+  "_from": "mwm@",
+  "readme": "## Documentation\n\nFor more documentation go to http://www.maxmertkit.com\n\n## Changelog\n\nChanges in a new version here.\n\n#### 0.0.12\n\n  * Added configuration file **.mwmc**, for now it supports one config:\n\n\t{\n\t\t\"directory\": \"name-of-the-direcory-with-css\"\n\t}",
+  "readmeFilename": "README.md",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:maxmert/mwm.git"
+  },
+  "dist": {
+    "shasum": "b2d00b5b2cf96d359c7308f5ce92d6fe7b182b2a"
+  },
+  "_resolved": "https://registry.npmjs.org/mwm/-/mwm-0.0.12.tgz"
 }

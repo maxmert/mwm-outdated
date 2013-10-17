@@ -74,10 +74,11 @@ exports.install = ( pth, mjson, calll, depent, themesss ) ->
 								else
 									fs.unlink path.join(pth, fileName)
 
-									
-									if path.dirname(path.join(pth,'../../_myvars.sass')) isnt '.'
-										fs.readFile path.join(pth,'../../_myvars.sass'),( err, data ) ->
+									if path.dirname(path.join(pth, widget.name, '_myvars.sass')) isnt '.'
+										fs.readFile path.join(pth, widget.name, '_myvars.sass'),( err, data ) ->
 											if not err?
+												widgetPath = path.join(pth, widget.name)
+												fs.appendFile path.join(config.directory(),'_paths.sass'), "$#{widget.name}-path: '#{widgetPath}'\n", ( err ) ->
 												fs.appendFile path.join(config.directory(),'_vars.sass'), "\n#{data}\n", ( err ) ->
 
 

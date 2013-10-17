@@ -1,3 +1,4 @@
+@import "paths" 
 \n@import "imports" 
 \n@import "params" 
 \n@import "myvars"
@@ -12,11 +13,10 @@
 \n\t@if $sizes
 \n\t\t@each $size in $sizes
 \n\t\t\t		$sz: #{nth($size, 1)}
-\n\t\t\t		@if $sz != _minor
-\n\t\t\t\t		&.#{nth($size, 1)}
-\n\t\t\t\t\t			font-size: nth($size,2)
-\n\t\t\t\t\t			padding: nth($size,2)/3 nth($size,2)/2
-\n\t\t\t	@else
+\n\t\t\t		&.#{nth($size, 1)}
+\n\t\t\t\t			font-size: nth($size,2)
+\n\t\t\t\t			padding: nth($size,2)/3 nth($size,2)/2
+\n\t\t\t		@if $sz == _minor
 \n\t\t\t\t		font-size: nth($size,2)
 \n\t\t\t\t		padding: nth($size,2)/3 nth($size,2)/2
 \n\t
@@ -41,20 +41,19 @@
 \n\t\t\t\t				$imp: !important
 \n\t
 \n\t
-\n\t\t\t			@if $theme != 'default'
-\n\t\t\t\t				&.#{$theme}
-\n\t\t\t\t\t					color: nth( $color-invert, $index )
-\n\t\t\t\t\t					border-color: nth( $border-color-lighten, $index )
-\n\t					
-\n\t\t\t\t					&:hover
-\n\t\t\t\t\t						border-color: nth( $border-color-darken, $index )#{$imp}
+\n\t\t\t			&.#{$theme}
+\n\t\t\t\t				color: nth( $color-invert, $index )#{$imp}
+\n\t\t\t\t				border-color: nth( $border-color-lighten, $index )#{$imp}
+\n\t				
+\n\t\t\t\t				&:hover
+\n\t\t\t\t\t				border-color: nth( $border-color-darken, $index )#{$imp}
 \n\t
-\n\t\t\t			@else
+\n\t\t\t			@if $theme == 'default'
 \n\t\t\t\t				color: nth( $color-invert, $index )
 \n\t\t\t\t				border-color: nth( $border-color-lighten, $index )
 \n\t
 \n\t\t\t\t				&:hover
-\n\t\t\t\t\t					border-color: nth( $border-color-darken, $index )#{$imp}
+\n\t\t\t\t\t					border-color: nth( $border-color-darken, $index )
 \n\t
 \n\t
 \n\t
